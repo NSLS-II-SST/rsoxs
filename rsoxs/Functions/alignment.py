@@ -188,19 +188,19 @@ def newuser():
     )
 
     proposal_id = input("Your proposal id ({}): ".format(RE.md["proposal_id"]))
-    if proposal_id is not "":
+    if proposal_id != "":
         RE.md["proposal_id"] = proposal_id
 
     SAF_id = input("Your SAF id ({}): ".format(RE.md["saf_id"]))
-    if SAF_id is not "":
+    if SAF_id != "":
         RE.md["saf_id"] = SAF_id
 
     institution = input("Your institution ({}): ".format(RE.md["institution"]))
-    if institution is not "":
+    if institution != "":
         RE.md["institution"] = institution
 
     user_name = input("Your name ({}): ".format(RE.md["user_name"]))
-    if user_name is not "":
+    if user_name != "":
         RE.md["user_name"] = user_name
 
     user_email = input(
@@ -208,17 +208,17 @@ def newuser():
             RE.md["user_email"]
         )
     )
-    if user_email is not "":
+    if user_email != "":
         RE.md["user_email"] = user_email
 
     project_name = input("Your project ({}): ".format(RE.md["project_name"]))
-    if project_name is not "":
+    if project_name != "":
         RE.md["project_name"] = project_name
 
     project_desc = input(
         "Your project description ({}): ".format(RE.md["project_desc"])
     )
-    if project_desc is not "":
+    if project_desc != "":
         RE.md["project_desc"] = project_desc
     # if new, add user to database get unique ID.
 
@@ -429,7 +429,7 @@ def newsample():
     sample_name = input(
         "Your sample name  - be concise ({}): ".format(RE.md["sample_name"])
     )
-    if sample_name is not "":
+    if sample_name != "":
         RE.md["sample_name"] = sample_name
 
     sample_priority = input(
@@ -437,61 +437,61 @@ def newsample():
             RE.md["sample_priority"]
         )
     )
-    if sample_priority is not "":
+    if sample_priority != "":
         RE.md["sample_priority"] = sample_priority
 
     sample_desc = input(
         "Describe your sample - be thorough ({}): ".format(RE.md["sample_desc"])
     )
-    if sample_desc is not "":
+    if sample_desc != "":
         RE.md["sample_desc"] = sample_desc
 
     sample_id = input(
         "Your sample id - if you have one ({}): ".format(RE.md["sample_id"])
     )
-    if sample_id is not "":
+    if sample_id != "":
         RE.md["sample_id"] = sample_id
 
     proposal_id = input(
         "Your Proposal ID from PASS ({}): ".format(RE.md["proposal_id"])
     )
-    if proposal_id is not "":
+    if proposal_id != "":
         RE.md["proposal_id"] = proposal_id
 
     institution = input("Your Institution ({}): ".format(RE.md["institution"]))
-    if institution is not "":
+    if institution != "":
         RE.md["institution"] = institution
 
     saf_id = input("Your SAF ID number from PASS ({}): ".format(RE.md["saf_id"]))
-    if saf_id is not "":
+    if saf_id != "":
         RE.md["saf_id"] = saf_id
 
     sample_set = input(
         "What set does this sample belong to ({}): ".format(RE.md["sample_set"])
     )
-    if sample_set is not "":
+    if sample_set != "":
         RE.md["sample_set"] = sample_set
 
     sample_date = input("Sample creation date ({}): ".format(RE.md["sample_date"]))
-    if sample_date is not "":
+    if sample_date != "":
         RE.md["sample_date"] = sample_date
 
     project_name = input(
         "Is there an associated project name ({}): ".format(RE.md["project_name"])
     )
-    if project_name is not "":
+    if project_name != "":
         RE.md["project_name"] = project_name
 
     project_desc = input("Describe the project ({}): ".format(RE.md["project_desc"]))
-    if project_desc is not "":
+    if project_desc != "":
         RE.md["project_desc"] = project_desc
 
     samp_user_id = input("Associated User ID ({}): ".format(RE.md["samp_user_id"]))
-    if samp_user_id is not "":
+    if samp_user_id != "":
         RE.md["samp_user_id"] = samp_user_id
 
     bar_loc = input("Location on the Bar ({}): ".format(RE.md["bar_loc"]["spot"]))
-    if bar_loc is not "":
+    if bar_loc != "":
         RE.md["bar_loc"]["spot"] = bar_loc
         RE.md["bar_spot"] = bar_loc
 
@@ -500,55 +500,55 @@ def newsample():
             RE.md["bar_loc"]["th"]
         )
     )
-    if th is not "":
+    if th != "":
         RE.md["bar_loc"]["th"] = th
         RE.md["angle"] = th
 
     composition = input(
         "Sample composition or chemical formula ({}): ".format(RE.md["composition"])
     )
-    if composition is not "":
+    if composition != "":
         RE.md["composition"] = composition
 
     density = input("Sample density ({}): ".format(RE.md["density"]))
-    if density is not "":
+    if density != "":
         RE.md["density"] = density
 
     components = input("Sample components ({}): ".format(RE.md["components"]))
-    if components is not "":
+    if components != "":
         RE.md["components"] = components
 
     thickness = input("Sample thickness ({}): ".format(RE.md["thickness"]))
-    if thickness is not "":
+    if thickness != "":
         RE.md["thickness"] = thickness
 
     sample_state = input(
         'Sample state "Broken/Fresh" ({}): '.format(RE.md["sample_state"])
     )
-    if sample_state is not "":
+    if sample_state != "":
         RE.md["sample_state"] = sample_state
 
     notes = input("Sample notes ({}): ".format(RE.md["notes"]))
-    if notes is not "":
+    if notes != "":
         RE.md["notes"] = notes
 
     grazing = input(
         "Is the sample for grazing incidence? ({}): ".format(RE.md["grazing"])
     )
-    if grazing is not "":
+    if grazing != "":
         RE.md["grazing"] = eval(grazing)
     front = input(
         "Is the sample on the front of the bar? ({}): ".format(RE.md["front"])
     )
-    if front is not "":
+    if front != "":
         RE.md["front"] = eval(front)
     height = input("Sample height? ({}): ".format(RE.md["height"]))
-    if height is not "":
+    if height != "":
         RE.md["height"] = eval(height)
 
     acquisitions = []
     add_default_acq = input("add acquisition (full_carbon_scan - WAXS)? : ")
-    if add_default_acq is "":
+    if add_default_acq == "":
         acquisitions.append(
             {
                 "plan_name": "full_carbon_scan",
@@ -752,13 +752,13 @@ def alignment_rel_scan(det,motor,start_rel,end_rel,steps):
 def offset_bar(bar, xoff, yoff, zoff, thoff):
     for samp in bar:
         for mot in samp["location"]:
-            if mot["motor"] is "x":
+            if mot["motor"] == "x":
                 mot["position"] += xoff
-            if mot["motor"] is "y":
+            if mot["motor"] == "y":
                 mot["position"] += yoff
-            if mot["motor"] is "z":
+            if mot["motor"] == "z":
                 mot["position"] += zoff
-            if mot["motor"] is "th":
+            if mot["motor"] == "th":
                 mot["position"] += thoff
         sample_recenter_sample(samp)
 
