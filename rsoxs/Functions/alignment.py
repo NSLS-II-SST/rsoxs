@@ -1140,7 +1140,7 @@ def update_bar(inbar, loc_Q, front):
                 else:
                     # print('got something')
                     break
-            if item is not ("enter" or "escape" or "n" or "p") and isinstance(
+            if item != ("enter" or "escape" or "n" or "p") and isinstance(
                 item, list
             ):
                 sample["location"] = item
@@ -1154,14 +1154,14 @@ def update_bar(inbar, loc_Q, front):
                 # advance sample and loop
                 lastclicked = samplenum
                 samplenum += 1
-            elif item is "escape":
+            elif item == "escape":
                 print("aborting")
                 break
             elif item == "enter" or item == "n":
                 print(f'leaving this {sample["sample_name"]} unchanged')
                 lastclicked = samplenum
                 samplenum += 1
-            elif item is "p":
+            elif item == "p":
                 print("Previous sample")
                 samplenum = lastclicked
             if samplenum >= len(bar):
