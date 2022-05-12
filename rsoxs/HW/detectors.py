@@ -112,54 +112,26 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs"):
 
 count = bp.count
 
-def dark_plan_saxs():
-    yield from saxs_det.skinnyunstage()
-    yield from saxs_det.skinnystage()
-    #yield from bps.mv(saxs_det.cam.sync, 0)
-    # take note what the current acq mode is
-    # change it to multiple
-    oldmode = saxs_det.cam.image_mode.get()
-    yield from bps.abs_set(saxs_det.cam.image_mode,1)
-    yield from bps.mv(saxs_det.cam.shutter_mode, 0)
-    yield from bps.trigger(saxs_det, group="darkframe-trigger")
+def dark_plan(det):
+    yield from det.skinnyunstage()
+    yield from det.skinnystage()
+    oldmode = det.cam.image_mode.get()
+    yield from bps.abs_set(det.cam.image_mode,1)
+    yield from bps.mv(det.cam.shutter_mode, 0)
+    yield from bps.trigger(det, group="darkframe-trigger")
     yield from bps.wait("darkframe-trigger")
-    print("dark_plan_saxs assets: ", saxs_det.tiff._asset_docs_cache)
-    snapshot = bluesky_darkframes.SnapshotDevice(saxs_det)
-    if saxs_det.useshutter:
-        #yield from bps.mv(saxs_det.cam.sync, 1)
-        yield from bps.mv(saxs_det.cam.shutter_mode, 2)
-    # if we changed the acq mode, change it back)
-    yield from bps.abs_set(saxs_det.cam.image_mode,oldmode)
-    yield from saxs_det.skinnyunstage()
-    yield from saxs_det.skinnystage()
+    snapshot = bluesky_darkframes.SnapshotDevice(det)
+    if det.useshutter:
+        yield from bps.mv(det.cam.shutter_mode, 2)
+    yield from bps.abs_set(det.cam.image_mode,oldmode)
+    yield from det.skinnyunstage()
+    yield from det.skinnystage()
     return snapshot
 
-
-def dark_plan_waxs():
-    yield from waxs_det.skinnyunstage()
-    yield from waxs_det.skinnystage()
-    # yield from bps.mv(waxs_det.cam.sync, 0)
-    # take note what the current acq mode is
-    # change it to multiple
-    oldmode = waxs_det.cam.image_mode.get()
-    yield from bps.abs_set(waxs_det.cam.image_mode,1)
-    yield from bps.mv(waxs_det.cam.shutter_mode, 0)
-    yield from bps.trigger(waxs_det, group="darkframe-trigger")
-    yield from bps.wait("darkframe-trigger")
-    print("dark_plan_saxs assets: ", waxs_det.tiff._asset_docs_cache)
-    snapshot = bluesky_darkframes.SnapshotDevice(waxs_det)
-    if waxs_det.useshutter:
-        #yield from bps.mv(waxs_det.cam.sync, 1)
-        yield from bps.mv(waxs_det.cam.shutter_mode, 2)
-    # if we changed the acq mode, change it back)
-    yield from waxs_det.skinnyunstage()
-    yield from waxs_det.skinnystage()
-    yield from bps.abs_set(waxs_det.cam.image_mode,oldmode)
-    return snapshot
 
 
 dark_frame_preprocessor_saxs = bluesky_darkframes.DarkFramePreprocessor(
-    dark_plan=dark_plan_saxs,
+    dark_plan=dark_plan,
     detector=saxs_det,
     max_age=300,
     locked_signals=[
@@ -173,7 +145,7 @@ dark_frame_preprocessor_saxs = bluesky_darkframes.DarkFramePreprocessor(
 
 #
 dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
-    dark_plan=dark_plan_waxs,
+    dark_plan=dark_plan,
     detector=waxs_det,
     max_age=120,
     locked_signals=[
@@ -189,7 +161,7 @@ dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
 )
 
 dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
-    dark_plan=dark_plan_waxs,
+    dark_plan=dark_plan,
     detector=waxs_det,
     max_age=120,
     locked_signals=[
@@ -197,16 +169,9 @@ dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
         Det_W.user_setpoint,
         waxs_det.cam.bin_x,
         waxs_det.cam.bin_y,
-        #sam_X.user_setpoint,
-        #sam_Th.user_setpoint,
-        #sam_Y.user_setpoint,
     ],
     limit=20,
 )
-
-
-
-
 
 
 dark_frames_enable_waxs = make_decorator(dark_frame_preprocessor_waxs)()
