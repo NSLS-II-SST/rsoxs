@@ -569,14 +569,14 @@ def newsample():
     if loc is not "":
         locs = []
         xval = input("X ({:.2f}): ".format(sam_X.user_readback.get()))
-        if xval is not "":
+        if xval != "":
             locs.append({"motor": "x", "position": xval, "order": 0})
         else:
             locs.append(
                 {"motor": "x", "position": sam_X.user_readback.get(), "order": 0}
             )
         yval = input("Y ({:.2f}): ".format(sam_Y.user_readback.get()))
-        if yval is not "":
+        if yval != "":
             locs.append({"motor": "y", "position": yval, "order": 0})
         else:
             locs.append(
@@ -584,7 +584,7 @@ def newsample():
             )
 
         zval = input("Z ({:.2f}): ".format(sam_Z.user_readback.get()))
-        if zval is not "":
+        if zval != "":
             locs.append({"motor": "z", "position": zval, "order": 0})
         else:
             locs.append(
@@ -592,7 +592,7 @@ def newsample():
             )
 
         thval = input("Theta ({:.2f}): ".format(sam_Th.user_readback.get()))
-        if thval is not "":
+        if thval != "":
             locs.append({"motor": "th", "position": thval, "order": 0})
         else:
             locs.append(
@@ -604,12 +604,12 @@ def newsample():
 
 
 def avg_scan_time(plan_name, nscans=50, new_scan_duration=600):
-    if plan_name is "normal_incidence_rotate_pol_nexafs":
+    if plan_name == "normal_incidence_rotate_pol_nexafs":
         multiple = 6
         plan_name = "fly_Carbon_NEXAFS"
     elif (
-        plan_name is "fixed_pol_rotate_sample_nexafs"
-        or plan_name is "fixed_sample_rotate_pol_nexafs"
+        plan_name == "fixed_pol_rotate_sample_nexafs"
+        or plan_name == "fixed_sample_rotate_pol_nexafs"
     ):
         multiple = 5
         plan_name = "fly_Carbon_NEXAFS"
