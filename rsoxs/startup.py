@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 import appdirs
 
-from ..CommonFunctions.functions import run_report
+from sst.CommonFunctions.functions import run_report
 
 run_report(__file__)
 
