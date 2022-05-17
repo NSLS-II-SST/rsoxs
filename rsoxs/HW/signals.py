@@ -1,6 +1,6 @@
 from ophyd import EpicsSignalRO, EpicsSignal
 from ophyd.status import StatusTimeoutError
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 from bluesky import plan_stubs as bps
 from bluesky import FailedStatus
 from datetime import datetime as datet

@@ -12,14 +12,14 @@ from ophyd.areadetector import (
 )
 from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
-from sst.CommonFunctions.functions import boxed_text, colored
-from sst.HW.diode import (
+from sst_funcs.printing import boxed_text, colored
+from sst_hw.diode import (
     Shutter_open_time,
     Shutter_control,
     Shutter_enable,
     Shutter_delay,
 )
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 
 
 run_report(__file__)

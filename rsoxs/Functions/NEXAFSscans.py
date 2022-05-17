@@ -5,7 +5,7 @@ from ..Functions.alignment import sample, load_sample
 from ..Functions.alignment import rotate_now
 from .energyscancore import NEXAFS_fly_scan_core, NEXAFS_scan_core
 from .energyscans import clean_up_md
-from sst.CommonFunctions.functions import run_report, read_input
+from sst_funcs.printing import run_report, read_input
 
 
 run_report(__file__)

@@ -6,8 +6,8 @@ global no_notifications_until
 from ..startup import RE
 from ..HW.slackbot import rsoxs_bot
 from ..HW.motors import sam_X
-from sst.HW.motors import gratingx, mirror2x, mirror2, grating
-from sst.CommonFunctions.functions import run_report
+from sst_hw.motors import gratingx, mirror2x, mirror2, grating
+from sst_funcs.printing import run_report
 
 
 run_report(__file__)

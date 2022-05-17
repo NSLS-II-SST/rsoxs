@@ -4,7 +4,7 @@ from ophyd import (
     EpicsSignalRO,
 )
 from ophyd import Component as Cpt, DynamicDeviceComponent as DDC
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 
 
 run_report(__file__)

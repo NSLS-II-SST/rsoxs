@@ -2,7 +2,7 @@ import numpy as np
 import bluesky.plan_stubs as bps
 from .energyscancore import en_scan_core
 from ..Functions.alignment import rotate_now
-from sst.CommonFunctions.functions import run_report, read_input
+from sst_funcs.printing import run_report, read_input
 
 run_report(__file__)
 

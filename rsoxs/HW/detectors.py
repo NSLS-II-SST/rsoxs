@@ -5,10 +5,10 @@ import bluesky_darkframes
 
 from ..Base.detectors import RSOXSGreatEyesDetector, SimGreatEyes
 from ..HW.motors import Det_S, Det_W, sam_Th, sam_X, sam_Y
-from sst.CommonFunctions.functions import boxed_text
+from sst_funcs.printing import boxed_text
 from ..HW.energy import en
 from ..startup import RE
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 
 
 run_report(__file__)

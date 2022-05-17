@@ -38,19 +38,19 @@ from ..HW.energy import (
     Mono_Scan_Stop,
     Mono_Scan_Stop_ev,
 )
-from sst.HW.mirrors import mir3
+from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det, saxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
-from sst.HW.diode import (
+from sst_hw.diode import (
     Shutter_open_time,
     Shutter_control,
     Shutter_enable,
     Shutter_trigger,
     shutter_open_set
 )
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 
 
 run_report(__file__)

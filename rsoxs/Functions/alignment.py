@@ -12,12 +12,12 @@ from ophyd import Device
 from ..startup import RE, db, bec, db0
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
-from sst.HW.diode import Shutter_enable, Shutter_control
+from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
 from ..HW.detectors import saxs_det, waxs_det, set_exposure
-from sst.HW.shutters import psh10
+from sst_hw.shutters import psh10
 from ..HW.energy import en, set_polarization
-from sst.CommonFunctions.functions import run_report
+from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 from ..HW.motors import (
     sam_X,
@@ -35,8 +35,8 @@ from ..HW.motors import (
     TEMZ
 )
 from ..HW.slits import slits1, slits2, slits3
-from sst.HW.motors import Exit_Slit
-from sst.CommonFunctions.functions import boxed_text, colored
+from sst_hw.motors import Exit_Slit
+from sst_funcs.printing import boxed_text, colored
 from .common_functions import args_to_string
 from .configurations import (WAXSNEXAFS,
         WAXS,

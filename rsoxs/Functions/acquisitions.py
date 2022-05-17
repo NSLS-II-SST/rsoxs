@@ -6,7 +6,7 @@ from .sample_spreadsheets import save_samplesxls
 from operator import itemgetter
 from ..HW.slackbot import rsoxs_bot
 from ..HW.signals import check_diodes
-from sst.CommonFunctions.functions import boxed_text, run_report, colored
+from sst_funcs.printing import boxed_text, run_report, colored
 from ..startup import db
 from ..Functions import rsoxs_queue_plans
 run_report(__file__)

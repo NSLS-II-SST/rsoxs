@@ -1,6 +1,6 @@
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
-from sst.HW.energy import (
+from sst_hw.energy import (
     EnPos,EnSimEPUPos,
     base_grating_to_250,
     base_grating_to_1200,
@@ -9,8 +9,8 @@ from sst.HW.energy import (
     mirror2
 )
 from ..HW.motors import sam_Th, sam_X, sam_Y
-from sst.CommonFunctions.functions import run_report
-from sst.HW.diode import Shutter_control
+from sst_funcs.printing import run_report
+from sst_hw.diode import Shutter_control
 from .signals import Sample_TEY
 from ..startup import bec
 
