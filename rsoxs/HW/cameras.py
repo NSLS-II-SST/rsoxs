@@ -1,5 +1,5 @@
 from sst_funcs.printing import run_report
-from sst_base.cameras import StandardProsilica, StandardProsilicaWithTIFFV33
+from sst_base.cameras import StandardProsilica, ColorProsilicaWithTIFFV33
 
 run_report(__file__)
 
@@ -7,7 +7,7 @@ Side_cam = StandardProsilica("XF:07ID1-ES:1{Scr:2}", name="RSoXS Sample Area Cam
 DetS_cam = StandardProsilica("XF:07ID1-ES:1{Scr:3}", name="WAXS Detector Area Camera")
 Izero_cam = StandardProsilica("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera")
 Sample_cam = StandardProsilica("XF:07ID1-ES:1{Scr:4}", name="RSoXS Sample Area Camera")
-SampleViewer_cam = StandardProsilicaWithTIFFV33(
+SampleViewer_cam = ColorProsilicaWithTIFFV33(
     "XF:07ID1-ES:1{Scr:5}",
     name="Sample Imager Detector Area Camera",
     read_attrs=["tiff"],
