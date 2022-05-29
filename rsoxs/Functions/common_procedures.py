@@ -21,6 +21,7 @@ from ..HW.energy import (
     mono_en,
     grating_to_1200,
     grating_to_250,
+    grating_to_rsoxs,
     set_polarization,
     epu_gap,
     epu_phase,
@@ -66,6 +67,8 @@ def buildeputable(
         yield from grating_to_1200(2.0,-6.3,0.0)
     elif grat == "250":
         yield from grating_to_250(2.0,-6.3,0.0)
+    elif grat == "rsoxs":
+        yield from grating_to_rsoxs(2.0,-6.3,0.0)
     bec.enable_plots()
 
     plt.close()
@@ -585,9 +588,9 @@ def isvar_scan():
 
 
 def vent():
-    yield from psh10.close_plan()
-    yield from gv28.close_plan()
-    yield from gv27a.close_plan()
+    yield from psh10.close()
+    yield from gv28.close()
+    yield from gv27a.close()
     yield from bps.mv(sam_Y, 349)
 
     print("waiting for you to close the load lock gate valve")

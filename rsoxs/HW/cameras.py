@@ -1,5 +1,5 @@
 from sst_funcs.printing import run_report
-from sst_base.cameras import StandardProsilica, ColorProsilicaWithTIFFV33
+from sst_base.cameras import StandardProsilicaWithTIFFV33, StandardProsilica, ColorProsilicaWithTIFFV33
 
 run_report(__file__)
 

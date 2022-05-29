@@ -42,6 +42,10 @@ from .configurations import (WAXSNEXAFS,
         WAXS,
         SAXS,
         SAXSNEXAFS,
+        SAXS_rsoxs_grating,
+        WAXS_rsoxs_grating,
+        SAXS_liquid,
+        WAXS_liquid,
         WAXSNEXAFS_SAXSslits,
         WAXS_SAXSslits,
         TEYNEXAFS)
@@ -821,9 +825,9 @@ def default_sample(name):
 
 
 def samxscan():
-    yield from psh10.open_plan()
+    yield from psh10.open()
     yield from bp.rel_scan([Beamstop_SAXS], sam_X, -2, 2, 41)
-    yield from psh10.close_plan()
+    yield from psh10.close()
 
 
 def spiralsearch(

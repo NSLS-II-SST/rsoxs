@@ -164,9 +164,9 @@ def save_samplesxls(bar, filename):
         "th": "th",
     }
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
-    sampledf.to_excel("temp.xls", index=False)
+    sampledf.to_excel("temp.xlsx", index=False)
 
-    df = pd.read_excel("temp.xls", na_values="")
+    df = pd.read_excel("temp.xlsx", na_values="")
     df.replace(np.nan, "", regex=True, inplace=True)
     testdict = df.to_dict(orient="records")
     for i, sam in enumerate(testdict):

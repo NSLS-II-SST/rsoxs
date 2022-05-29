@@ -28,6 +28,7 @@ from ..HW.energy import (
     mono_en,
     epu_gap,
     grating_to_250,
+    grating_to_rsoxs,
     grating_to_1200,
     set_polarization,
 )
@@ -188,6 +189,10 @@ def en_scan_core(
         if max(energies) > 1000:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1000:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
     else:
         valid = False
         validation += "invalid grating was chosen"
@@ -235,6 +240,8 @@ def en_scan_core(
         yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "250":
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     # set the polarization
     yield from set_polarization(pol)
     # set up the scan cycler
@@ -293,6 +300,8 @@ def NEXAFS_scan_core(
         yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "250":
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     # set motor offset if it's set
     if motorname is not "None":
         yield from bps.rel_set(eval(motorname), offset, wait=True)
@@ -381,6 +390,10 @@ def NEXAFS_fly_scan_core(
         if max(energies) > 1000:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1000:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
     else:
         valid = False
         validation += "invalid grating was chosen"
@@ -409,6 +422,8 @@ def NEXAFS_fly_scan_core(
         yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "250":
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     signals = [Beamstop_WAXS, Beamstop_SAXS, Izero_Mesh, Sample_TEY]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
@@ -506,6 +521,10 @@ def RSoXS_fly_scan_core(
         if max(energies) > 1000:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1000:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
     else:
         valid = False
         validation += "invalid grating was chosen"
@@ -545,6 +564,8 @@ def RSoXS_fly_scan_core(
         yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "250":
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
 
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
