@@ -33,12 +33,70 @@ def clean_up_md(arguments={}, md={}, **kwargs):
         {"plan_name": arguments["enscan_type"], "master_plan": arguments["master_plan"]}
     )
 
+def full_iron_scan_nd(
+    multiple=1.0,
+    grating="rsoxs",
+    master_plan=None,
+    md={},
+    enscan_type="full_iron_scan_nd",
+    **kwargs
+):
+    """
+    full_iron_scan_nd
+    @param master_plan: a category of higher level plan which you might want to sort by
+    @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
+    @param md: metadata to push through to lower level plans and eventually a bluesky document
+    @param multiple: default exposure times is multipled by this
+    @param grating: '1200' high energy or '250' low energy
+    @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
+    @return: Do a step scan and take images
+    """
+    plan_name = "full_iron_scan_nd"
+    # grab locals
+    arguments = dict(locals())
+    clean_up_md(arguments, md, **kwargs)
+
+    if (
+        len(
+            read_input(
+                "Starting an Iron energy scan hit enter in the next 3 seconds to abort",
+                "abort",
+                "",
+                3,
+            )
+        )
+        > 0
+    ):
+        return
+    # create a list of energies
+    energies = np.arange(690.0, 700.0, 5.0)
+    energies = np.append(energies, np.arange(700.0, 705.0, 1.0))
+    energies = np.append(energies, np.arange(705.0, 712.5, 0.25))
+    energies = np.append(energies, np.arange(712.5, 725.0, 0.5))
+    energies = np.append(energies, np.arange(725.0, 740.0, 1.0))
+    times = energies.copy()
+
+    # Define exposures times for different energy ranges
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
+    times *= multiple
+
+    # use these energies and exposure times to scan energy and record detectors and signals
+    yield from en_scan_core(
+        energies=energies,
+        times=times,
+        enscan_type=enscan_type,
+        md=md,
+        master_plan=master_plan,
+        grating=grating,
+        **kwargs
+    )
+
 
 def full_oxygen_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_oxygen_scan_nd",
@@ -50,8 +108,6 @@ def full_oxygen_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -74,15 +130,15 @@ def full_oxygen_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(510, 525, 1)
+    energies = np.arange(510, 525, 1.0)
     energies = np.append(energies, np.arange(525, 540, 0.2))
-    energies = np.append(energies, np.arange(540, 560, 1))
+    energies = np.append(energies, np.arange(540, 560, 1.0))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -92,8 +148,6 @@ def full_oxygen_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -101,9 +155,7 @@ def full_oxygen_scan_nd(
 
 def short_oxygen_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_oxygen_scan_nd",
@@ -115,8 +167,6 @@ def short_oxygen_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -138,16 +188,16 @@ def short_oxygen_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(510, 525, 2)
+    energies = np.arange(510, 525, 2.0)
     energies = np.append(energies, np.arange(525, 540, 0.5))
-    energies = np.append(energies, np.arange(540, 560, 2))
+    energies = np.append(energies, np.arange(540, 560, 2.0))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
     # times[energies<525] = 2
     # times[(energies < 540) & (energies >= 525)] = 5
     # times[energies >= 540] = 2
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -157,8 +207,6 @@ def short_oxygen_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -166,9 +214,7 @@ def short_oxygen_scan_nd(
 
 def short_zincl_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.96,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_zincl_scan_nd",
@@ -180,8 +226,6 @@ def short_zincl_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -208,7 +252,7 @@ def short_zincl_scan_nd(
     energies = np.append(energies, np.arange(1035.0, 1085.0, 3.0))
     times = energies.copy()
 
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -218,8 +262,6 @@ def short_zincl_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -227,9 +269,7 @@ def short_zincl_scan_nd(
 
 def very_short_oxygen_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="very_short_oxygen_scan_nd",
@@ -241,8 +281,6 @@ def very_short_oxygen_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -264,17 +302,17 @@ def very_short_oxygen_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(510, 525, 5)
+    energies = np.arange(510, 525, 5.0)
     energies = np.append(energies, np.arange(525, 531, 0.5))
-    energies = np.append(energies, np.arange(531, 535, 2))
-    energies = np.append(energies, np.arange(535, 560, 10))
+    energies = np.append(energies, np.arange(531, 535, 2.0))
+    energies = np.append(energies, np.arange(535, 560, 10.0))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
     # times[energies<525] = 2
     # times[(energies < 540) & (energies >= 525)] = 5
     # times[energies >= 540] = 2
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -284,8 +322,6 @@ def very_short_oxygen_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -293,9 +329,7 @@ def very_short_oxygen_scan_nd(
 
 def short_fluorine_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_fluorine_scan_nd",
@@ -307,8 +341,6 @@ def short_fluorine_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -340,7 +372,7 @@ def short_fluorine_scan_nd(
     # times[energies<525] = 2
     # times[(energies < 540) & (energies >= 525)] = 5
     # times[energies >= 540] = 2
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
     # use these energies and exposure times to scan energy and record detectors and signals
     yield from en_scan_core(
@@ -349,8 +381,6 @@ def short_fluorine_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -359,7 +389,7 @@ def short_fluorine_scan_nd(
 
 def full_iron_scan_nd(
     multiple=1.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_iron_scan_nd",
@@ -371,8 +401,6 @@ def full_iron_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -407,7 +435,7 @@ def full_iron_scan_nd(
     # times[energies<525] = 2
     # times[(energies < 540) & (energies >= 525)] = 5
     # times[energies >= 540] = 2
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
     # use these energies and exposure times to scan energy and record detectors and signals
     yield from en_scan_core(
@@ -424,9 +452,7 @@ def full_iron_scan_nd(
 
 def short_aluminum_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.96,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_aluminum_scan_nd",
@@ -438,8 +464,6 @@ def short_aluminum_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -471,7 +495,7 @@ def short_aluminum_scan_nd(
     # times[energies<525] = 2
     # times[(energies < 540) & (energies >= 525)] = 5
     # times[energies >= 540] = 2
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
     # use these energies and exposure times to scan energy and record detectors and signals
     yield from en_scan_core(
@@ -480,8 +504,6 @@ def short_aluminum_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -489,9 +511,7 @@ def short_aluminum_scan_nd(
 
 def full_nitrogen_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.93,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_nitrogen_scan_nd",
@@ -503,8 +523,6 @@ def full_nitrogen_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -532,9 +550,9 @@ def full_nitrogen_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 400] = 2
+    times[energies < 400] = 1
     # times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 400] = 2
+    times[energies >= 400] = 1
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -544,8 +562,6 @@ def full_nitrogen_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -553,9 +569,7 @@ def full_nitrogen_scan_nd(
 
 def short_nitrogen_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_nitrogen_scan_nd",
@@ -567,8 +581,6 @@ def short_nitrogen_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -592,16 +604,16 @@ def short_nitrogen_scan_nd(
         return
 
     # create a list of energies
-    energies = np.arange(385, 397, 1)
+    energies = np.arange(385, 397, 1.0)
     energies = np.append(energies, np.arange(397, 401, 0.2))
-    energies = np.append(energies, np.arange(401, 410, 1))
-    energies = np.append(energies, np.arange(410, 430, 2))
+    energies = np.append(energies, np.arange(401, 410, 1.0))
+    energies = np.append(energies, np.arange(410, 430, 2.0))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 400] = 2
+    times[energies < 400] = 1.0
     # times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 400] = 2
+    times[energies >= 400] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -611,8 +623,6 @@ def short_nitrogen_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -620,9 +630,7 @@ def short_nitrogen_scan_nd(
 
 def very_short_carbon_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="very_short_carbon_scan_nd",
@@ -634,8 +642,6 @@ def very_short_carbon_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -659,7 +665,7 @@ def very_short_carbon_scan_nd(
         return
 
     # create a list of energies
-    energies = np.arange(270, 282, 2)
+    energies = np.arange(270, 282, 2.0)
     energies = np.append(energies, np.arange(282, 286, 0.5))
     energies = np.append(energies, np.arange(286, 292, 0.5))
     energies = np.append(energies, np.arange(292, 306, 2))
@@ -668,9 +674,9 @@ def very_short_carbon_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -680,8 +686,6 @@ def very_short_carbon_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -689,9 +693,7 @@ def very_short_carbon_scan_nd(
 
 def short_carbon_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_carbon_scan_nd",
@@ -703,8 +705,6 @@ def short_carbon_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -728,7 +728,7 @@ def short_carbon_scan_nd(
         return
 
     # create a list of energies
-    energies = np.arange(270, 282, 2)
+    energies = np.arange(270, 282, 2.0)
     energies = np.append(energies, np.arange(282, 286, 0.25))
     energies = np.append(energies, np.arange(286, 292, 0.5))
     energies = np.append(energies, np.arange(292, 306, 1))
@@ -737,9 +737,9 @@ def short_carbon_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -749,8 +749,6 @@ def short_carbon_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -759,7 +757,7 @@ def short_carbon_scan_nd(
 
 def full_siliconk_scan_nd(
     multiple=1.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_siliconk_scan_nd",
@@ -771,8 +769,6 @@ def full_siliconk_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -796,11 +792,11 @@ def full_siliconk_scan_nd(
         return
 
     # create a list of energies
-    energies = np.arange(1830, 1870, 1)
+    energies = np.arange(1830, 1870, 1.0)
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies >= 286] = 2.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -820,9 +816,7 @@ def full_siliconk_scan_nd(
 
 def short_carbon_scan_nonaromatic(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_carbon_scan_nonaromatic",
@@ -834,8 +828,6 @@ def short_carbon_scan_nonaromatic(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -859,7 +851,7 @@ def short_carbon_scan_nonaromatic(
         return
 
     # create a list of energies
-    energies = np.arange(270, 282, 2)
+    energies = np.arange(270, 282, 2.0)
     energies = np.append(energies, np.arange(282, 286, 0.5))
     energies = np.append(energies, np.arange(286, 290, 0.25))
     energies = np.append(energies, np.arange(290, 292, 0.5))
@@ -869,9 +861,9 @@ def short_carbon_scan_nonaromatic(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -881,8 +873,6 @@ def short_carbon_scan_nonaromatic(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -892,7 +882,7 @@ def short_carbon_scan_nonaromatic(
 
 def collins_carbon_survey_fixedpol(
     multiple=1.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     energies = [270.0,283.5,284.5,285.3],
     times = [5.0,1.0,1.0,1.0],
@@ -908,8 +898,6 @@ def collins_carbon_survey_fixedpol(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -963,11 +951,9 @@ def collins_carbon_survey_fixedpol(
 
 
 def custom_rsoxs_scan(
-    energies=[((270, 340, 1.0), 2.0)],
+    energies=[((270, 340, 1.0), 1.0)],
     master_plan=None,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     md={},
     enscan_type="custom_rsoxs_scan",
     **kwargs
@@ -978,8 +964,6 @@ def custom_rsoxs_scan(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1016,19 +1000,15 @@ def custom_rsoxs_scan(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
 
 def custom_rotate_rsoxs_scan(
-    energies=[((270, 340, 1.0), 2.0)],
+    energies=[((270, 340, 1.0), 1.0)],
     angles = None,
     master_plan=None,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     md=None,
     enscan_type="custom_rotate_rsoxs_scan",
     **kwargs
@@ -1039,8 +1019,6 @@ def custom_rotate_rsoxs_scan(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1081,8 +1059,6 @@ def custom_rotate_rsoxs_scan(
                 enscan_type=enscan_type,
                 md=md,
                 master_plan=master_plan,
-                diode_range=diode_range,
-                m3_pitch=m3_pitch,
                 grating=grating,
                 angle=angle,
                 **kwargs
@@ -1094,8 +1070,6 @@ def custom_rotate_rsoxs_scan(
             enscan_type=enscan_type,
             md=md,
             master_plan=master_plan,
-            diode_range=diode_range,
-            m3_pitch=m3_pitch,
             grating=grating,
             **kwargs
         )
@@ -1104,9 +1078,7 @@ def custom_rotate_rsoxs_scan(
 
 def short_sulfurl_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.02,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_sulfurl_scan_nd",
@@ -1118,8 +1090,6 @@ def short_sulfurl_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1145,14 +1115,14 @@ def short_sulfurl_scan_nd(
     # Oct 2019, this pitch value seems to be optimal for carbon
 
     # create a list of energies
-    energies = np.arange(150, 160, 1)
+    energies = np.arange(150, 160, 1.0)
     energies = np.append(energies, np.arange(160, 170, 0.25))
-    energies = np.append(energies, np.arange(170, 200, 1))
+    energies = np.append(energies, np.arange(170, 200, 1.0))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 170] = 2
-    times[energies >= 170] = 2
+    times[energies < 170] = 1.0
+    times[energies >= 170] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1162,8 +1132,6 @@ def short_sulfurl_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1171,9 +1139,7 @@ def short_sulfurl_scan_nd(
 
 def focused_carbon_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="focused_carbon_scan_nd",
@@ -1185,8 +1151,6 @@ def focused_carbon_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1210,7 +1174,7 @@ def focused_carbon_scan_nd(
         return
 
     # create a list of energies
-    energies = np.arange(270, 282, 5)
+    energies = np.arange(270, 282, 5.0)
     energies = np.append(energies, np.arange(282, 286, 0.2))
     energies = np.append(energies, np.arange(286, 292, 0.5))
     energies = np.append(energies, np.arange(292, 306, 1))
@@ -1219,9 +1183,9 @@ def focused_carbon_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1231,255 +1195,6 @@ def focused_carbon_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
-        grating=grating,
-        **kwargs
-    )
-
-
-def g_carbon_scan_nd(
-    multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
-    master_plan=None,
-    md={},
-    enscan_type="g_carbon_scan_nd",
-    **kwargs
-):
-    """
-    g_carbon_scan_nd
-    @param master_plan: a category of higher level plan which you might want to sort by
-    @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
-    @param md: metadata to push through to lower level plans and eventually a bluesky document
-    @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
-    @param grating: '1200' high energy or '250' low energy
-    @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
-    @return: Do a step scan and take images
-    """
-    plan_name = "g_carbon_scan_nd"
-    # grab locals
-    arguments = dict(locals())
-    clean_up_md(arguments, md, **kwargs)
-    if (
-        len(
-            read_input(
-                "Starting a Carbon energy scan hit enter in the next 3 seconds to abort",
-                "abort",
-                "",
-                3,
-            )
-        )
-        > 0
-    ):
-        return
-    # create a list of energies
-    energies = np.array([270, 283.5, 284.75, 285.2, 286.5])
-    times = energies.copy()
-
-    # Define exposures times for different energy ranges
-    times[energies < 2820] = 5
-    times *= multiple
-
-    # use these energies and exposure times to scan energy and record detectors and signals
-    yield from en_scan_core(
-        energies=energies,
-        times=times,
-        enscan_type=enscan_type,
-        md=md,
-        master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
-        grating=grating,
-        **kwargs
-    )
-
-
-def t_carbon_scan_nd(
-    multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
-    master_plan=None,
-    md={},
-    enscan_type="t_carbon_scan_nd",
-    **kwargs
-):
-    """
-    t_carbon_scan_nd
-    @param master_plan: a category of higher level plan which you might want to sort by
-    @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
-    @param md: metadata to push through to lower level plans and eventually a bluesky document
-    @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
-    @param grating: '1200' high energy or '250' low energy
-    @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
-    @return: Do a step scan and take images
-    """
-    plan_name = "t_carbon_scan_nd"
-    # grab locals
-    arguments = dict(locals())
-    clean_up_md(arguments, md, **kwargs)
-    if (
-        len(
-            read_input(
-                "Starting a Carbon energy scan hit enter in the next 3 seconds to abort",
-                "abort",
-                "",
-                3,
-            )
-        )
-        > 0
-    ):
-        return
-    # create a list of energies
-    energies = np.array([270, 283, 284.3, 284.9, 285.5, 286, 286.5, 287])
-    times = energies.copy()
-
-    # Define exposures times for different energy ranges
-    times[energies < 2820] = 5
-    times *= multiple
-
-    # use these energies and exposure times to scan energy and record detectors and signals
-    yield from en_scan_core(
-        energies=energies,
-        times=times,
-        enscan_type=enscan_type,
-        md=md,
-        master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
-        grating=grating,
-        **kwargs
-    )
-
-
-def sufficient_carbon_scan_nd(
-    multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
-    master_plan=None,
-    md={},
-    enscan_type="sufficient_carbon_scan_nd",
-    **kwargs
-):
-    """
-    sufficient_carbon_scan_nd
-    @param master_plan: a category of higher level plan which you might want to sort by
-    @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
-    @param md: metadata to push through to lower level plans and eventually a bluesky document
-    @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
-    @param grating: '1200' high energy or '250' low energy
-    @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
-    @return: Do a step scan and take images
-    """
-    plan_name = "sufficient_carbon_scan_nd"
-    # grab locals
-    arguments = dict(locals())
-    clean_up_md(arguments, md, **kwargs)
-    if (
-        len(
-            read_input(
-                "Starting a Carbon energy scan hit enter in the next 3 seconds to abort",
-                "abort",
-                "",
-                3,
-            )
-        )
-        > 0
-    ):
-        return
-    # create a list of energies
-    energies = np.arange(270, 282, 1)
-    energies = np.append(energies, np.arange(282, 286, 0.1))
-    energies = np.append(energies, np.arange(286, 292, 0.25))
-    energies = np.append(energies, np.arange(292, 305, 1))
-    energies = np.append(energies, np.arange(305, 320, 5))
-    energies = np.append(energies, np.arange(320, 350, 10))
-    times = energies.copy()
-
-    # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 286] = 2
-    times *= multiple
-
-    # use these energies and exposure times to scan energy and record detectors and signals
-    yield from en_scan_core(
-        energies=energies,
-        times=times,
-        enscan_type=enscan_type,
-        md=md,
-        master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
-        grating=grating,
-        **kwargs
-    )
-
-
-def picky_carbon_scan_nd(
-    multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
-    master_plan=None,
-    md={},
-    enscan_type="picky_carbon_scan_nd",
-    **kwargs
-):
-    """
-    picky_carbon_scan_nd
-    @param master_plan: a category of higher level plan which you might want to sort by
-    @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
-    @param md: metadata to push through to lower level plans and eventually a bluesky document
-    @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
-    @param grating: '1200' high energy or '250' low energy
-    @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
-    @return: Do a step scan and take images
-    """
-    plan_name = "picky_carbon_scan_nd"
-    # grab locals
-    arguments = dict(locals())
-    clean_up_md(arguments, md, **kwargs)
-    if (
-        len(
-            read_input(
-                "Starting a Carbon energy scan hit enter in the next 3 seconds to abort",
-                "abort",
-                "",
-                3,
-            )
-        )
-        > 0
-    ):
-        return
-    # create a list of energies
-    energies = np.arange(270, 285, 1)
-    times = energies.copy()
-
-    # Define exposures times for different energy ranges
-    times[energies < 2820] = 1
-    times *= multiple
-
-    # use these energies and exposure times to scan energy and record detectors and signals
-    yield from en_scan_core(
-        energies=energies,
-        times=times,
-        enscan_type=enscan_type,
-        md=md,
-        master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1487,9 +1202,7 @@ def picky_carbon_scan_nd(
 
 def full_carbon_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_carbon_scan_nd",
@@ -1501,8 +1214,6 @@ def full_carbon_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1533,9 +1244,9 @@ def full_carbon_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1545,8 +1256,6 @@ def full_carbon_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1554,9 +1263,7 @@ def full_carbon_scan_nd(
 
 def full_carbon_scan_nonaromatic(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_carbon_scan_nonaromatic",
@@ -1568,8 +1275,6 @@ def full_carbon_scan_nonaromatic(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1600,9 +1305,9 @@ def full_carbon_scan_nonaromatic(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1612,8 +1317,6 @@ def full_carbon_scan_nonaromatic(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1621,9 +1324,7 @@ def full_carbon_scan_nonaromatic(
 
 def full_fluorine_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.89,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_fluorine_scan_nd",
@@ -1635,8 +1336,6 @@ def full_fluorine_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1662,9 +1361,9 @@ def full_fluorine_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1674,8 +1373,6 @@ def full_fluorine_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1683,9 +1380,7 @@ def full_fluorine_scan_nd(
 
 def veryshort_fluorine_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.99,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="veryshort_fluorine_scan_nd",
@@ -1697,8 +1392,6 @@ def veryshort_fluorine_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1720,14 +1413,14 @@ def veryshort_fluorine_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(680, 700, 1)
+    energies = np.arange(680, 700, 1.0)
     energies = np.append(energies, np.arange(700, 720.5, 5))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 2
-    times[energies >= 286] = 2
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1737,8 +1430,6 @@ def veryshort_fluorine_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1746,9 +1437,7 @@ def veryshort_fluorine_scan_nd(
 
 def full_ca_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_ca_scan_nd",
@@ -1760,8 +1449,6 @@ def full_ca_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1783,7 +1470,7 @@ def full_ca_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(320, 340, 5)
+    energies = np.arange(320, 340, 5.0)
     energies = np.append(energies, np.arange(340, 345, 1))
     energies = np.append(energies, np.arange(345, 349, 0.5))
     energies = np.append(energies, np.arange(349, 349.5, 0.1))
@@ -1794,7 +1481,7 @@ def full_ca_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 400] = 3
+    times[energies < 400] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1804,8 +1491,6 @@ def full_ca_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1813,9 +1498,7 @@ def full_ca_scan_nd(
 
 def short_calcium_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="short_calcium_scan_nd",
@@ -1827,8 +1510,6 @@ def short_calcium_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1850,13 +1531,13 @@ def short_calcium_scan_nd(
     ):
         return
     # create a list of energies
-    energies = np.arange(320, 340, 5)
+    energies = np.arange(320, 340, 5.0)
     energies = np.append(energies, np.arange(340, 345, 1))
     energies = np.append(energies, np.arange(345, 355, 0.5))
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 400] = 2
+    times[energies < 400] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1866,8 +1547,6 @@ def short_calcium_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1875,9 +1554,7 @@ def short_calcium_scan_nd(
 
 def full_carbon_calcium_scan_nd(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=8.0,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="full_carbon_calcium_scan_nd",
@@ -1889,8 +1566,6 @@ def full_carbon_calcium_scan_nd(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1925,10 +1600,10 @@ def full_carbon_calcium_scan_nd(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[energies < 282] = 2
-    times[(energies < 286) & (energies >= 282)] = 5
-    times[energies >= 286] = 2
-    times[energies >= 320] = 10
+    times[energies < 282] = 1.0
+    times[(energies < 286) & (energies >= 282)] = 1.0
+    times[energies >= 286] = 1.0
+    times[energies >= 320] = 3.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1938,8 +1613,6 @@ def full_carbon_calcium_scan_nd(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
         **kwargs
     )
@@ -1947,8 +1620,6 @@ def full_carbon_calcium_scan_nd(
 
 def survey_scan_verylowenergy(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.93,
     grating="250",
     master_plan=None,
     md={},
@@ -1961,8 +1632,6 @@ def survey_scan_verylowenergy(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -1988,7 +1657,7 @@ def survey_scan_verylowenergy(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -1998,18 +1667,15 @@ def survey_scan_verylowenergy(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
+        lockscan=False,
         **kwargs
     )
 
 
 def survey_scan_lowenergy(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.91,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="survey_scan_lowenergy",
@@ -2021,8 +1687,6 @@ def survey_scan_lowenergy(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -2048,7 +1712,7 @@ def survey_scan_lowenergy(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -2058,18 +1722,15 @@ def survey_scan_lowenergy(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
+        lockscan=False,
         **kwargs
     )
 
 
 def survey_scan_highenergy(
-    multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.89,
-    grating="1200",
+    multiple=1.0,\
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="survey_scan_highenergy",
@@ -2083,8 +1744,6 @@ def survey_scan_highenergy(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -2110,7 +1769,7 @@ def survey_scan_highenergy(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -2120,18 +1779,15 @@ def survey_scan_highenergy(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
+        lockscan=False,
         **kwargs
     )
 
 
 def survey_scan_veryhighenergy(
     multiple=1.0,
-    diode_range=8,
-    m3_pitch=7.89,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="survey_scan_veryhighenergy",
@@ -2143,8 +1799,6 @@ def survey_scan_veryhighenergy(
     @param enscan_type: the granular level plan you might want to sort by - generally for timing or data lookup
     @param md: metadata to push through to lower level plans and eventually a bluesky document
     @param multiple: default exposure times is multipled by this
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -2170,7 +1824,7 @@ def survey_scan_veryhighenergy(
     times = energies.copy()
 
     # Define exposures times for different energy ranges
-    times[:] = 2.0
+    times[:] = 1.0
     times *= multiple
 
     # use these energies and exposure times to scan energy and record detectors and signals
@@ -2180,9 +1834,8 @@ def survey_scan_veryhighenergy(
         enscan_type=enscan_type,
         md=md,
         master_plan=master_plan,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         grating=grating,
+        lockscan=False,
         **kwargs
     )
 
@@ -2191,9 +1844,7 @@ def cdsaxs_scan(
     energies=[(250, 2), (270, 2), (280, 2), (285, 2), (300, 2)],
     angles=(-60, 61, 2),
     master_plan="cdsaxs_scan",
-    diode_range=8,
-    m3_pitch=8.00,
-    grating="1200",
+    grating="rsoxs",
     md={},
     enscan_type="cdsaxs_scan",
     **kwargs
@@ -2206,8 +1857,6 @@ def cdsaxs_scan(
     @param multiple: default exposure times is multipled by this
     @param energies: list of touples of energy, exposure time
     @param angles: list of angles.  at each angle, the energy list will be collected
-    @param diode_range: integer range for the dilde
-    @param m3_pitch: pitch value for M3 for this energy range - check before scans
     @param grating: '1200' high energy or '250' low energy
     @param kwargs: all extra parameters for general scans - see the inputs for en_scan_core
     @return: Do a step scan and take images
@@ -2243,8 +1892,6 @@ def cdsaxs_scan(
             enscan_type=enscan_type,
             md=md,
             master_plan=master_plan,
-            diode_range=diode_range,
-            m3_pitch=m3_pitch,
             grating=grating,
             **kwargs
         )

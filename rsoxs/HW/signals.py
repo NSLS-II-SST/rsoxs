@@ -56,6 +56,9 @@ diode_i400_enable = EpicsSignal(
 Slit1_i400_npnts = EpicsSignal(
     "XF:07ID-ES1{Slt1:I400-1}:TRIGPOINTS_SP", name="RSoXS Slit 1 i400 trigger points", kind="normal"
 ,string=True)
+Slit1_i400_read_time = EpicsSignal(
+    "XF:07ID-ES1{Slt1:I400-1}:PERIOD_SP", name="RSoXS Slit 1 i400  read time", kind="normal"
+,string=True)
 diode_i400_npnts = EpicsSignal(
     "XF:07ID-ES1{DMR:I400-1}:TRIGPOINTS_SP", name="RSoXS diode i400 trigger points", kind="normal"
 ,string=True)
@@ -71,6 +74,9 @@ Slit1_i400_accum = EpicsSignal(
 diode_i400_accum = EpicsSignal(
     "XF:07ID-ES1{DMR:I400-1}:ACCUM_SP", name="RSoXS diode i400  accumulation mode", kind="normal"
 ,string=True)
+diode_i400_read_time = EpicsSignal(
+    "XF:07ID-ES1{DMR:I400-1}:PERIOD_SP", name="RSoXS diode i400  read time", kind="normal"
+,string=True)
 
 
 diode_i400_PDU = EpicsSignal(
@@ -80,33 +86,39 @@ diode_i400_PDU = EpicsSignal(
 
 
 def setup_slit1_i400():
-    yield from bps.mv(slit1_i400_enable, 'Disabled')
+    yield from bps.mv(Slit1_i400_enable, 'Disabled')
     try:
-        yield from bps.mv(slit1_i400_cap, '1000pF',timeout=1)
+        yield from bps.mv(Slit1_i400_cap, '1000pF',timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(slit1_i400_npnts, 940,timeout=1)
+        yield from bps.mv(Slit1_i400_npnts, 940,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(slit1_i400_mode, 'Trigger Count',timeout=1)
+        yield from bps.mv(Slit1_i400_read_time, 0.001,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(slit1_i400_accum, 'Interpolate',timeout=1)
+        yield from bps.mv(Slit1_i400_mode, 'Trigger Count',timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(slit1_i400_enable, 'Enabled',timeout=1)
+        yield from bps.mv(Slit1_i400_accum, 'Interpolate',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(Slit1_i400_enable, 'Enabled',timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
@@ -123,13 +135,59 @@ def setup_diode_i400():
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(diode_i400_npnts, 940,timeout=1)
+        yield from bps.mv(diode_i400_npnts, 200,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
         yield from bps.mv(diode_i400_mode, 'Trigger Count',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_read_time, 0.001,timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_accum, 'Interpolate',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_enable, 'Enabled',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+
+
+def High_Gain_diode_i400():
+    yield from bps.mv(diode_i400_enable, 'Disabled')
+    try:
+        yield from bps.mv(diode_i400_cap, '10pF',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_npnts, 20,timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_mode, 'Trigger Count',timeout=1)
+    except FailedStatus:
+        pass
+    except StatusTimeoutError:
+        pass
+    try:
+        yield from bps.mv(diode_i400_read_time, 0.01,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
