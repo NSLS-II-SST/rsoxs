@@ -770,8 +770,8 @@ def offset_bar(bar, xoff, yoff, zoff, thoff):
 
 def default_sample(name):
     return {
-        "proposal_id": "C-308244",  # we set the default folder here - most data shouldn't be taken
-        "saf_id": 306821,
+        "data_session": "C-310704",  # we set the default folder here - most data shouldn't be taken
+        "SAF": 309227,
         "institution": "NIST",
         "acquisitions": [],
         "components": "",
@@ -802,10 +802,6 @@ def default_sample(name):
         "angle": 90,
         "density": "",
         "location": [
-            {"motor": "x", "position": 3.71, "order": 0},
-            {"motor": "y", "position": -186.3, "order": 0},
-            {"motor": "z", "position": 0, "order": 0},
-            {"motor": "th", "position": 90, "order": 0},
         ],
         "project_desc": "Calibration",
         "samp_user_id": 1,

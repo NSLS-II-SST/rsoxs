@@ -14,7 +14,6 @@ for path in paths:
 import os
 import nslsii
 import time
-from pathlib import Path
 import appdirs
 
 from sst_funcs.printing import run_report
@@ -116,3 +115,5 @@ db0 = Broker.named("rsoxs")
 
 bec.disable_table()
 bec.disable_plots()
+
+RE.md['scan_id'] = int(RE.md['scan_id'])
