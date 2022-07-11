@@ -66,6 +66,35 @@ else:
 from nslsii.md_dict import RunEngineRedisDict
 RE.md = RunEngineRedisDict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
 
+
+import re
+
+data_session_re = re.compile(r"^pass-\d+$")
+
+def md_validator(md):
+    """ Validate RE.md before a plan runs.
+
+    This function validates only "data_session", which
+    must be matched by the regular expression "^pass-\d+$".
+    """
+
+    if "data_session" in md:
+        # if there is a "data_session" key
+        # its value must be validated
+        data_session_value = md["data_session"]
+        data_session_match = data_session_re.match(data_session_value)
+        if data_session_match is None:
+            raise ValueError(
+                f"RE.md['data_session']='{data_session_value}' "
+                f"is not matched by regular expression '{data_session_re.pattern}'")
+    else:
+        # if there is no "data_session" key that's ok
+        pass
+
+# md_validator will be called before a plan runs
+RE.md_validator = md_validator
+
+
 # === END PERSISTENT DICT CODE ===
 
 
