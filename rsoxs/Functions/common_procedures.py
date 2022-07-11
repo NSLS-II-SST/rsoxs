@@ -10,6 +10,7 @@ from bluesky.run_engine import Msg
 from ..HW.signals import (
     Izero_Mesh,
     Beamstop_WAXS,
+    Sample_TEY,
     Beamstop_SAXS,
     Slit1_Current_Top,
     Slit1_Current_Bottom,
@@ -22,6 +23,8 @@ from ..HW.energy import (
     grating_to_1200,
     grating_to_250,
     grating_to_rsoxs,
+    grating,
+    mirror2,
     set_polarization,
     epu_gap,
     epu_phase,
@@ -37,6 +40,7 @@ from sst_hw.shutters import psh10
 from sst_hw.vacuum import rsoxs_ll_gpwr
 from ..startup import bec
 from sst_funcs.printing import run_report
+from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
 
 run_report(__file__)
 
@@ -606,3 +610,52 @@ def vent():
         "Should be safe to begin vent by pressing right most button of BOTTOM turbo controller once"
     )
     print("")
+
+
+def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
+    #RE(load_sample(sample_by_name(bar, 'HOPG')))
+    yield from bps.mv(en.polarization, pol)
+    yield from bps.mv(en,energy)
+    Sample_TEY.kind = 'hinted'
+    Izero_Mesh.kind = 'normal'
+    mirror_measured = []
+    grating_measured = []
+    energy_measured = []
+    m_measured = []
+    bec.enable_plots()
+    for cff,m_order in zip(cs,ms):
+        m_set, g_set = get_mirror_grating_angles(291.65, cff, k, m_order)
+        yield from bps.mv(grating, g_set, mirror2, m_set)
+        peaklist = []
+        yield from bps.mv(Shutter_control, 1)
+        yield from tune_max(
+            [Izero_Mesh, Sample_TEY],
+            ["RSoXS Sample Current"],
+            grating,
+            g_set - .1,
+            g_set + .1,
+            0.00001,
+            50,
+            5,
+            True,
+            peaklist
+        )
+        yield from bps.mv(Shutter_control, 0)
+        grating_measured.append(peaklist[0][0]['Mono Grating']['value'])
+        mirror_measured.append(mirror2.read()['Mono Mirror']['value'])
+        energy_measured.append(291.65)
+        m_measured.append(m_order)
+    print(f'mirror positions: {mirror_measured}')
+    print(f'grating positions: {grating_measured}')
+    print(f'energy positions: {energy_measured}')
+    print(f'orders: {m_measured}')
+    fit = find_best_offsets(mirror_measured,grating_measured,m_measured,energy_measured,k)
+    print(fit)
+    print(fit.x)
+    return fit
+
+
+def set_pgm_offsets(mirror_offset,grating_offset):
+    yield from bps.mvr(mirror2.user_offset,-mirror_offset) # right now we have to set the negative of the fit value as the delta in the offset
+    yield from bps.mvr(grating.user_offset,-grating_offset)
+
