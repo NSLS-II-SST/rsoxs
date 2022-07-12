@@ -45,6 +45,7 @@ from .configurations import (WAXSNEXAFS,
         SAXS_rsoxs_grating,
         WAXS_rsoxs_grating,
         SAXSNEXAFS_rsoxs_grating,
+        WAXSNEXAFS_rsoxs_grating,
         SAXS_liquid,
         WAXS_liquid,
         WAXSNEXAFS_SAXSslits,
@@ -61,9 +62,9 @@ def user():
         text += "   proposal ID:           " + colored(
             "{}".format(str(RE.md["proposal_id"])).center(50, " "), "yellow"
         )
-    if len(str(RE.md["saf_id"])) > 0:
-        text += "\n   saf ID:              " + colored(
-            "{}".format(str(RE.md["saf_id"])).center(50, " "), "yellow"
+    if len(str(RE.md["SAF"])) > 0:
+        text += "\n   SAF ID:              " + colored(
+            "{}".format(str(RE.md["SAF"])).center(50, " "), "yellow"
         )
     if len(RE.md["user_name"]) > 0:
         text += "\n   User Name:           " + colored(
@@ -72,10 +73,6 @@ def user():
     if len(RE.md["user_email"]) > 0:
         text += "\n   User Email:          " + colored(
             "{}".format(RE.md["user_name"]).center(50, " "), "yellow"
-        )
-    if len(RE.md["user_start_date"]) > 0:
-        text += "\n   User Start Date:     " + colored(
-            "{}".format(RE.md["user_start_date"]).center(50, " "), "yellow"
         )
     if len(RE.md["user_id"]) > 0:
         text += "\n   User ID:             " + colored(
@@ -103,9 +100,9 @@ def sample():
         text += "   proposal ID:           " + colored(
             "{}".format(RE.md["proposal_id"]).center(48, " "), "cyan"
         )
-    if len(str(RE.md["saf_id"])) > 0:
+    if len(str(RE.md["SAF"])) > 0:
         text += "\n   SAF id:                " + colored(
-            "{}".format(RE.md["saf_id"]).center(48, " "), "cyan"
+            "{}".format(RE.md["SAF"]).center(48, " "), "cyan"
         )
     if len(str(RE.md["user_name"])) > 0:
         text += "\n   User Name:             " + colored(
@@ -196,9 +193,9 @@ def newuser():
     if proposal_id != "":
         RE.md["proposal_id"] = proposal_id
 
-    SAF_id = input("Your SAF id ({}): ".format(RE.md["saf_id"]))
+    SAF_id = input("Your SAF id ({}): ".format(RE.md["SAF"]))
     if SAF_id != "":
-        RE.md["saf_id"] = SAF_id
+        RE.md["SAF"] = SAF_id
 
     institution = input("Your institution ({}): ".format(RE.md["institution"]))
     if institution != "":
@@ -226,10 +223,6 @@ def newuser():
     if project_desc != "":
         RE.md["project_desc"] = project_desc
     # if new, add user to database get unique ID.
-
-    dt = datetime.datetime.now()
-    user_start_date = dt.strftime("%Y-%m-%d")
-    RE.md["user_start_date"] = user_start_date
     user_id = "0"
     RE.md["user_id"] = user_id
     user()
@@ -334,7 +327,7 @@ def get_sample_dict(acq=[], locations=None):
     sample_date = RE.md["sample_date"]
     project_name = RE.md["project_name"]
     proposal_id = RE.md["proposal_id"]
-    saf_id = RE.md["saf_id"]
+    saf_id = RE.md["SAF"]
     institution = RE.md["institution"]
     project_desc = RE.md["project_desc"]
     samp_user_id = RE.md["samp_user_id"]
@@ -358,7 +351,7 @@ def get_sample_dict(acq=[], locations=None):
         "sample_id": sample_id,
         "sample_priority": sample_priority,
         "proposal_id": proposal_id,
-        "saf_id": saf_id,
+        "SAF": saf_id,
         "institution": institution,
         "sample_set": sample_set,
         "sample_date": sample_date,
@@ -386,10 +379,9 @@ def get_sample_dict(acq=[], locations=None):
 def user_dict(
     user_id=RE.md["user_id"],
     proposal_id=RE.md["proposal_id"],
-    saf_id=RE.md["saf_id"],
+    saf_id=RE.md["SAF"],
     institution=RE.md["institution"],
     user_name=RE.md["user_name"],
-    user_start_date=RE.md["user_start_date"],
     project_name=RE.md["project_name"],
     project_desc=RE.md["project_desc"],
 ):
@@ -399,7 +391,6 @@ def user_dict(
         "saf_id": saf_id,
         "institution": institution,
         "user_name": user_name,
-        "user_start_date": user_start_date,
         "project_name": project_name,
         "project_desc": project_desc,
     }
@@ -467,9 +458,9 @@ def newsample():
     if institution != "":
         RE.md["institution"] = institution
 
-    saf_id = input("Your SAF ID number from PASS ({}): ".format(RE.md["saf_id"]))
+    saf_id = input("Your SAF ID number from PASS ({}): ".format(RE.md["SAF"]))
     if saf_id != "":
-        RE.md["saf_id"] = saf_id
+        RE.md["SAF"] = saf_id
 
     sample_set = input(
         "What set does this sample belong to ({}): ".format(RE.md["sample_set"])

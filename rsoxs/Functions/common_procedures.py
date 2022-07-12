@@ -67,12 +67,12 @@ def buildeputable(
     mono_en.kind = "hinted"
     epu_gap.kind = 'hinted'
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
-    if grat == "1200":
-        yield from grating_to_1200(2.0,-6.3,0.0)
-    elif grat == "250":
-        yield from grating_to_250(2.0,-6.3,0.0)
-    elif grat == "rsoxs":
-        yield from grating_to_rsoxs(2.0,-6.3,0.0)
+    # if grat == "1200":
+    #     yield from grating_to_1200(2.0,-6.3,0.0)
+    # elif grat == "250":
+    #     yield from grating_to_250(2.0,-6.3,0.0)
+    # elif grat == "rsoxs":
+    #     yield from grating_to_rsoxs(2.0,-6.3,0.0)
     bec.enable_plots()
 
     plt.close()
@@ -80,7 +80,7 @@ def buildeputable(
     plt.close()
     plt.close()
 
-    yield from bps.mv(sam_Y,30)
+    #yield from bps.mv(sam_Y,30)
     if mode == "C":
         yield from bps.mv(epu_mode, 0)
     elif mode == "CW":
@@ -130,7 +130,7 @@ def buildeputable(
                 "PeakCurrentBS": heightsbs,
                 }
         dataframe = pd.DataFrame(data=data)
-        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2021oct_" + name + ".csv")
+        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2022July_" + name + ".csv")
         count += 1
         if count > 20:
             count = 0
@@ -145,26 +145,28 @@ def buildeputable(
     # print(ens,gaps)
 
 
-def do_some_eputables_2021_en():
+def do_some_eputables_2022_en():
 
-    yield from load_configuration("WAXSNEXAFS")
+    yield from load_configuration("WAXSNEXAFS_rsoxs_grating")
 
     #yield from buildeputable(105, 850, 10, 2, 14000, 15000,'C','250','C_250')
     #yield from buildeputable(105, 850, 10, 2, 14000, 15000,'CW','250','CW_250')
-    #yield from buildeputable(200, 1200, 10, 2, 20000, 15000, 'C', '1200', 'C_1200')
-    #yield from buildeputable(200, 1200, 10, 2, 20000, 15000, 'CW', '1200', 'CW_1200')
+    #yield from buildeputable(105, 1200, 10, 2, 14000, 15000, 'C', '1200', 'C_1200')
+    #yield from buildeputable(105, 1200, 10, 2, 14000, 15000, 'CW', '1200', 'CW_1200')
 
     #yield from buildeputable(200, 1300, 10, 2, 23704, 0, "L", "1200", "mL0_1200")
     #yield from buildeputable(200, 1300, 10, 2, 23148, 4000, "L", "1200", "mL4_1200")
-    angles = [10,20,30,40,50,60,70,80]
-    phases = [6688.9843608114115,
+    angles = [0,10,20,30,40,50,60,70,80,90]
+    phases = [0,
+              6688.9843608114115,
               10781.54138668513,
               13440.927684320242,
               15705.851176691127,
               17575.669146953864,
               19598.02761805813,
               21948.115314738126,
-              24889.02500863509]
+              24889.02500863509,
+              29500]
 
 #    startingens = [95,125,155,185,200,200,185,160]
 #    for angle,ph,sten in zip(angles[5:],phases[5:],startingens[5:]):
@@ -172,19 +174,19 @@ def do_some_eputables_2021_en():
 #    for angle,ph,sten in zip(angles,phases,startingens):
 #        yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L3", "250", f'linear{180-angle}deg_250')
 
-    startgaps = [33271.94497611413,
-                29889.652490430373,
-                27174.560460333993,
-                24965.844827621615,
-                23564.225919905086,
-                22983.602525718445,
-                22874.408275853402,
-                23677.309482826902]
-
-    for angle,ph,stgp in zip(angles[6:],phases[6:],startgaps[6:]):
-        yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
-    for angle,ph,stgp in zip(angles,phases,startgaps):
-        yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
+    # startgaps = [33271.94497611413,
+    #             29889.652490430373,
+    #             27174.560460333993,
+    #             24965.844827621615,
+    #             23564.225919905086,
+    #             22983.602525718445,
+    #             22874.408275853402,
+    #             23677.309482826902]
+    #
+    # for angle,ph,stgp in zip(angles,phases,startgaps):
+    #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
+    # for angle,ph,stgp in zip(angles,phases,startgaps):
+    #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
 
 
     angles = [0,10,20,30,40,50,60,70,80,90]
@@ -197,13 +199,17 @@ def do_some_eputables_2021_en():
               21948.115314738126,
               24889.02500863509,29500]
     startingens = [70,95,125,155,185,200,200,185,160,140]
+    for angle,ph,sten in zip(angles,phases,startingens):
+        yield from buildeputable(sten, 1300, 20, 5, 14000, ph, "L", "1200", f'linear{angle}deg_1200_H1')
+    for angle,ph,sten in zip(angles,phases,startingens):
+        yield from buildeputable(sten, 1300, 20, 5, 14000, ph, "L3", "1200", f'linear{180-angle}deg_1200_H1')
     for angle,ph,sten in zip(angles[3:],phases[3:],startingens[3:]):
         yield from buildeputable(sten*3, 2200, 20, 5, 14000, ph, "L", "1200", f'linear{angle}deg_1200_H3')
     for angle,ph,sten in zip(angles,phases,startingens):
         yield from buildeputable(sten*3, 2200, 20, 5, 14000, ph, "L3", "1200", f'linear{180-angle}deg_1200_H3')
 
-    yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'C', '1200', 'CW_250_H3')
-    yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_250_H3')
+    #yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'C', '1200', 'CW_250_H3')
+    #yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_250_H3')
 
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
@@ -324,71 +330,45 @@ def do_2021_eputables3():
     mono_en.kind = "hinted"
     mono_en.read_attrs = ["readback"]
     bec.enable_plots()  # TODO: this will work, but not needed - need to move all plotting to a seperate app
-    yield from load_configuration("WAXSNEXAFS")
+    yield from load_configuration("WAXSNEXAFS_rsoxs_grating")
     yield from bps.mv(slits1.hsize, 1)
     yield from bps.mv(slits2.hsize, 1)
     yield from bps.mv(epu_mode, 3)
 
-    yield from grating_to_250()
+    yield from buildeputablegaps(
+        14000, 35000, 500, 1, 80, "_July2020_phase4000_0", 0, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase29500_1200", 29500, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase26000_1200", 26000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase23000_1200", 23000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase21000_1200", 21000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase18000_1200", 18000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase15000_1200", 15000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 30000, 500, 2, 150, "_July2020_phase12000_1200", 12000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 35000, 500, 1, 80, "_July2020_phase8000_1200", 8000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 35000, 500, 1, 80, "_July2020_phase4000_1200", 4000, 1200
+    )
+    yield from buildeputablegaps(
+        14000, 35000, 500, 1, 80, "_July2020_phase4000_1200", 4000, 1200
+    )
 
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase29500_250", 29500, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase26000_250", 26000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase25000_250", 23000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase21000_250", 21000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase18000_250", 18000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase15000_250", 15000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_May_H1m3phase12000_250", 12000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_May_H1m3phase8000_250", 8000, 250
-    )
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_May_H1m3phase4000_250", 4000, 250
-    )
-
-    yield from grating_to_1200()
-
-    yield from buildeputablegaps(19000, 50000, 1000, 1, 132, "_May_H1m3phase0", 0, 1200)
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 140, "_May_H1m3phase29500", 29500, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 160, "_May_H1m3phase26000", 26000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 160, "_May_H1m3phase23000", 23000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 160, "_May_H1m3phase21000", 21000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 150, "_May_H1m3phase18000", 18000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 140, "_May_H1m3phase15000", 15000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 50000, 1000, 2, 130, "_May_H1m3phase12000", 12000, 1200
-    )
-    yield from buildeputablegaps(
-        16000, 50000, 1000, 1.3, 100, "_May_H1m3phase8000", 8000, 1200
-    )
-    yield from buildeputablegaps(
-        18000, 50000, 1000, 1.3, 100, "_May_H1m3phase4000", 4000, 1200
-    )
 
 
 def tune_max(
@@ -550,6 +530,8 @@ def tune_max(
                 # print("stop = {}".format(stop))
 
         # finally, move to peak position
+        if peak_position == 0:
+            peak_position = start
         if peak_position is not None:
             # improvement: report final peak_position
             # print("final position = {}".format(peak_position))
@@ -655,7 +637,4 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
     return fit
 
 
-def set_pgm_offsets(mirror_offset,grating_offset):
-    yield from bps.mvr(mirror2.user_offset,-mirror_offset) # right now we have to set the negative of the fit value as the delta in the offset
-    yield from bps.mvr(grating.user_offset,-grating_offset)
 

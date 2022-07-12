@@ -12,9 +12,11 @@ for path in paths:
     sys.path.append(str(path))
 
 import os
+import re
 import nslsii
 import time
 import appdirs
+import httpx
 
 from sst_funcs.printing import run_report
 
@@ -67,28 +69,72 @@ from nslsii.md_dict import RunEngineRedisDict
 RE.md = RunEngineRedisDict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
 
 
-import re
-
-data_session_re = re.compile(r"^pass-\d+$")
+data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
 
 def md_validator(md):
-    """ Validate RE.md before a plan runs.
+    """Validate RE.md before a plan runs.
 
-    This function validates only "data_session", which
-    must be matched by the regular expression "^pass-\d+$".
+    This function validates only "data_session".
     """
 
     if "data_session" in md:
         # if there is a "data_session" key
         # its value must be validated
         data_session_value = md["data_session"]
+        if not isinstance(data_session_value, str):
+            raise ValueError(
+                f"RE.md['data_session']={data_session_value}', but it must be a string"
+            )
         data_session_match = data_session_re.match(data_session_value)
         if data_session_match is None:
             raise ValueError(
                 f"RE.md['data_session']='{data_session_value}' "
-                f"is not matched by regular expression '{data_session_re.pattern}'")
+                f"is not matched by regular expression '{data_session_re.pattern}'"
+            )
+        else:
+            proposal_number = data_session_match.group("proposal_number")
+            nslsii_api_client = httpx.Client(
+                base_url="https://api-staging.nsls2.bnl.gov"
+            )
+            try:
+                proposal_response = nslsii_api_client.get(
+                    f"/proposal/{proposal_number}"
+                )
+                proposal_response.raise_for_status()
+                if "error_message" in proposal_response.json():
+                    raise ValueError(
+                        f"while verifying data_session '{data_session_value}' "
+                        f"an error was returned by {proposal_response.url}: "
+                        f"{proposal_response.json()}"
+                    )
+                else:
+                    # data_session is valid!
+                    pass
+
+            except httpx.RequestError as rerr:
+                # give the user a warning
+                # but allow the run to start
+                warnings.warn(
+                    f"while verifying data_session '{data_session_value}' "
+                    f"the request {rerr.request.url!r} failed with "
+                    f"'{rerr}'"
+                )
+                return
+            except httpx.HTTPStatusError as serr:
+                warnings.warn(
+                    f"while verifying data_session '{data_session_value}' "
+                    f"the request {serr.request.url!r} failed with "
+                    f"'{serr}'"
+                )
+                if serr.response.is_client_error:
+                    # the user may be able to fix this?
+                    # do not allow the run to start
+                    raise serr
+                elif serr.response.is_server_error:
+                    # allow the run to start
+                    pass
     else:
-        # if there is no "data_session" key that's ok
+        # if there is no "data_session" key allow runs to start
         pass
 
 # md_validator will be called before a plan runs

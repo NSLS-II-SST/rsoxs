@@ -334,6 +334,41 @@ def SAXSNEXAFS_rsoxs_grating():
     ]
 
 
+def WAXSNEXAFS_rsoxs_grating():
+    return [
+        [
+            {"motor": slits1.vsize, "position": 0.025, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+            {"motor": slits1.hsize, "position": 0.1, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
+            {"motor": slits2.vsize, "position": 0.4, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
+            {"motor": slits2.hsize, "position": 0.25, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.65, "order": 0},
+            {"motor": slits3.vsize, "position": 0.9, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.4, "order": 0},
+            {"motor": slits3.hsize, "position": 0.85, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -29, "order": 0},
+            {"motor": Det_W, "position": -94, "order": 1},
+            {"motor": Det_S, "position": -100, "order": 1},
+            {"motor": BeamStopW, "position": 71.4, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        ],
+        {
+            "RSoXS_Config": "WAXSNEXAFS_rsoxs_grating",
+            "RSoXS_Main_DET": "Beamstop_WAXS",
+            "RSoXS_WAXS_SDD": None,
+            "RSoXS_WAXS_BCX": None,
+            "RSoXS_WAXS_BCY": None,
+            "RSoXS_SAXS_SDD": None,
+            "RSoXS_SAXS_BCX": None,
+            "RSoXS_SAXS_BCY": None,
+        },
+    ]
+
+
 def WAXS_rsoxs_grating():
     return [
         [
