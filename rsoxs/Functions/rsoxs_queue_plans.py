@@ -27,6 +27,7 @@ from .energyscans import (
     custom_rsoxs_scan,
     custom_rotate_rsoxs_scan,
     focused_carbon_scan_nd,
+    full_titaniuml2_scan,
 )
 from .NEXAFSscans import (
     fly_Oxygen_NEXAFS,
@@ -49,6 +50,4 @@ from .alignment import (
     load_sample,
     load_configuration,
     spiralsearch,
-    spiraldata,
-    spiralsearchwaxs,
 )

@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
+import re
 from ophyd import Device
 from operator import itemgetter
 from numpy import array
+import re, warnings, httpx
+from .common_functions import args_to_string, string_to_inputs
 from ..HW.motors import sam_X, sam_Y, sam_Th, sam_Z
 from ..Functions.acquisitions import avg_scan_time
 from ..Functions import rsoxs_queue_plans
@@ -60,19 +63,8 @@ from .alignment import (
     load_sample,
     load_configuration,
     spiralsearch,
-    spiraldata,
-    spiralsearchwaxs,
 )
 
-
-
-
-
-
-
-
-
-from .common_functions import args_to_string, string_to_inputs
 
 
 def add_acq(
@@ -88,6 +80,69 @@ def add_acq(
         }
     )
     return sample_dict
+
+
+def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='2022-2'):
+    '''
+    proposal_id is either a string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
+    beamline is the beamline name from PASS,
+    path_base is the part of the path that indicates it's really for this beamline
+    cycle is the current cycle (or the cycle that is valid for this purpose)
+
+    queury the api PASS database, and get the info corresponding to a proposal ID
+    returns:
+    the data_session ID which should be put into the run engine metadata of every scan
+    the path to write analyzed data to
+    all of the proposal information for the metadata if needed
+    '''
+    warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this"
+    proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
+    if isinstance(proposal_id, str):
+        proposal = proposal_re.match(proposal_id).group("proposal_number")
+    else:
+        proposal = proposal_id
+    pass_client = httpx.Client(base_url="https://api-staging.nsls2.bnl.gov")
+    responce = pass_client.get(f"/proposal/{proposal}")
+    res = responce.json()
+    if "safs" not in res:
+        warnings.warn(f'proposal {proposal} does not appear to have any safs'+warn_text)
+        return None, None, None, None
+    comissioning = 1
+    if "cycles" in res:
+        comissioning = 0
+        if cycle not in res['cycles']:
+            warnings.warn(f'proposal {proposal} is not valid for the {cycle} cycle'+warn_text)
+            return None, None, None, None
+    elif "Commissioning" not in res['type']:
+        warnings.warn(
+            f'proposal {proposal} does not have a valid cycle, and does not appear to be a commissioning proposal'+warn_text)
+        return -1
+    if len(res['safs']) < 0:
+        warnings.warn(f'proposal {proposal} does not have a valid SAF in the system'+warn_text)
+        return None, None, None, None
+    valid_SAF = ""
+    for saf in res['safs']:
+        if saf['status'] == 'APPROVED' and beamline in saf['instruments']:
+            valid_SAF = saf['saf_id']
+    if len(valid_SAF) == 0:
+        warnings.warn(f'proposal {proposal} does not have a SAF for {beamline} active in the system'+warn_text)
+        return None, None, None, None
+    proposal_info = res
+    dir_responce = pass_client.get(f"/proposal/{proposal}/directories")
+    dir_res = dir_responce.json()
+    if len(dir_res) < 1:
+        warnings.warn(f'proposal{proposal} have any directories'+warn_text)
+        return None, None, None, None
+    valid_path = ""
+    for dir in dir_res:
+        if comissioning and (path_base in dir['path']):
+            valid_path = dir['path']
+        elif (path_base in dir['path']) and (cycle in dir['path']):
+            valid_path = dir['path']
+    if len(valid_path) == 0:
+        warnings.warn(f'no valid paths (containing {path_base} and {cycle} were found for proposal {proposal}'+warn_text)
+        return None, None, None, None
+    return res['data_session'], valid_path, valid_SAF, proposal_info
 
 
 def load_samplesxls(filename):
@@ -137,7 +192,18 @@ def load_samplesxls(filename):
             samplenew[i]["acquisitions"] = eval(sam["acquisitions"])
     for i, sam in enumerate(samplenew):
         samplenew[i]["location"] = eval(sam["location"])
+
         samplenew[i]["bar_loc"] = eval(sam["bar_loc"])
+        if 'proposal_id' in sam:
+            proposal = sam['proposal_id']
+        elif 'data_session' in sam:
+            proposal = sam['data_session']
+        else:
+            warnings.warn('no valid proposal was located - please add that and try again')
+            proposal = 0
+        sam['data_session'],sam['analysis_dir'],sam['SAF'],sam['proposal'] = get_proposal_info(proposal)
+        if sam['SAF'] ==None:
+            print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
         if "acq_history" in sam.keys():
             samplenew[i]["acq_history"] = eval(sam["acq_history"])
         else:

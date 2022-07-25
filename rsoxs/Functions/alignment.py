@@ -307,11 +307,13 @@ def get_md_from_config(config):
     return eval(config + "()[1]")
 
 
-def load_configuration(config):
+def load_configuration(config,sim_mode=False):
     """
     :param config: string containing a name of a configuration
     :return:
     """
+    if(sim_mode):
+        return f"moved to {config} configuration"
     yield from move_to_location(get_location_from_config(config))
     RE.md.update(get_md_from_config(config))
 
@@ -343,7 +345,6 @@ def get_sample_dict(acq=[], locations=None):
     thickness = RE.md["thickness"]
     sample_state = RE.md["sample_state"]
     notes = RE.md["notes"]
-    history = RE.md["acq_history"]
 
     return {
         "sample_name": sample_name,
@@ -372,7 +373,6 @@ def get_sample_dict(acq=[], locations=None):
         "notes": notes,
         "location": locations,
         "acquisitions": acq,
-        "acq_history": history,
     }
 
 
@@ -396,13 +396,16 @@ def user_dict(
     }
 
 
-def load_sample(sam_dict):
+def load_sample(sam_dict,sim_mode=False):
     """
     move to a sample location and load the metadata with the sample information
 
     :param sam_dict: sample dictionary containing all metadata and sample location
     :return:
     """
+
+    if(sim_mode):
+        return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
     yield from move_to_location(locs=sam_dict["location"])
     # sample()
@@ -761,45 +764,27 @@ def offset_bar(bar, xoff, yoff, zoff, thoff):
 
 def default_sample(name):
     return {
-        "data_session": "C-310704",  # we set the default folder here - most data shouldn't be taken
+        "data_session": "pass-310704",  # we set the default folder here - most data shouldn't be taken
+        "PROPOSAL_ID": "C-310704",
         "SAF": 309227,
         "institution": "NIST",
         "acquisitions": [],
         "components": "",
         "composition": "",
-        "bar_loc": {
-            "spot": "0C",
-            "front": True,
-            "th": 90,
-            "x0": 2.7,
-            "ximg": 1.4,
-            "y0": -186.3,
-            "yimg": -182.2,
-            "th0": 0,
-            "xoff": 1.86,
-            "zoff": -1.8,
-            "z0": 0,
-            "af1y": -186.35,
-            "af2y": 4,
-            "af1zoff": 1.67,
-            "af2zoff": 4.83,
-            "af1xoff": 1.865,
-            "af2xoff": 1.83,
-        },
+        "bar_loc": {},
         "bar_spot": "0C",
         "front": True,
         "grazing": False,
         "height": 0.0,
         "angle": 90,
         "density": "",
-        "location": [
-        ],
+        "location": [],
         "project_desc": "Calibration",
         "samp_user_id": 1,
         "sample_date": "2021-03-09 00:00:00",
         "sample_id": name,
         "sample_name": name,
-        "sample_priority": name,
+        "sample_priority": 0,
         "sample_desc": name,
         "project_name": "Calibration",
         "notes": "",
@@ -850,8 +835,8 @@ def spiralsearch(
                 validation += f"angle of {angle} is out of range\n"
     if sim_mode:
         if valid:
-            retstr = f"scanning {newdets} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
-            retstr += f"    in {len(times)} steps with exposure times from {min(times)} to {max(times)} seconds\n"
+            retstr = f"scanning {newdets} at {energy} eV \n"
+            retstr += f"    with a diameter of {diameter} mm  and stepsize of {stepsize} mm\n"
             return retstr
         else:
             return validation
@@ -885,32 +870,6 @@ def spiralsearch(
     )
 
 
-def spiraldata(
-    diameter=0.6, stepsize=0.2, energy=None, exp_time=None, master_plan=None
-):
-    if energy is not None:
-        if energy > 70 and energy < 2200:
-            yield from bps.mv(en, energy)
-    if exp_time is not None:
-        if exp_time > 0.001 and exp_time < 1000:
-            set_exposure(exp_time)
-    x_center = sam_X.user_setpoint.get()
-    y_center = sam_Y.user_setpoint.get()
-    num = round(diameter / stepsize) + 1
-    yield from bp.spiral_square(
-        [saxs_det],
-        sam_X,
-        sam_Y,
-        x_center=x_center,
-        y_center=y_center,
-        x_range=diameter,
-        y_range=diameter,
-        x_num=num,
-        y_num=num,
-        md={"plan_name": "spiraldata", "master_plan": master_plan},
-    )
-
-
 def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
     for samp in barin:
         yield from load_sample(samp)
@@ -920,27 +879,6 @@ def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
             f'running spiral scan on {samp["proposal_id"]} {samp["sample_name"]}'
         )
         yield from spiralsearch(diameter, stepsize, master_plan="spiralsearch_all")
-
-
-def spiralsearchwaxs(diameter=0.6, stepsize=0.2, energy=None, master_plan=None):
-    if energy is not None:
-        if energy > 150 and energy < 2200:
-            yield from bps.mv(en, energy)
-    x_center = sam_X.user_setpoint.get()
-    y_center = sam_Y.user_setpoint.get()
-    num = round(diameter / stepsize) + 1
-    yield from bp.spiral_square(
-        [waxs_det],
-        sam_X,
-        sam_Y,
-        x_center=x_center,
-        y_center=y_center,
-        x_range=diameter,
-        y_range=diameter,
-        x_num=num,
-        y_num=num,
-        md={"plan_name": "spiralsearchwaxs", "master_plan": master_plan},
-    )
 
 
 def spiralsearchwaxs_all(barin=[], diameter=0.5, stepsize=0.2):
@@ -1080,8 +1018,7 @@ def update_bar(inbar, loc_Q, front):
             # add in a diode position as well
             diode = default_sample("diode")
             if sample_by_name(bar, "diode") is not None:
-                bar.remove(sample_by_name(bar, "diode"))
-            bar.insert(-1, diode)
+                bar.insert(-1, diode)
 
         else:
             # if front fiducials don't exist,add dummy ones (so thge AF2 ones are in the correct position)

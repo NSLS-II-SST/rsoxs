@@ -1,5 +1,7 @@
 import datetime
 from bluesky import FailedStatus
+from itertools import chain
+
 from .alignment import load_sample, load_configuration, avg_scan_time, move_to_location
 from .configurations import all_out
 from .sample_spreadsheets import save_samplesxls
@@ -11,29 +13,47 @@ from ..startup import db
 from ..Functions import rsoxs_queue_plans
 run_report(__file__)
 
+config_list = [
+    'WAXSNEXAFS',
+    'WAXS',
+    'SAXS',
+    'SAXSNEXAFS',
+    'SAXS_rsoxs_grating',
+    'WAXS_rsoxs_grating',
+    'SAXSNEXAFS_rsoxs_grating',
+    'WAXSNEXAFS_rsoxs_grating',
+    'SAXS_liquid',
+    'WAXS_liquid',
+    'WAXSNEXAFS_SAXSslits',
+    'WAXS_SAXSslits',
+    'TEYNEXAFS']
 
 def run_sample(sam_dict):
     yield from load_sample(sam_dict)
     yield from do_acquisitions(sam_dict["acquisitions"])
 
 
-def do_acquisitions(acq_list):
+def do_acquisitions(acq_list,dry_run=False):
     uids = []
     for acq in acq_list:
-        uid = yield from run_acquisition(acq)
+        uid = yield from run_acquisition(acq,dry_run)
         uids.append(uid)
     return uids
 
 
-def run_acquisition(acq):
+def run_acquisition(acq,dry_run):
     # runs an acquisition the old way (from run_bar or from the bar directly)
-    yield from load_configuration(acq["configuration"])
+    if(not dry_run):
+        yield from load_configuration(acq["configuration"])
     try:
         plan = getattr(rsoxs_queue_plans, acq["plan_name"])
     except Exception:
         print("Invalid Plan Name")
-        return -1
-    uid = yield from plan(*acq["args"], **acq["kwargs"])
+        return "Invalid Plan Name"
+    if(dry_run):
+        uid = yield from plan(*acq["args"], **acq["kwargs"],sim_mode=True)
+    else:
+        uid = yield from plan(*acq["args"], **acq["kwargs"])
     return uid
 
 
@@ -153,9 +173,17 @@ def run_bar(
         text = ""
         total_time = 0
         for i, step in enumerate(list_out):
-            # check configuration
-            # check sample position
-            # check acquisition
+            # TODO: check configuration
+            if(step[2] not in config_list ):
+                text += "Warning invalid configuration" + step[2]
+            # TODO: check sample position
+            # TODO: check acquisition
+            newtext = yield from do_acquisitions([step[6]],dry_run=True)
+            if isinstance(newtext,list):
+                words = list(chain(*newtext))
+                text += ''.join(words)
+            else:
+                text += newtext
             text += "load {} from {}, config {}, run {} (p {} a {}), starts @ {} takes {}\n".format(
                 step[5]["sample_name"],
                 step[1],
@@ -217,9 +245,7 @@ def run_bar(
                     success = True
             yield from load_sample(step[5])  # move to sample / load sample metadata
             yield from check_diodes()
-            yield from do_acquisitions(
-                [step[6]]
-            )  # run acquisition (will load configuration again)
+            yield from do_acquisitions([step[6]])  # run acquisition (will load configuration again)
             uid = db[-1].uid
             print(f"acq uid = {uid}")
             scan_id = db[uid].start["scan_id"]

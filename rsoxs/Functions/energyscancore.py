@@ -168,13 +168,19 @@ def en_scan_core(
     valid = True
     validation = ""
     newdets = []
+    detnames = []
     for det in dets:
         if not isinstance(det, Device):
             try:
-                newdets.append(eval(det))
+                det_dev = eval(det)
+                newdets.append(det_dev)
+                detnames.append(det_dev.name)
             except Exception:
                 valid = False
                 validation += f"detector {det} is not an ophyd device\n"
+        else:
+            newdets.append(det)
+            detnames.append(det.name)
     if len(newdets) < 1:
         valid = False
         validation += "No detectors are given\n"
@@ -211,7 +217,7 @@ def en_scan_core(
             validation += f"angle of {angle} is out of range\n"
     if sim_mode:
         if valid:
-            retstr = f"scanning {newdets} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
+            retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
             retstr += f"    in {len(times)} steps with exposure times from {min(times)} to {max(times)} seconds\n"
             return retstr
         else:
@@ -349,6 +355,7 @@ def NEXAFS_fly_scan_core(
     grating="best",
     enscan_type=None,
     master_plan=None,
+    angle=None,
     cycles=0,
     locked = True,
     md=None,
@@ -400,6 +407,10 @@ def NEXAFS_fly_scan_core(
     if pol < -1 or pol > 180:
         valid = False
         validation += f"polarization of {pol} is not valid\n"
+    if angle is not None:
+        if -155 > angle or angle > 195:
+            valid = False
+            validation += f"angle of {angle} is out of range\n"
     if sim_mode:
         if valid:
             retstr = f"fly scanning from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
@@ -409,7 +420,9 @@ def NEXAFS_fly_scan_core(
             return validation
     if not valid:
         raise ValueError(validation)
-
+    if angle is not None:
+        print(f'moving angle to {angle}')
+        yield from rotate_now(angle)
     if 'hopg_loc' in md.keys():
         hopgx = md['hopg_loc']['x']
         hopgy = md['hopg_loc']['y']
@@ -427,13 +440,11 @@ def NEXAFS_fly_scan_core(
     signals = [Beamstop_WAXS, Beamstop_SAXS, Izero_Mesh, Sample_TEY]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
-    else:
-        yield from set_polarization(pol)
-    en.read()
-    samplepol = en.sample_polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
     yield from bps.mv(en.scanlock, 0) # unlock parameters
-    yield from bps.mv(en, en_start)  # move to the initial energy
+    print("Moving to initial position before scan start")
+    yield from bps.mv(en.energy, en_start+10, en.polarization, pol )  # move to the initial energy
+    samplepol = en.sample_polarization.setpoint.get()
     if locked:
         yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
     print(f"Effective sample polarization is {samplepol}")
@@ -446,17 +457,17 @@ def NEXAFS_fly_scan_core(
         scan_params += rev_scan_params
         scan_params *= int(cycles)
 
-
+    uid = ""
     if openshutter:
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
-        yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
+        uid = yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
         yield from bps.mv(Shutter_control, 0)
 
     else:
-        yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
+        uid = yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
     yield from bps.mv(en.scanlock, 0) # unlock energy parameters at the end
-
+    return uid
 
 
 def RSoXS_fly_scan_core(
@@ -595,9 +606,9 @@ def RSoXS_fly_scan_core(
 
     set_exposure(exp_time)
 
-    yield from fly_scan_dets(scan_params,newdets, md=md, locked=locked, polarization=pol)
+    uid = yield from fly_scan_dets(scan_params,newdets, md=md, locked=locked, polarization=pol)
     yield from bps.mv(en.scanlock, 0) # unlock energy parameters at the end
-
+    return uid
 ## HACK HACK
 
 
@@ -873,7 +884,7 @@ def scan_eliot(detectors, cycler, shutter_sig = None, *, md={}):
     return (yield from inner_scan_eliot())
 
 
-def fly_scan_eliot(scan_params,sigs=[], polarization=0, locked = 1, *, md={}):
+def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
     """
     Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
 
@@ -928,12 +939,9 @@ def fly_scan_eliot(scan_params,sigs=[], polarization=0, locked = 1, *, md={}):
             yield Msg("checkpoint")
             print("Preparing mono for fly")
             yield from bps.mv(
-                Mono_Scan_Start_ev,
-                start_en,
-                Mono_Scan_Stop_ev,
-                end_en,
-                Mono_Scan_Speed_ev,
-                speed_en,
+                Mono_Scan_Start_ev, start_en,
+                Mono_Scan_Stop_ev,end_en,
+                Mono_Scan_Speed_ev,speed_en,
             )
             # move to the initial position
             #if step > 0:

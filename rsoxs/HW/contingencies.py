@@ -1,6 +1,7 @@
 import logging
+import bluesky.plan_stubs as bps
 from bluesky.suspenders import (
-SuspendBoolHigh, SuspendFloor, SuspendBoolLow, SuspendWhenChanged
+SuspendBoolHigh, SuspendFloor, SuspendCeil, SuspendBoolLow, SuspendWhenChanged
 )
 from sst_funcs.printing import run_report
 from ..Functions.contingencies import (
@@ -10,18 +11,37 @@ from ..Functions.contingencies import (
     enc_clr_x,
     OSEmailHandler,
     MakeSafeHandler,
+    det_down_notice,
+    temp_bad_notice,
+    temp_ok_notice
 )
 from sst_hw.gatevalves import gvll
-from sst_hw.shutters import psh4, psh1
+from sst_hw.shutters import psh4, FEsh1
 from ..HW.signals import ring_current
 from ..HW.motors import sam_X
 from sst_hw.vacuum import rsoxs_pg_main
-from ..HW.detectors import start_det_cooling,stop_det_cooling
+from ..HW.detectors import start_det_cooling,stop_det_cooling,saxs_det,waxs_det
 from ..startup import RE
 
 
 run_report(__file__)
 
+
+def waxs_back_on():
+    yield from bps.mv(
+        waxs_det.cam.temperature,-80,
+        waxs_det.cam.enable_cooling,1,
+        waxs_det.cam.bin_x,4,
+        waxs_det.cam.bin_y,4)
+
+
+
+def saxs_back_on():
+    yield from bps.mv(
+        saxs_det.cam.temperature,-80,
+        saxs_det.cam.enable_cooling,1,
+        saxs_det.cam.bin_x,4,
+        saxs_det.cam.bin_y,4)
 
 suspend_gvll = SuspendBoolLow(
     gvll.state,
@@ -38,7 +58,7 @@ suspend_shutter4 = SuspendBoolHigh(
 )
 
 suspend_shutter1 = SuspendBoolHigh(
-    psh1.state,
+    FEsh1.state,
     sleep=30,
     tripped_message="Front End Shutter Closed, waiting for it to open",
     pre_plan=beamdown_notice,
@@ -60,7 +80,70 @@ suspend_current = SuspendFloor(
 )
 
 
-suspend_current = SuspendWhenChanged(
+suspend_waxs_temp_low = SuspendFloor(
+    waxs_det.cam.temperature_actual,
+    resume_thresh=-85,
+    suspend_thresh=-90,
+    sleep=30,
+    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
+    pre_plan=det_down_notice,
+    post_plan=waxs_back_on,
+)
+
+
+
+suspend_waxs_temp_high = SuspendCeil(
+    waxs_det.cam.temperature_actual,
+    resume_thresh=-78,
+    suspend_thresh=-75,
+    sleep=30,
+    tripped_message="the detector temperature is above -75C, will resume when below -78C",
+    pre_plan=temp_bad_notice,
+    post_plan=temp_ok_notice,
+)
+
+
+suspend_saxs_temp_low = SuspendFloor(
+    saxs_det.cam.temperature_actual,
+    resume_thresh=-85,
+    suspend_thresh=-90,
+    sleep=30,
+    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
+    pre_plan=det_down_notice,
+    post_plan=saxs_back_on,
+)
+
+
+
+suspend_saxs_temp_high = SuspendCeil(
+    saxs_det.cam.temperature_actual,
+    resume_thresh=-78,
+    suspend_thresh=-75,
+    sleep=30,
+    tripped_message="the detector temperature is above -75C, will resume when below -78C",
+    pre_plan=det_down_notice,
+    post_plan=temp_ok_notice,
+)
+
+
+def waxs_back_on():
+    yield from bps.mv(
+        waxs_det.cam.temperature,-80,
+        waxs_det.cam.enable_cooling,1,
+        waxs_det.cam.bin_x,4,
+        waxs_det.cam.bin_y,4)
+
+
+
+def saxs_back_on():
+    yield from bps.mv(
+        saxs_det.cam.temperature,-80,
+        saxs_det.cam.enable_cooling,1,
+        saxs_det.cam.bin_x,4,
+        saxs_det.cam.bin_y,4)
+
+
+suspend_pressure = SuspendWhenChanged(
     rsoxs_pg_main,
     expected_value='LO<E-03',
     allow_resume=True,
@@ -74,6 +157,14 @@ suspend_current = SuspendWhenChanged(
 
 
 RE.install_suspender(suspend_current)
+RE.install_suspender(suspend_pressure)
+RE.install_suspender(suspend_waxs_temp_low)
+RE.install_suspender(suspend_waxs_temp_high)
+RE.install_suspender(suspend_saxs_temp_low)
+RE.install_suspender(suspend_saxs_temp_high)
+
+
+
 
 suspendx = SuspendBoolHigh(
     sam_X.enc_lss,
