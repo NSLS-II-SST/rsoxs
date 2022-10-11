@@ -40,6 +40,7 @@ from .NEXAFSscans import (
     fixed_sample_rotate_pol_nexafs,
     fly_Calcium_NEXAFS,
     fly_Carbon_NEXAFS,
+    fly_Titaniuml2_NEXAFS,
     fly_SiliconK_NEXAFS,
     fly_SiliconL_NEXAFS,
     fly_SulfurL_NEXAFS,

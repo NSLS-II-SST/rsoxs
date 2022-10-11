@@ -82,7 +82,7 @@ def add_acq(
     return sample_dict
 
 
-def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='2022-2'):
+def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='2022-3'):
     '''
     proposal_id is either a string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
     beamline is the beamline name from PASS,

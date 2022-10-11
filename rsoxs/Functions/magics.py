@@ -328,9 +328,10 @@ class RSoXSPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
         dt = datetime.datetime.now()
         formatted_date = dt.strftime("%Y-%m-%d")
+        proposal = f'{RE.md["proposal_id"]}'
 
         if (
-            len(RE.md["proposal_id"]) > 0
+            len(proposal) > 0
             and len(RE.md["institution"]) > 0
             and len(RE.md["project_name"]) > 0
             and len(RE.md["cycle"]) > 0
@@ -340,7 +341,7 @@ class RSoXSPrompt(Prompts):
                 "RSoXS "
                 + "{}/{}-{}/{}/auto/{}/ ".format(
                     RE.md["cycle"],
-                    RE.md["proposal_id"],
+                    proposal,
                     RE.md["institution"],
                     RE.md["project_name"],
                     formatted_date,

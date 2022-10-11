@@ -72,8 +72,6 @@ def fly_Carbon_NEXAFS(
     speed=0.2,
     cycles=0,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.94,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -99,8 +97,6 @@ def fly_Carbon_NEXAFS(
         openshutter=True,
         master_plan=master_plan,
         md=md,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         cycles=cycles,
@@ -109,11 +105,45 @@ def fly_Carbon_NEXAFS(
     return uid
 
 
+def fly_Titaniuml2_NEXAFS(
+    speed=0.2,
+    cycles=0,
+    pol=0,
+    grating="rsoxs",
+    master_plan=None,
+    md={},
+    enscan_type="fly_Titaniuml2_NEXAFS",
+    **kwargs
+):
+    """
+
+    @param speed: the speed in eV/second to fly the mono
+    @param pol: the polarization of the EPU to set before run
+    @param diode_range: sets the range of the SAXS and WAXS beamstop DIODEs for direct beam measurements
+    @param m3_pitch: the pitch of the M3 mirror to use for this energy range
+    @param grating: the grating of the mono to use for the scan (currently "1200", "250" and "rsoxs" are only valid choices)
+    @return: perform a flying NEXAFS scan
+    """
+    plan_name = "fly_Titaniuml2_NEXAFS"
+    # grab locals
+    arguments = dict(locals())
+    clean_up_md(arguments, md, **kwargs)
+    uid = yield from NEXAFS_fly_scan_core(
+        [(445, 455, speed * 3), (455, 468, speed), (468, 480, speed * 3)],
+        enscan_type=enscan_type,
+        openshutter=True,
+        master_plan=master_plan,
+        md=md,
+        pol=pol,
+        grating=grating,
+        cycles=cycles,
+        **kwargs
+    )
+    return uid
+
 def fly_Calcium_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.99,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -140,8 +170,6 @@ def fly_Calcium_NEXAFS(
 
         master_plan=master_plan,
         md=md,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         **kwargs
@@ -152,8 +180,6 @@ def fly_Calcium_NEXAFS(
 def fly_SulfurL_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.97,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -177,9 +203,6 @@ def fly_SulfurL_NEXAFS(
         [(180, 225, speed)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -191,8 +214,6 @@ def fly_SulfurL_NEXAFS(
 def fly_SiliconL_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=8.01,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -216,9 +237,6 @@ def fly_SiliconL_NEXAFS(
         [(100, 140, speed)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -230,8 +248,6 @@ def fly_SiliconL_NEXAFS(
 def fly_SiliconK_NEXAFS(
     speed=0.4,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.97,
     grating="1200",
     master_plan=None,
     md={},
@@ -255,9 +271,6 @@ def fly_SiliconK_NEXAFS(
         [(1830, 1870, speed)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -269,8 +282,6 @@ def fly_SiliconK_NEXAFS(
 def fly_Nitrogen_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.96,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -294,9 +305,6 @@ def fly_Nitrogen_NEXAFS(
         [(385, 397, speed * 3), (397, 407, speed), (407, 440, speed * 5)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -308,8 +316,6 @@ def fly_Nitrogen_NEXAFS(
 def fly_Oxygen_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.96,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -333,9 +339,6 @@ def fly_Oxygen_NEXAFS(
         [(510, 525, speed * 3), (525, 540, speed), (540, 560, speed * 5)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -347,9 +350,7 @@ def fly_Oxygen_NEXAFS(
 def fly_Fluorine_NEXAFS(
     speed=0.4,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="fly_Fluorine_NEXAFS",
@@ -371,9 +372,6 @@ def fly_Fluorine_NEXAFS(
         [(670, 685, 3 * speed), (685, 700, speed), (700, 740, 3 * speed)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -386,9 +384,7 @@ def fly_Fluorine_NEXAFS(
 def fly_Iron_NEXAFS(
     speed=0.3,
     pol=0,
-    diode_range=8,
-    m3_pitch=7.98,
-    grating="1200",
+    grating="rsoxs",
     master_plan=None,
     md={},
     enscan_type="fly_Iron_NEXAFS",
@@ -410,9 +406,6 @@ def fly_Iron_NEXAFS(
         [(690, 700, 5 * speed), (700, 730, speed), (730, 750, 5 * speed)],
         enscan_type=enscan_type,
         openshutter=True,
-
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,
@@ -426,8 +419,6 @@ def fly_Iron_NEXAFS(
 def fly_Boron_NEXAFS(
     speed=0.2,
     pol=0,
-    diode_range=8,
-    m3_pitch=8.0,
     grating="rsoxs",
     master_plan=None,
     md={},
@@ -451,8 +442,6 @@ def fly_Boron_NEXAFS(
         [(180, 220, speed)],
         enscan_type=enscan_type,
         openshutter=True,
-        diode_range=diode_range,
-        m3_pitch=m3_pitch,
         pol=pol,
         grating=grating,
         master_plan=master_plan,

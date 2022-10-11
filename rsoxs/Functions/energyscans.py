@@ -666,7 +666,7 @@ def collins_carbon_survey_fixedpol(
     polarizations=[-1,0,90],
     md={},
     pol=None,
-    enscan_type="short_carbon_scan_nonaromatic",
+    enscan_type="collins_carbon_survey_fixedpol",
     **kwargs
 ):
     """

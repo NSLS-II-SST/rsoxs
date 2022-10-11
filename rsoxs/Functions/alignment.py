@@ -58,7 +58,7 @@ run_report(__file__)
 def user():
     title = "User metadata - stored in every scan:"
     text = ""
-    if len(RE.md["proposal_id"]) > 0:
+    if len(f'{RE.md["proposal_id"]}') > 0:
         text += "   proposal ID:           " + colored(
             "{}".format(str(RE.md["proposal_id"])).center(50, " "), "yellow"
         )
@@ -407,9 +407,10 @@ def load_sample(sam_dict,sim_mode=False):
     if(sim_mode):
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
+    print('stearting movement')
     yield from move_to_location(locs=sam_dict["location"])
-    # sample()
-
+    print("done with movement")
+    yield from bps.sleep(0)
 
 def load_user_dict_to_md(user_dict):
     RE.md.update(user_dict)
@@ -771,7 +772,7 @@ def default_sample(name):
         "acquisitions": [],
         "components": "",
         "composition": "",
-        "bar_loc": {},
+        "bar_loc": {'spot':'A0'},
         "bar_spot": "0C",
         "front": True,
         "grazing": False,
@@ -1054,8 +1055,8 @@ def update_bar(inbar, loc_Q, front):
                     break
                 else:
                     continue
-            print(
-                f'Right-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
+            print(sample)
+            print(f'Right-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
                 + "Press n on plot or enter to skip to next sample, p for previous sample, esc to end"
             )
             # ipython input x,y or click in plt which outputs x, y location
