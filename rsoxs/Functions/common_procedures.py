@@ -614,8 +614,8 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
             [Izero_Mesh, Sample_TEY],
             ["RSoXS Sample Current"],
             grating,
-            g_set - .1,
-            g_set + .1,
+            g_set - .2,
+            g_set + .2,
             0.00001,
             50,
             5,
@@ -635,6 +635,3 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
     print(fit)
     print(fit.x)
     return fit
-
-
-
