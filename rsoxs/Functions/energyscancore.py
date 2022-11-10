@@ -14,7 +14,7 @@ from bluesky.plan_stubs import (
     create,
     save,
 )
-from bluesky.preprocessors import rewindable_wrapper
+from bluesky.preprocessors import rewindable_wrapper, finalize_wrapper
 from bluesky.utils import short_uid, separate_devices, all_safe_rewind
 from collections import defaultdict
 from bluesky import preprocessors as bpp
@@ -58,6 +58,12 @@ run_report(__file__)
 
 
 SLEEP_FOR_SHUTTER = 1
+
+
+def cleanup():
+    # make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
+    yield from bps.mv(en.scanlock, 0)
+    yield from bps.mv(Shutter_control, 0)
 
 
 def one_trigger_nd_step(detectors, step, pos_cache):
@@ -272,8 +278,8 @@ def en_scan_core(
         sigcycler += cycler(det.cam.acquire_time, times.copy())
     sigcycler += cycler(Shutter_open_time, shutter_times)
 
-    yield from bp.scan_nd(newdets + signals, sigcycler, md=md)
-    yield from bps.mv(energy.scanlock, 0)
+    yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+
 
 
 def NEXAFS_scan_core(
@@ -334,12 +340,12 @@ def NEXAFS_scan_core(
         yield from bps.mv(Shutter_control, 0)
     elif open_each_step:
         yield from bps.mv(Shutter_enable, 1)
-        yield from bp.scan_nd(
+        yield from finalize_wrapper(bp.scan_nd(
             dets + signals + [en.energy],
             sigcycler,
             md={"plan_name": enscan_type, "master_plan": master_plan},
             per_step=one_shuttered_step,
-        )
+        ),cleanup())
     else:
         yield from bp.scan_nd(
             dets + signals + [en.energy],
@@ -461,12 +467,8 @@ def NEXAFS_fly_scan_core(
     if openshutter:
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
-        uid = yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
-        yield from bps.mv(Shutter_control, 0)
+    uid = yield from finalize_wrapper(fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol),cleanup())
 
-    else:
-        uid = yield from fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol)
-    yield from bps.mv(en.scanlock, 0) # unlock energy parameters at the end
     return uid
 
 
@@ -606,8 +608,7 @@ def RSoXS_fly_scan_core(
 
     set_exposure(exp_time)
 
-    uid = yield from fly_scan_dets(scan_params,newdets, md=md, locked=locked, polarization=pol)
-    yield from bps.mv(en.scanlock, 0) # unlock energy parameters at the end
+    uid = yield from finalize_wrapper(fly_scan_dets(scan_params,newdets, md=md, locked=locked, polarization=pol),cleanup())
     return uid
 ## HACK HACK
 
