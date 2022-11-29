@@ -109,7 +109,7 @@ def buildeputable(
             min(100000, max(15000, startinggap + 1500 * widfract)),
             3 * widfract,
             10,
-            5,
+            3,
             True,
             peaklist
         )
@@ -130,7 +130,7 @@ def buildeputable(
                 "PeakCurrentBS": heightsbs,
                 }
         dataframe = pd.DataFrame(data=data)
-        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2022July_" + name + ".csv")
+        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2022Nov_" + name + ".csv")
         count += 1
         if count > 20:
             count = 0
@@ -148,25 +148,17 @@ def buildeputable(
 def do_some_eputables_2022_en():
 
     yield from load_configuration("WAXSNEXAFS_rsoxs_grating")
-
-    #yield from buildeputable(105, 850, 10, 2, 14000, 15000,'C','250','C_250')
-    #yield from buildeputable(105, 850, 10, 2, 14000, 15000,'CW','250','CW_250')
-    #yield from buildeputable(105, 1200, 10, 2, 14000, 15000, 'C', '1200', 'C_1200')
-    #yield from buildeputable(105, 1200, 10, 2, 14000, 15000, 'CW', '1200', 'CW_1200')
-
-    #yield from buildeputable(200, 1300, 10, 2, 23704, 0, "L", "1200", "mL0_1200")
-    #yield from buildeputable(200, 1300, 10, 2, 23148, 4000, "L", "1200", "mL4_1200")
-    angles = [0,10,20,30,40,50,60,70,80,90]
-    phases = [0,
-              6688.9843608114115,
-              10781.54138668513,
-              13440.927684320242,
-              15705.851176691127,
-              17575.669146953864,
-              19598.02761805813,
-              21948.115314738126,
-              24889.02500863509,
-              29500]
+    # angles = [0,5,15,25,40,50,60,70,80,90]
+    # phases = [0,
+    #           6688.9843608114115,
+    #           10781.54138668513,
+    #           13440.927684320242,
+    #           15705.851176691127,
+    #           17575.669146953864,
+    #           19598.02761805813,
+    #           21948.115314738126,
+    #           24889.02500863509,
+    #           29500]
 
 #    startingens = [95,125,155,185,200,200,185,160]
 #    for angle,ph,sten in zip(angles[5:],phases[5:],startingens[5:]):
@@ -189,26 +181,27 @@ def do_some_eputables_2022_en():
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
 
 
-    angles = [0,10,20,30,40,50,60,70,80,90]
-    phases = [0,6688.9843608114115,
+    angles = [0,2.94,5,10,20,30,40,50,60,70,80,85,90]
+    phases = [0,
+              2500,
+              4000,
+              6688.9843608114115,
               10781.54138668513,
               13440.927684320242,
               15705.851176691127,
               17575.669146953864,
               19598.02761805813,
               21948.115314738126,
-              24889.02500863509,29500]
-    startingens = [70,95,125,155,185,200,200,185,160,140]
+              24889.02500863509,
+              27000,
+              29500]
+    startingens = [70,70,70,95,125,155,185,200,200,185,160,140]
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 20, 5, 14000, ph, "L", "1200", f'linear{angle}deg_1200_H1')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f'linear{angle}deg_rsoxs_H1')
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 20, 5, 14000, ph, "L3", "1200", f'linear{180-angle}deg_1200_H1')
-    for angle,ph,sten in zip(angles[3:],phases[3:],startingens[3:]):
-        yield from buildeputable(sten*3, 2200, 20, 5, 14000, ph, "L", "1200", f'linear{angle}deg_1200_H3')
-    for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten*3, 2200, 20, 5, 14000, ph, "L3", "1200", f'linear{180-angle}deg_1200_H3')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f'linear{180-angle}deg_rsoxs_H1')
 
-    #yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'C', '1200', 'CW_250_H3')
+    #yield from buildeputable(315, 1300, 20, 5, 14000, 15000, 'C', '1200', 'CW_250_H3')
     #yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_250_H3')
 
     # 1200l/pp from 400 to 1400 eV
@@ -323,7 +316,7 @@ def do_2020_eputables():
 # yield from bps.mv(epu_mode,2)
 
 
-def do_2021_eputables3():
+def do_2022_eputables3():
     Izero_Mesh.kind = "hinted"
     Beamstop_WAXS.kind = "hinted"
     mono_en.readback.kind = "hinted"
