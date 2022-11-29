@@ -42,6 +42,7 @@ from ..HW.energy import (
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det, saxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
+from ..HW.lakeshore import ramp_temp
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
 from sst_hw.diode import (
@@ -137,6 +138,7 @@ def en_scan_core(
     enscan_type=None,
     lockscan = True,
     pol=0,
+    temp=None,
     grating="no change",
     master_plan=None,
     angle=None,
@@ -221,6 +223,10 @@ def en_scan_core(
         if -155 > angle or angle > 195:
             valid = False
             validation += f"angle of {angle} is out of range\n"
+    if temp is not None:
+        if 0<temp<350:
+            valid = False
+            validation += f"temperature of {temp} is out of range\n"
     if sim_mode:
         if valid:
             retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
@@ -234,6 +240,9 @@ def en_scan_core(
     if angle is not None:
         print(f'moving angle to {angle}')
         yield from rotate_now(angle)
+    if temp is not None:
+        print(f'ramping temperature to {temp}')
+        yield from ramp_temp(temp)
     for det in newdets:
         det.cam.acquire_time.kind = "hinted"
     # set the grating
@@ -262,12 +271,12 @@ def en_scan_core(
     yield from bps.mv(energy.scanlock, 0)
     yield from bps.sleep(0.5)
     try:
-        yield from bps.mv(energy, energies[0],timeout=5)  # move to the initial energy (unlocked)
+        yield from bps.mv(energy, energies[0],timeout=20)  # move to the initial energy (unlocked)
     except StatusTimeoutError:
-        print("energy didn't move the first time")
+        print("energy took a long time to move to starting energy")
         pass
     except FailedStatus:
-        print("energy didn't move the first time")
+        print("energy failed to move the first time")
         pass
     yield from bps.mv(energy, energies[0])
 
@@ -279,6 +288,196 @@ def en_scan_core(
     sigcycler += cycler(Shutter_open_time, shutter_times)
 
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+
+
+def new_en_scan_core(
+    signals=None, # a list of signals
+    dets=None,    # a list of detectors to run at each step
+    energy=None,  # optional energy object to set energy commands to
+    lockscan = True, # whether to lock the harmonic and other energy components during a scan
+    grating="no change", # what grating to use for this scan
+
+    energies=None,# a list of energies to run through in the inner loop
+    times=None,   # exposure times for each energy (same length as energies)
+    polarizations=None, # polarizations to run as an outer loop
+    locations=None,       # locations to run as an outermost loop
+    temperatures=None,       # locations to run as an outermost loop
+
+    enscan_type=None,     # optional extra string name to describe this type of scan - will make timing
+    master_plan=None, # if this is lying within an outer plan, that name can be stored here
+    sim_mode=False,  # if true, check all inputs but do not actually run anything
+    md=None, # md to pass to the scan
+    **kwargs #extraneous settings from higher level plans are ignored
+):
+    # grab locals
+    if signals is None:
+        signals = []
+    if dets is None:
+        dets = []
+    if energies is None:
+        energies = []
+    if times is None:
+        times = []
+    if polarizations is None:
+        polarizations = []
+    if locations is None:
+        locations = []
+    if temperatures is None:
+        temperatures = []
+    if md is None:
+        md = {}
+    if energy is None:
+        energy = en
+    arguments = dict(locals())
+    del arguments["md"]  # no recursion here!
+    arguments["signals"] = [signal.name for signal in arguments["signals"]]
+    arguments["energy"] = arguments["energy"].name
+    if md is None:
+        md = {}
+    md.setdefault("plan_history", [])
+    md["plan_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
+    md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
+    # print the current sample information
+    # sample()  # print the sample information  Removing this because RE will no longer be loaded with sample data
+    # set the exposure times to be hinted for the detector which will be used
+
+    # validate inputs
+    valid = True
+    validation = ""
+    newdets = []
+    detnames = []
+    for det in dets:
+        if not isinstance(det, Device):
+            try:
+                det_dev = eval(det)
+                newdets.append(det_dev)
+                detnames.append(det_dev.name)
+            except Exception:
+                valid = False
+                validation += f"detector {det} is not an ophyd device\n"
+        else:
+            newdets.append(det)
+            detnames.append(det.name)
+    if len(newdets) < 1:
+        valid = False
+        validation += "No detectors are given\n"
+    if min(energies) < 70 or max(energies) > 2200:
+        valid = False
+        validation += "energy input is out of range for SST 1\n"
+    if grating == "1200":
+        if min(energies) < 150:
+            valid = False
+            validation += "energy is to low for the 1200 l/mm grating\n"
+    elif grating == "250":
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    else:
+        valid = False
+        validation += "invalid grating was chosen"
+    if max(times) > 10:
+        valid = False
+        validation += "exposure times greater than 10 seconds are not valid\n"
+    if min(polarizations) < -1 or max(polarizations) > 180:
+        valid = False
+        validation += f"a provided polarization is not valid\n"
+    if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
+        valid = False
+        validation += f"temperature out of range\n"
+    if not isinstance(energy, Device):
+        valid = False
+        validation += f"energy object {energy} is not a valid ophyd device\n"
+    if len(locations) > 0:
+        motor_positions = [{d['motor']: d['position'] for d in location} for location in locations]
+        angles = {d.get('angle', None) for d in motor_positions}
+        angles.discard(None)
+        xs = {d.get('x', None) for d in motor_positions}
+        xs.discard(None)
+        if min(xs,default=0) < -13 or max(xs,default=0) > 13:
+            valid = False
+            validation += f"X motor is out of vaild range\n"
+        ys = {d.get('y', None) for d in motor_positions}
+        ys.discard(None)
+        if min(ys,default=0) < -190 or max(ys,default=0) > 355:
+            valid = False
+            validation += f"Y motor is out of vaild range\n"
+        zs = {d.get('z', None) for d in motor_positions}
+        zs.discard(None)
+        if min(zs,default=0) < -13 or max(zs,default=0) > 13:
+            valid = False
+            validation += f"Z motor is out of vaild range\n"
+        # temxs = {d.get('temx', None) for d in motor_positions}
+        # temxs.discard(None)
+        # if min(xs) < -13 or max(xs) > 13:
+        #     valid = False
+        #     validation += f"X motor is out of vaild range\n"
+        # temys = {d.get('temy', None) for d in motor_positions}
+        # temys.discard(None)
+        # if min(xs) < -13 or max(xs) > 13:
+        #     valid = False
+        #     validation += f"X motor is out of vaild range\n"
+        temzs = {d.get('temz', None) for d in motor_positions}
+        temzs.discard(None)
+        if min(temzs,default=0) < 0 or max(temzsdefault=0) > 150:
+            valid = False
+            validation += f"X motor is out of vaild range\n"
+        if max(temzs,0) > 100 and min(ys,default=50) < 20:
+            valid = False
+            validation += f"potential clash between TEY and sample bar\n"
+    if sim_mode:
+        if valid:
+            retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
+            retstr += f"    in {len(times)} steps with exposure times from {min(times)} to {max(times)} seconds\n"
+            return retstr
+        else:
+            return validation
+
+    if not valid:
+        raise ValueError(validation)
+    for det in newdets:
+        det.cam.acquire_time.kind = "hinted"
+    # set the grating
+    if 'hopg_loc' in md.keys():
+        print('hopg location found')
+        hopgx = md['hopg_loc']['x']
+        hopgy = md['hopg_loc']['y']
+        hopgth = md['hopg_loc']['th']
+    else:
+        print('no hopg location found')
+        hopgx = None
+        hopgy = None
+        hopgth = None
+    print(f'checking grating is {grating}')
+    if grating == "1200":
+        yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "250":
+        yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    # set up the scan cycler
+    sigcycler = cycler(energy, energies)
+    shutter_times = [i * 1000 for i in times]
+    yield from bps.mv(energy.scanlock, 0)
+    yield from bps.sleep(0.5)
+    yield from bps.mv(energy, energies[0])  # move to the initial energy (unlocked)
+
+    if lockscan:
+        yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
+
+    for det in newdets:
+        sigcycler += cycler(det.cam.acquire_time, times.copy())
+    sigcycler += cycler(Shutter_open_time, shutter_times)
+
+    # multiply in polarization cycler
+    # multiply in location cycler
+    # multiply in temperature cycler
+
+    yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+
 
 
 
