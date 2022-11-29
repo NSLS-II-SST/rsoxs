@@ -407,9 +407,7 @@ def load_sample(sam_dict,sim_mode=False):
     if(sim_mode):
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
-    print('stearting movement')
     yield from move_to_location(locs=sam_dict["location"])
-    print("done with movement")
     yield from bps.sleep(0)
 
 def load_user_dict_to_md(user_dict):
