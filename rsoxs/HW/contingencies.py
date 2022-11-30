@@ -20,7 +20,14 @@ from sst_hw.shutters import psh4, FEsh1
 from ..HW.signals import ring_current
 from ..HW.motors import sam_X
 from sst_hw.vacuum import rsoxs_pg_main
-from ..HW.detectors import start_det_cooling,stop_det_cooling,saxs_det,waxs_det
+from ..HW.detectors import (
+        start_det_cooling,
+        stop_det_cooling,
+        saxs_det,waxs_det,
+        dark_frame_preprocessor_waxs_spirals,
+        dark_frame_preprocessor_waxs,
+        dark_frame_preprocessor_saxs
+        )
 from ..startup import RE
 
 
@@ -65,9 +72,6 @@ suspend_shutter1 = SuspendBoolHigh(
     post_plan=beamup_notice,
 )
 
-RE.install_suspender(suspend_shutter1)
-# RE.install_suspender(suspend_shutter4)
-# RE.install_suspender(suspend_gvll)
 
 suspend_current = SuspendFloor(
     ring_current,
@@ -156,12 +160,6 @@ suspend_pressure = SuspendWhenChanged(
 
 
 
-RE.install_suspender(suspend_current)
-RE.install_suspender(suspend_pressure)
-RE.install_suspender(suspend_waxs_temp_low)
-RE.install_suspender(suspend_waxs_temp_high)
-RE.install_suspender(suspend_saxs_temp_low)
-RE.install_suspender(suspend_saxs_temp_high)
 
 
 
@@ -180,7 +178,6 @@ suspendgx = SuspendBoolHigh(
     "resume automatically.",
     pre_plan=enc_clr_gx,
 )
-RE.install_suspender(suspendx)
 
 
 # if there is no scatter, pause
@@ -191,18 +188,20 @@ mail_handler = OSEmailHandler()
 mail_handler.setLevel(
     "ERROR"
 )  # Only email for if the level is ERROR or higher (CRITICAL).
-logger.addHandler(mail_handler)
 
 safe_handler = MakeSafeHandler()
 safe_handler.setLevel("ERROR")  # is this correct?
-logger.addHandler(safe_handler)
+
 
 
 def turn_on_checks():
     RE.install_suspender(suspend_shutter1)
-    # RE.install_suspender(suspend_shutter4)
-    # RE.install_suspender(suspend_gvll)
     RE.install_suspender(suspend_current)
+    RE.install_suspender(suspend_pressure)
+    RE.install_suspender(suspend_waxs_temp_low)
+    RE.install_suspender(suspend_waxs_temp_high)
+    RE.install_suspender(suspend_saxs_temp_low)
+    RE.install_suspender(suspend_saxs_temp_high)
     RE.install_suspender(suspendx)
     logger.addHandler(safe_handler)
     logger.addHandler(mail_handler)
@@ -210,9 +209,45 @@ def turn_on_checks():
 
 def turn_off_checks():
     RE.remove_suspender(suspend_shutter1)
-    # RE.remove_suspender(suspend_shutter4)
-    # RE.remove_suspender(suspend_gvll)
     RE.remove_suspender(suspend_current)
+    RE.remove_suspender(suspendx)
+    RE.remove_suspender(suspend_pressure)
+    RE.remove_suspender(suspend_waxs_temp_low)
+    RE.remove_suspender(suspend_waxs_temp_high)
+    RE.remove_suspender(suspend_saxs_temp_low)
+    RE.remove_suspender(suspend_saxs_temp_high)
     RE.remove_suspender(suspendx)
     logger.removeHandler(safe_handler)
     logger.removeHandler(mail_handler)
+
+
+
+
+def waxs_spiral_mode():
+    try:
+        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+    except ValueError:
+        pass
+    try:
+        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+    except ValueError:
+        pass
+    RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
+
+def waxs_normal_mode():
+    try:
+        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+    except ValueError:
+        pass
+    try:
+        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+    except ValueError:
+        pass
+    RE.preprocessors.append(dark_frame_preprocessor_waxs)
+
+
+# install preprocessors
+waxs_normal_mode()
+RE.preprocessors.append(dark_frame_preprocessor_saxs)
+# install handlers for errors and install suspenders
+turn_on_checks()

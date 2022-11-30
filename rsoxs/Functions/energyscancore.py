@@ -42,7 +42,7 @@ from ..HW.energy import (
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det, saxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
-from ..HW.lakeshore import ramp_temp
+from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
 from sst_hw.diode import (
@@ -139,6 +139,8 @@ def en_scan_core(
     lockscan = True,
     pol=0,
     temp=None,
+    temp_wait=0, # negative no wait at all, anything positive is wait for ramp and this amount of minutes
+    temp_ramp=10,
     grating="no change",
     master_plan=None,
     angle=None,
@@ -227,6 +229,12 @@ def en_scan_core(
         if 0<temp<350:
             valid = False
             validation += f"temperature of {temp} is out of range\n"
+        if temp_wait > 30:
+            valid = False
+            validation += f"temperature wait time of {temp_wait} minutes is too long\n"
+        if 0.1 > temp_ramp or temp_ramp > 100:
+            valid = False
+            validation += f"temperature ramp speed of {temp_ramp} is not True/False\n"
     if sim_mode:
         if valid:
             retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
@@ -240,9 +248,6 @@ def en_scan_core(
     if angle is not None:
         print(f'moving angle to {angle}')
         yield from rotate_now(angle)
-    if temp is not None:
-        print(f'ramping temperature to {temp}')
-        yield from ramp_temp(temp)
     for det in newdets:
         det.cam.acquire_time.kind = "hinted"
     # set the grating
@@ -286,6 +291,19 @@ def en_scan_core(
     for det in newdets:
         sigcycler += cycler(det.cam.acquire_time, times.copy())
     sigcycler += cycler(Shutter_open_time, shutter_times)
+
+    if temp is not None:
+        if temp_ramp is not None:
+            print(f'setting ramp speed to {temp_ramp}deg/min')
+            yield from bps.mv(tem_tempstage.ramp_speed,temp_ramp)
+            yield from bps.sleep(0.5) # make sure the controller has time to change
+        if temp_wait>=0:
+            print(f'ramping temperature to {temp} and waiting {temp_wait*60} seconds')
+            yield from bps.mv(tem_tempstage,temp) # set the temp stage and wait
+            yield from bps.sleep(temp_wait*60)
+        else:
+            print(f'starting temperature ramp to {temp} and continuing')
+            yield from bps.mv(tem_tempstage.setpoint,temp) # set the temp stage and move on
 
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
 
@@ -514,7 +532,7 @@ def NEXAFS_scan_core(
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     # set motor offset if it's set
-    if motorname is not "None":
+    if motorname != "None":
         yield from bps.rel_set(eval(motorname), offset, wait=True)
     # set polarization
     yield from set_polarization(pol)
