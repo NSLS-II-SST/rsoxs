@@ -62,7 +62,7 @@ def exposure():
     return "   " + saxs_det.exposure() + "\n   " + waxs_det.exposure()
 
 
-def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs"):
+def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs",n_exp=1):
     """
     snap of detectors to clear any charge from light hitting them - needed before starting scans or snapping images
     :return:
@@ -79,6 +79,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs"):
         counts = "s"
     if secs <= 0:
         secs = det.cam.acquire_time.get()
+    
 
     if secs == 1:
         secss = ""
@@ -104,6 +105,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs"):
     print(det)
     print(bp.count)
     print(count)
+    yield from bps.mv(det.cam.num_images,n_exp)
     yield from bp.count([det], num=count)
     if name is not None:
         RE.md["sample_name"] = samsave
@@ -117,6 +119,8 @@ def dark_plan(det):
     yield from det.skinnystage()
     oldmode = det.cam.image_mode.get()
     yield from bps.abs_set(det.cam.image_mode,1)
+    n_exp = det.cam.num_images.get()
+    yield from bps.abs_set(det.cam.num_images,1)
     yield from bps.mv(det.cam.shutter_mode, 0)
     yield from bps.trigger(det, group="darkframe-trigger")
     yield from bps.wait("darkframe-trigger")
@@ -124,6 +128,7 @@ def dark_plan(det):
     if det.useshutter:
         yield from bps.mv(det.cam.shutter_mode, 2)
     yield from bps.abs_set(det.cam.image_mode,oldmode)
+    yield from bps.abs_set(det.cam.num_images,n_exp)
     yield from det.skinnyunstage()
     yield from det.skinnystage()
     return snapshot

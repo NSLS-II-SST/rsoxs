@@ -145,6 +145,7 @@ def en_scan_core(
     master_plan=None,
     angle=None,
     sim_mode=False,
+    n_exp=1,
     md=None,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
@@ -212,9 +213,9 @@ def en_scan_core(
     else:
         valid = False
         validation += "invalid grating was chosen"
-    if max(times) > 20:
+    if max(times) > 10:
         valid = False
-        validation += "exposure times greater than 20 seconds are not valid\n"
+        validation += "exposure times greater than 10 seconds are not valid\n"
     if pol < -1 or pol > 180:
         valid = False
         validation += f"polarization of {pol} is not valid\n"
@@ -235,6 +236,9 @@ def en_scan_core(
         if 0.1 > temp_ramp or temp_ramp > 100:
             valid = False
             validation += f"temperature ramp speed of {temp_ramp} is not True/False\n"
+    if 1000 < n_exp < 1:
+        valid = False
+        validation += f'number of exposures {n_exp} is unreasonable\n'
     if sim_mode:
         if valid:
             retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
@@ -289,6 +293,7 @@ def en_scan_core(
         yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
 
     for det in newdets:
+        yield from bps.mv(det.cam.num_images,n_exp)
         sigcycler += cycler(det.cam.acquire_time, times.copy())
     sigcycler += cycler(Shutter_open_time, shutter_times)
 
