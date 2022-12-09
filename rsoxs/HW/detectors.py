@@ -40,12 +40,12 @@ waxs_det.stats1.total.kind = "hinted"
 # saxs_det = SimGreatEyes(name="Simulated SAXS camera")
 
 
-def start_det_cooling():
+def stop_det_cooling():
     yield from saxs_det.cooling_off()
     yield from waxs_det.cooling_off()
 
 
-def stop_det_cooling():
+def start_det_cooling():
     yield from saxs_det.set_temp(-80)
     yield from waxs_det.set_temp(-80)
 

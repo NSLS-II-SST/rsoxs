@@ -17,9 +17,9 @@ from ..Functions.contingencies import (
 )
 from sst_hw.gatevalves import gvll
 from sst_hw.shutters import psh4, FEsh1
-from ..HW.signals import ring_current
+from ..HW.signals import ring_current,sst_control
 from ..HW.motors import sam_X
-from sst_hw.vacuum import rsoxs_pg_main
+from sst_hw.vacuum import rsoxs_pg_main_val
 from ..HW.detectors import (
         start_det_cooling,
         stop_det_cooling,
@@ -49,6 +49,7 @@ def saxs_back_on():
         saxs_det.cam.enable_cooling,1,
         saxs_det.cam.bin_x,4,
         saxs_det.cam.bin_y,4)
+
 
 suspend_gvll = SuspendBoolLow(
     gvll.state,
@@ -130,31 +131,23 @@ suspend_saxs_temp_high = SuspendCeil(
 )
 
 
-def waxs_back_on():
-    yield from bps.mv(
-        waxs_det.cam.temperature,-80,
-        waxs_det.cam.enable_cooling,1,
-        waxs_det.cam.bin_x,4,
-        waxs_det.cam.bin_y,4)
 
-
-
-def saxs_back_on():
-    yield from bps.mv(
-        saxs_det.cam.temperature,-80,
-        saxs_det.cam.enable_cooling,1,
-        saxs_det.cam.bin_x,4,
-        saxs_det.cam.bin_y,4)
-
-
-suspend_pressure = SuspendWhenChanged(
-    rsoxs_pg_main,
-    expected_value='LO<E-03',
-    allow_resume=True,
+suspend_pressure = SuspendCeil(
+    rsoxs_pg_main_val,
+    resume_thresh=0.003,
+    suspend_thresh=0.01,
     sleep=30,
     tripped_message="Pressure in the Chamber is above the threshold for having cooling on",
     pre_plan=stop_det_cooling,
     post_plan=start_det_cooling,
+)
+
+suspend_control = SuspendWhenChanged(
+    sst_control,
+    expected_value='RSoXS',
+    allow_resume=True,
+    sleep=1,
+    tripped_message="RSoXS does not currently have control",
 )
 
 
@@ -203,6 +196,7 @@ def turn_on_checks():
     RE.install_suspender(suspend_saxs_temp_low)
     RE.install_suspender(suspend_saxs_temp_high)
     RE.install_suspender(suspendx)
+    RE.install_suspender(suspend_control)
     logger.addHandler(safe_handler)
     logger.addHandler(mail_handler)
 
@@ -217,6 +211,7 @@ def turn_off_checks():
     RE.remove_suspender(suspend_saxs_temp_low)
     RE.remove_suspender(suspend_saxs_temp_high)
     RE.remove_suspender(suspendx)
+    RE.remove_suspender(suspend_control)
     logger.removeHandler(safe_handler)
     logger.removeHandler(mail_handler)
 

@@ -305,7 +305,8 @@ def en_scan_core(
             print(f'starting temperature ramp to {temp} and continuing')
             yield from bps.mv(tem_tempstage.setpoint,temp) # set the temp stage and move on
 
-    yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+    yield from bp.scan_nd(newdets + signals, sigcycler, md=md)
+    yield from cleanup()
 
 
 def new_en_scan_core(

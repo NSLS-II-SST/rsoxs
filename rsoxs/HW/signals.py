@@ -18,6 +18,9 @@ bpm13_sum = EpicsSignalRO(
 ring_current = EpicsSignalRO(
     "SR:OPS-BI{DCCT:1}I:Real-I", name="NSLS-II Ring Current", kind="normal"
 )
+sst_control = EpicsSignalRO(
+    "XF:07ID-CT{Bl-Ctrl}Endstn-Sel", name="SST endstation in Control", kind="normal",string=True
+)
 Beamstop_WAXS = EpicsSignalRO(
     "XF:07ID-ES1{DMR:I400-1}:IC1_MON", name="WAXS Beamstop", kind="normal"
 )
