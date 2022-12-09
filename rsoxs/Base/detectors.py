@@ -62,6 +62,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     image = C(ImagePlugin, "image1:")
     cam = C(GreatEyesDetCamWithVersions, "cam1:")
     transform_type = 0
+    number_exposures = 1
     tiff = C(
         TIFFPluginWithFileStore,
         "TIFF1:",
@@ -114,6 +115,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 "yellow",
                 85,
             )
+        self.cam.num_images.set(self.number_exposures)
         self.trans1.enable.set(1)
         self.trans1.type.set(self.transform_type)
         self.image.nd_array_port.set("TRANS1")
@@ -161,6 +163,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
             Shutter_enable.set(0)
         else:
             print("not turning on shutter because detector is in simulation mode")
+        self.cam.num_images.set(1)
         return [self].append(super().unstage(*args, **kwargs))
 
     def skinnyunstage(self, *args, **kwargs):

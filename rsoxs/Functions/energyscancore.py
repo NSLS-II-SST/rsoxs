@@ -293,7 +293,7 @@ def en_scan_core(
         yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
 
     for det in newdets:
-        yield from bps.mv(det.cam.num_images,n_exp)
+        yield from bps.mv(det.number_exposures,n_exp)
         sigcycler += cycler(det.cam.acquire_time, times.copy())
     sigcycler += cycler(Shutter_open_time, shutter_times)
 
