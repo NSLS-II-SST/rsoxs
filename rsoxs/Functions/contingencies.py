@@ -22,7 +22,7 @@ def pause_notices(until=None, **kwargs):
     #
 
     global no_notifications_until
-    if until is None and len(kwargs) is 0:
+    if until is None and len(kwargs)== 0:
         print("You need to specify either a duration or a timeout.")
     elif until is None:
         no_notifications_until = datetime.datetime.now() + datetime.timedelta(**kwargs)
@@ -87,7 +87,7 @@ def det_down_notice():
     user_email = RE.md["user_email"]
     send_notice(
         bls_email + "," + user_email,
-        "<@U016YV35UAJ> SST-1 detector seems to have failed",
+        f"<@U04EZ5DSB33> {get_user_slack_tag()} SST-1 detector seems to have failed", # username for rsoxs slack U016YV35UAJ
         "The temperature is reading below -90C which is a mistake"
         "\rScans have been paused until the detector and IOC are restarted."
     )
@@ -120,6 +120,7 @@ def beamdown_notice():
     send_notice(
         bls_email + "," + user_email,
         "SST-1 has lost beam",
+        f"{get_user_slack_tag()}\r"
         "Beam to RSoXS has been lost."
         "\rYour scan has been paused automatically."
         "\rNo intervention needed, but thought you might "
@@ -142,6 +143,7 @@ def beamup_notice():
     send_notice(
         bls_email + "," + user_email,
         "SST-1 beam restored",
+        f"{get_user_slack_tag()}\r"
         "Beam to RSoXS has been restored."
         "\rYour scan has resumed running."
         "\rIf able, you may want to check the data and "
@@ -158,13 +160,22 @@ def beamup_notice():
     )
     yield from bps.null()
 
+def get_user_slack_tag():
+    user_slack_tag = ''
+    if 'user_slack_tag' in RE.md.keys():
+        if type(RE.md['user_slack_tag']) is list:
+            for tag in RE.md['user_slack_tag']:
+                user_slack_tag += f'<@{tag}> '
+        else:
+            user_slack_tag += f'<@{RE.md["user_slack_tag"]}>'
+    return user_slack_tag
 
 class OSEmailHandler(logging.Handler):
     def emit(self, record):
         user_email = RE.md["user_email"]
         send_notice(
             bls_email + "," + user_email,
-            "<@U016YV35UAJ> SST has thrown an exception",
+            f"<@U04EZ5DSB33> {get_user_slack_tag()} SST has thrown an exception",
             record.getMessage(),
         )  # record.stack_info
 

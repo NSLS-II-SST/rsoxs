@@ -102,10 +102,10 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs",n_exp=1):
     if name is not None:
         RE.md["sample_name"] = name
     #yield from bp.count([det, en.energy], num=count)
-    print(det)
-    print(bp.count)
-    print(count)
-    yield from bps.mv(det.cam.num_images,n_exp)
+    #print(det)
+    #print(bp.count)
+    #print(count)
+    det.number_exposures = n_exp
     yield from bp.count([det], num=count)
     if name is not None:
         RE.md["sample_name"] = samsave
