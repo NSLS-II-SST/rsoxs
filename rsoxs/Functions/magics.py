@@ -259,7 +259,7 @@ def snap(line):
     except:
         RE(snapshot())
     else:
-        if secs > 0 and secs < 100:
+        if secs > 0 and secs < 10:
             RE(snapshot(secs))
 
 
@@ -273,7 +273,7 @@ def snapsaxs(line):
     except:
         RE(snapshot(detn="saxs"))
     else:
-        if secs > 0 and secs < 100:
+        if secs > 0 and secs < 10:
             RE(snapshot(secs, detn="saxs"))
 
 
@@ -287,7 +287,7 @@ def snapwaxs(line):
     except:
         RE(snapshot(detn="waxs"))
     else:
-        if secs > 0 and secs < 100:
+        if secs > 0 and secs < 10:
             RE(snapshot(secs, detn="waxs"))
 
 

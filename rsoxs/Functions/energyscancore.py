@@ -451,7 +451,7 @@ def new_en_scan_core(
         temzs.discard(None)
         if min(temzs,default=0) < 0 or max(temzsdefault=0) > 150:
             valid = False
-            validation += f"X motor is out of vaild range\n"
+            validation += f"TEMz motor is out of vaild range\n"
         if max(temzs,0) > 100 and min(ys,default=50) < 20:
             valid = False
             validation += f"potential clash between TEY and sample bar\n"
@@ -679,6 +679,7 @@ def NEXAFS_fly_scan_core(
     samplepol = en.sample_polarization.setpoint.get()
     if locked:
         yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
+    yield from bps.mv(en.energy, en_start-0.10 )  # move to the initial energy
     print(f"Effective sample polarization is {samplepol}")
     if len(kwargs)>0:
         print(f'{kwargs} were entered as options, but are being ignored')
