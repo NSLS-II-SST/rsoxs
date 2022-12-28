@@ -486,9 +486,10 @@ def normal_incidence_rotate_pol_nexafs(
     plan_name = "normal_incidence_rotate_pol_nexafs"
     # grab locals
     arguments = dict(locals())
-    arguments["nexafs_plan"] = eval(nexafs_plan).__name__
+    nexafs_func = globals()[nexafs_plan]
+    arguments["nexafs_plan"] = nexafs_func.__name__
     clean_up_md(arguments, md, **kwargs)
-    nexafs_plan_plan = eval(nexafs_plan)
+    nexafs_plan_plan = nexafs_func
     uids = []
     for pol in polarizations:
         uid = yield from nexafs_plan_plan(angle=90,pol=pol, master_plan=master_plan, md=md, **kwargs)
@@ -510,9 +511,10 @@ def fixed_pol_rotate_sample_nexafs(
     plan_name = "fixed_pol_rotate_sample_nexafs"
     # grab locals
     arguments = dict(locals())
-    arguments["nexafs_plan"] = eval(nexafs_plan).__name__
+    nexafs_func = globals()[nexafs_plan]
+    arguments["nexafs_plan"] = nexafs_func.__name__
     clean_up_md(arguments, md, **kwargs)
-    nexafs_plan_plan = eval(nexafs_plan)
+    nexafs_plan_plan = nexafs_func
     uids = []
     for angle in angles:
         uid = yield from nexafs_plan_plan(
@@ -552,9 +554,10 @@ def fixed_sample_rotate_pol_nexafs(
     plan_name = "fixed_sample_rotate_pol_nexafs"
     # grab locals
     arguments = dict(locals())
-    arguments["nexafs_plan"] = eval(nexafs_plan).__name__
+    nexafs_func = globals()[nexafs_plan]
+    arguments["nexafs_plan"] = nexafs_func.__name__
     clean_up_md(arguments, md, **kwargs)
-    nexafs_plan_plan = eval(nexafs_plan)
+    nexafs_plan_plan = nexafs_func
     uids = []
     for angle in angles:
         if angle < grazing_angle:
@@ -585,9 +588,10 @@ def fixed_sample_rotate_pol_list_nexafs(
     plan_name = "fixed_sample_rotate_pol_list_nexafs"
     # grab locals
     arguments = dict(locals())
-    arguments["nexafs_plan"] = eval(nexafs_plan).__name__
+    nexafs_func = globals()[nexafs_plan]
+    arguments["nexafs_plan"] = nexafs_func.__name__
     clean_up_md(arguments, md, **kwargs)
-    nexafs_plan_plan = eval(nexafs_plan)
+    nexafs_plan_plan = nexafs_func
     uids = []
     for pol in polarizations:
         uid = yield from nexafs_plan_plan(

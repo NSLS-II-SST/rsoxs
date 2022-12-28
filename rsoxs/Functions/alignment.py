@@ -300,11 +300,13 @@ def move_to_location(locs=get_sample_location()):
 
 
 def get_location_from_config(config):
-    return eval(config + "()[0]")
+    config_func = getattr(rsoxs.HW.signals, config)
+    return config_func()[0]
 
 
 def get_md_from_config(config):
-    return eval(config + "()[1]")
+    config_func = getattr(rsoxs.HW.signals, config)
+    return config_func()[1]
 
 
 def load_configuration(config,sim_mode=False):
@@ -534,15 +536,15 @@ def newsample():
         "Is the sample for grazing incidence? ({}): ".format(RE.md["grazing"])
     )
     if grazing != "":
-        RE.md["grazing"] = eval(grazing)
+        RE.md["grazing"] = bool(grazing)
     front = input(
         "Is the sample on the front of the bar? ({}): ".format(RE.md["front"])
     )
     if front != "":
-        RE.md["front"] = eval(front)
+        RE.md["front"] = bool(front)
     height = input("Sample height? ({}): ".format(RE.md["height"]))
     if height != "":
-        RE.md["height"] = eval(height)
+        RE.md["height"] = float(height)
 
     acquisitions = []
     add_default_acq = input("add acquisition (full_carbon_scan - WAXS)? : ")
@@ -820,7 +822,7 @@ def spiralsearch(
     for det in dets:
         if not isinstance(det, Device):
             try:
-                newdets.append(eval(det))
+                newdets.append(globals()[det])
             except Exception:
                 valid = False
                 validation += f"detector {det} is not an ophyd device\n"

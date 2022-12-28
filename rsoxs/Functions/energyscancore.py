@@ -183,7 +183,7 @@ def en_scan_core(
     for det in dets:
         if not isinstance(det, Device):
             try:
-                det_dev = eval(det)
+                det_dev = globals()[det]
                 newdets.append(det_dev)
                 detnames.append(det_dev.name)
             except Exception:
@@ -376,7 +376,7 @@ def new_en_scan_core(
     for det in dets:
         if not isinstance(det, Device):
             try:
-                det_dev = eval(det)
+                det_dev = globals()[det]
                 newdets.append(det_dev)
                 detnames.append(det_dev.name)
             except Exception:
@@ -542,7 +542,7 @@ def NEXAFS_scan_core(
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     # set motor offset if it's set
     if motorname != "None":
-        yield from bps.rel_set(eval(motorname), offset, wait=True)
+        yield from bps.rel_set(globals()[motorname], offset, wait=True)
     # set polarization
     yield from set_polarization(pol)
     # make sure the energy is completely read, so we know where we are
@@ -734,7 +734,7 @@ def RSoXS_fly_scan_core(
     for det in dets:
         if not isinstance(det, Device):
             try:
-                newdets.append(eval(det))
+                newdets.append(globals()[det])
             except Exception:
                 valid = False
                 validation += f"detector {det} is not an ophyd device\n"
