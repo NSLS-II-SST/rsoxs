@@ -39,6 +39,12 @@ from ..HW.energy import (
     Mono_Scan_Stop,
     Mono_Scan_Stop_ev,
 )
+from ..HW.motors import (
+    sam_X,
+    sam_Y,
+    sam_Z,
+    sam_Th,
+)
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det, saxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
@@ -318,29 +324,35 @@ def en_scan_core(
 
 
 def new_en_scan_core(
-    signals=None, # a list of signals
-    dets=None,    # a list of detectors to run at each step
-    energy=None,  # optional energy object to set energy commands to
+    dets=None,    # a list of detectors to run at each step - get from md by default
+    energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
     lockscan = True, # whether to lock the harmonic and other energy components during a scan
     grating="no change", # what grating to use for this scan
 
     energies=None,# a list of energies to run through in the inner loop
-    times=None,   # exposure times for each energy (same length as energies)
-    polarizations=None, # polarizations to run as an outer loop
-    locations=None,       # locations to run as an outermost loop
-    temperatures=None,       # locations to run as an outermost loop
+    times=None,   # exposure times for each energy (same length as energies) (cycler add to energies)
+
+    polarizations=None, # polarizations to run as an outer loop (cycler multiply with previous)
+    
+    locations=None,       # locations to run together as an outer loop  (cycler multiply with previous) list of location dicts
+    temperatures=None,       # locations to run as an outer loop  (cycler multiply with previous generally, but optionally add to locations - see next)
+
+    temps_with_locations = False, # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
 
     enscan_type=None,     # optional extra string name to describe this type of scan - will make timing
-    master_plan=None, # if this is lying within an outer plan, that name can be stored here
+    master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
-    md=None, # md to pass to the scan
+    md=None,  # md to pass to the scan
     **kwargs #extraneous settings from higher level plans are ignored
 ):
     # grab locals
     if signals is None:
         signals = []
     if dets is None:
-        dets = []
+        if md['RSoXS_Main_DET'] == 'WAXS':
+            dets = ['waxs_det']
+        else:
+            dets = ['saxs_det']
     if energies is None:
         energies = []
     if times is None:
@@ -418,6 +430,7 @@ def new_en_scan_core(
     if not isinstance(energy, Device):
         valid = False
         validation += f"energy object {energy} is not a valid ophyd device\n"
+    motor_positions=[]
     if len(locations) > 0:
         motor_positions = [{d['motor']: d['position'] for d in location} for location in locations]
         angles = {d.get('angle', None) for d in motor_positions}
@@ -455,6 +468,10 @@ def new_en_scan_core(
         if max(temzs,0) > 100 and min(ys,default=50) < 20:
             valid = False
             validation += f"potential clash between TEY and sample bar\n"
+    if(temps_with_locations):
+        if len(temperatures)!= len(locations):
+            valid = False
+            validation += f"temperatures and locations are different lengths, cannot be simultaneously changed\n"
     if sim_mode:
         if valid:
             retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
@@ -496,12 +513,37 @@ def new_en_scan_core(
         yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
 
     for det in newdets:
-        sigcycler += cycler(det.cam.acquire_time, times.copy())
-    sigcycler += cycler(Shutter_open_time, shutter_times)
+        sigcycler += cycler(det.cam.acquire_time, times.copy()) # cycler for changing each detector exposure time
+    sigcycler += cycler(Shutter_open_time, shutter_times) # cycler for changing the shutter opening time
 
-    # multiply in polarization cycler
-    # multiply in location cycler
-    # multiply in temperature cycler
+    if len(polarizations):
+        sigcycler *= cycler(energy.polarization, polarizations) # cycler for polarization changes (multiplied means we do everything above for each polarization)
+
+
+    if(temps_with_locations):
+        angles = [d.get('th', None) for d in motor_positions]
+        xs = [d.get('x', None) for d in motor_positions]
+        ys = [d.get('y', None) for d in motor_positions]
+        zs = [d.get('z', None) for d in motor_positions]
+        loc_temp_cycler = cycler(sam_X,xs)
+        loc_temp_cycler += cycler(sam_Y,ys) # adding means we run the cyclers simultaenously, 
+        loc_temp_cycler += cycler(sam_Z,zs)
+        loc_temp_cycler += cycler(sam_Th,angles)
+        loc_temp_cycler += cycler(tem_tempstage,temperatures)
+        sigcycler *= loc_temp_cycler # add cyclers for temperature and location changes (if they are linked) one of everything above (energies, polarizations) for each temp/location
+    else:
+        angles = [d.get('th', None) for d in motor_positions]
+        xs = [d.get('x', None) for d in motor_positions]
+        ys = [d.get('y', None) for d in motor_positions]
+        zs = [d.get('z', None) for d in motor_positions]
+        loc_cycler = cycler(sam_X,xs)
+        loc_cycler += cycler(sam_Y,ys)
+        loc_cycler += cycler(sam_Z,zs)
+        loc_cycler += cycler(sam_Th,angles)
+        sigcycler *= loc_cycler # run every energy for every polarization and every polarization for every location
+        sigcycler *= cycler(tem_tempstage,temperatures) # run every location for each temperature step
+
+
 
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
 
@@ -699,147 +741,6 @@ def NEXAFS_fly_scan_core(
     return uid
 
 
-def RSoXS_fly_scan_core(
-    scan_params,
-    exp_time,
-    dets,
-    angle=None,
-    openshutter=False,
-    pol=0,
-    grating="best",
-    enscan_type=None,
-    master_plan=None,
-    locked = True,
-    md=None,
-    sim_mode=False,
-    **kwargs #extraneous settings from higher level plans are ignored
-):
-    # grab locals
-    if md is None:
-        md = {}
-    arguments = dict(locals())
-    del arguments["md"]  # no recursion here!
-    if md is None:
-        md = {}
-    md.setdefault("plan_history", [])
-    md["plan_history"].append(
-        {"plan_name": "NEXAFS_fly_scan_core", "arguments": arguments}
-    )
-    md.update({"plan_name": enscan_type, "master_plan": master_plan})
-
-    # validate inputs
-    valid = True
-    validation = ""
-    newdets = []
-    for det in dets:
-        if not isinstance(det, Device):
-            try:
-                newdets.append(globals()[det])
-            except Exception:
-                valid = False
-                validation += f"detector {det} is not an ophyd device\n"
-    if len(newdets) < 1:
-        valid = False
-        validation += "No detectors are given\n"
-    energies = np.empty(0)
-    speeds = []
-    for scanparam in scan_params:
-        (sten, enden, speed) = scanparam
-        energies = np.append(energies, np.linspace(sten, enden, 10))
-        speeds.append(speed)
-    if len(energies) < 10:
-        valid = False
-        validation += f"scan parameters {scan_params} could not be parsed\n"
-    if min(energies) < 70 or max(energies) > 2200:
-        valid = False
-        validation += "energy input is out of range for SST 1\n"
-    if grating == "1200":
-        if min(energies) < 150:
-            valid = False
-            validation += "energy is to low for the 1200 l/mm grating\n"
-    elif grating == "250":
-        if max(energies) > 1000:
-            valid = False
-            validation += "energy is too high for 250 l/mm grating\n"
-    elif grating == "rsoxs":
-        if max(energies) > 1000:
-            valid = False
-            validation += "energy is too high for 250 l/mm grating\n"
-    else:
-        valid = False
-        validation += "invalid grating was chosen"
-    if pol < -1 or pol > 180:
-        valid = False
-        validation += f"polarization of {pol} is not valid\n"
-    if angle is not None:
-        if -155 > angle or angle > 195:
-            valid = False
-            validation += f"angle of {angle} is out of range\n"
-    if sim_mode:
-        if valid:
-            retstr = f"scanning {newdets} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
-            retstr += f"    in {len(times)} steps with exposure times from {min(times)} to {max(times)} seconds\n"
-            return retstr
-        else:
-            return validation
-    if sim_mode:
-        if valid:
-            retstr = f"fly scanning from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
-            retstr += f"    at speeds from {max(speeds)} to {max(speeds)} ev/second\n"
-            return retstr
-        else:
-            return validation
-    if not valid:
-        raise ValueError(validation)
-
-    if 'hopg_loc' in md.keys():
-        hopgx = md['hopg_loc']['x']
-        hopgy = md['hopg_loc']['y']
-        hopgth = md['hopg_loc']['th']
-    else:
-        hopgx = None
-        hopgy = None
-        hopgth = None
-    if grating == "1200":
-        yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    elif grating == "250":
-        yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    elif grating == "rsoxs":
-        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-
-    if np.isnan(pol):
-        pol = en.polarization.setpoint.get()
-    else:
-        yield from set_polarization(pol)
-
-
-
-    if angle is not None:
-        print(f'moving angle to {angle}')
-        yield from rotate_now(angle)
-    for det in newdets:
-        det.cam.acquire_time.kind = "hinted"
-
-    shutter_times = [i * 1000 for i in times]
-    yield from bps.mv(en.scanlock, 0)
-    yield from bps.mv(en, energies[0])  # move to the initial energy (unlocked)
-
-    en.read()
-    samplepol = en.sample_polarization.setpoint.get()
-    (en_start, en_stop, en_speed) = scan_params[0]
-    yield from bps.mv(en.scanlock, 0) # unlock parameters
-    yield from bps.mv(en, en_start)  # move to the initial energy
-    if locked:
-        yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
-    print(f"Effective sample polarization is {samplepol}")
-
-    set_exposure(exp_time)
-
-    uid = yield from finalize_wrapper(fly_scan_dets(scan_params,newdets, md=md, locked=locked, polarization=pol),cleanup())
-    return uid
-## HACK HACK
-
-
 def rd(obj, *, default_value=0):
     """Reads a single-value non-triggered object
     This is a helper plan to get the scalar value out of a Device
@@ -959,158 +860,6 @@ def one_shuttered_step(detectors, step, pos_cache):
     )  # now wait for motors, before moving on to next step
 
 
-def scan_eliot(detectors, cycler, shutter_sig = None, *, md={}):
-    """
-    Scan over an arbitrary N-dimensional trajectory.
-    1.) begin movement as soon as photon part of detection ends
-            wait for shutter to close, not for detector readout
-    2.) do not wait for motor movement to finish before beginnning detection step
-
-    NOTE this may result in small smearing of data by one point backwards,
-        but this is usually worth it for the speed up
-
-    Parameters
-    ----------
-    detectors : list - strong requirement that they NOT be mixed with cycler motors
-    cycler : Cycler
-        list of dictionaries mapping motors to positions
-    shutter_sig : Device to set (to None) and wait for it to go to 0 before ending step
-        this signals the end of photons, not the end of the detector trigger
-        it is safe to move to the next step once this signal is 0
-    ***per_step : not used here, all is hard coded in
-    md : dict, optional
-        metadata
-
-    """
-    _md = {
-        "detectors": [det.name for det in detectors],
-        "motors": [motor.name for motor in cycler.keys],
-        "num_points": len(cycler),
-        "num_intervals": len(cycler) - 1,
-        "plan_args": {"detectors": list(map(repr, detectors)), "cycler": repr(cycler)},
-        "plan_name": "scan_eliot",
-        "hints": {},
-    }
-    _md.update(md or {})
-    try:
-        dimensions = [(motor.hints["fields"], "primary") for motor in cycler.keys]
-    except (AttributeError, KeyError):
-        # Not all motors provide a 'fields' hint, so we have to skip it.
-        pass
-    else:
-        _md["hints"].setdefault("dimensions", dimensions)
-    if shutter_sig is None:
-        shutter_sig = shutter_open_set
-    pos_cache = defaultdict(lambda: None)  # where last position is stashed
-    cycler = utils.merge_cycler(cycler)
-    motors = list(cycler.keys)
-
-    @bpp.stage_decorator(list(detectors) + motors)
-    @bpp.run_decorator(md=_md)
-    def inner_scan_eliot():
-        # this makes the reading step easier (usually done by trigger_and_read)
-        devices = separate_devices(list(detectors) + motors)  # remove redundant entries
-        # removing this to read the detecors and motors seperately
-
-        # go to first motor position
-        yield Msg("checkpoint")
-        motorgrp = _short_uid("set")  # create a UID for the motor group
-        for motor, pos in list(cycler)[0].items():
-            if pos == pos_cache[motor]:
-                # This step does not move this motor.
-                continue
-            yield Msg("set", motor, pos, group=motorgrp)
-            pos_cache[motor] = pos
-        # wait for motors this time
-        yield from bps.wait(group=motorgrp)  # now wait for motors, before moving on to next step
-
-        # trigger detectors
-        detgrp = _short_uid("trigger")
-        no_wait = True
-        for obj in devices:
-            if hasattr(obj, "trigger"):
-                no_wait = False
-                yield from trigger(obj, group=detgrp)
-
-        # step through the list
-        for step in list(cycler)[1:]:  # this is not repeating the first step
-            # within loop, read motors, move to next motor position, read detectors
-            # create primary step,
-
-            yield Msg("checkpoint")
-
-            # detectors are still potentially reading out
-            # wait for motor movement to end - make sure we aren't sending a move command before they are done
-            yield from create("primary") # create a primary step
-            for motor in motors:
-                yield from read(motor)
-
-            # move to next position - detectors might still be reading at this point
-
-            # in plans with longer distances between steps, this can be dangerous
-
-            if not no_wait: # if the detectors are even triggered - RSoXS detectors will be
-                yield from wait(group=detgrp) # wait for the detectors to be finished
-
-            motorgrp = _short_uid("set")  # stolen from move per_step to break out the wait
-            for motor, pos in step.items():
-                if pos == pos_cache[motor]:
-                    # This step does not move this motor.
-                    continue
-                yield Msg("set", motor, pos, group=motorgrp)
-                pos_cache[motor] = pos
-            # now motors are moving, and potentially the detectors are still reading out
-            # wait for detector trigger from last step to finish
-
-            # read detectors
-            # yield from create("primary") # create a primary step moving to above first read
-            for obj in detectors: # changing from devices to detectors - to separate out reads
-                yield from read(obj) # read out the detectors (the motor may be moving still)
-            yield from save()
-
-            # the shutter is closed at this point, so now is the time to set the exposure watcher
-
-            yield from bps.abs_set(shutter_sig, None, timeout=20,group="shutter")
-            # the motor may be moving still, but generally it is actually fine
-            # trigger next detector step
-
-            yield from bps.wait(group=motorgrp)  # now wait for motors, before moving on to next step
-            # this is the safe way to do it, ensuring that the exposure can't possibly start
-            # before the energy and motors are done moving - but this might cause delays
-
-            detgrp = _short_uid("trigger")
-            no_wait = True
-            for obj in list(detectors):
-                if hasattr(obj, "trigger"):
-                    no_wait = False
-                    yield from trigger(obj, group=detgrp)
-
-            # wait for the shutter to have opened and closed successfully
-            # sending none to the set command triggers a special status monitor
-            yield from bps.wait(group="shutter")
-
-            # detectors are likely still reading out, but the photons are done, so we can move the motors - loop
-
-        # wait for detectors to finish the final time
-        if not no_wait:
-            yield from wait(group=detgrp)
-
-        # wait for the final motor movement
-        yield Msg("wait", None, group=motorgrp)
-
-        # read detectors and motors the final time
-        yield from create("primary")
-        for motor in motors:
-            yield from read(motor)
-    #    for obj in devices: # here we want to read all of the motors and detectors
-    #        yield from read(obj)
-    #    yield from save()
-        for obj in detectors: # changing from devices to detectors - to separate out reads
-            yield from read(obj) # read out the detectors (the motor may be moving still)
-        yield from save()
-
-    return (yield from inner_scan_eliot())
-
 
 def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
     """
@@ -1220,6 +969,7 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
 def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
     """
     Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
+    this specific plan in in progress and is not operational yet
 
     scan proceeds as:
     1.) set up the flying parameters in the monochromator
@@ -1335,104 +1085,3 @@ def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
 
     return (yield from inner_scan_eliot())
 
-
-
-def fly_scan_mono_epu(scan_params, polarization=0, grating="best", *, md={}):
-    """
-    Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
-
-    scan proceeds as:
-    1.) set up the flying parameters in the monochromator
-    2.) move to the starting position in both undulator and monochromator
-    3.) begin the scan (take baseline, begin monitors)
-    4.) read the current mono readback
-    5.) set the undulator to move to the corresponding position
-    6.) if the mono is still running (not at end position), return to step 4
-    7.) if the mono is done, load the next parameters and start at step 1
-    8.) if no more parameters, end the scan
-
-    Parameters
-    ----------
-    scan_params : a list of tuples consisting of:
-        (start_en : eV to begin the scan,
-        stop_en : eV to stop the scan,
-        speed_en : eV / second to move the monochromator)
-        the stop energy of each tuple should match the start of the next to make a continuous scan
-            although this is not strictly enforced to allow for flexibility
-    pol : polarization to run the scan
-    grating : grating to run the scan
-    md : dict, optional
-        metadata
-
-    """
-    _md = {
-        "detectors": [mono_en.name],
-        "motors": [mono_en.name],
-        "plan_name": "fly_scan_eliot",
-        "hints": {},
-    }
-    _md.update(md or {})
-    devices = [mono_en]
-
-    @bpp.monitor_during_decorator([mono_en])
-    @bpp.stage_decorator(list(devices))
-    @bpp.run_decorator(md=_md)
-    def inner_scan_eliot():
-        # start the scan parameters to the monoscan PVs
-        yield Msg("checkpoint")
-        if np.isnan(polarization):
-            pol = en.polarization.setpoint.get()
-        else:
-            yield from set_polarization(polarization)
-            pol = polarization
-        step = 0
-        for (start_en, end_en, speed_en) in scan_params:
-            print(f"starting fly from {start_en} to {end_en} at {speed_en} eV/second")
-            yield Msg("checkpoint")
-            print("Preparing mono for fly")
-            yield from bps.mv(
-                Mono_Scan_Start_ev,
-                start_en,
-                Mono_Scan_Stop_ev,
-                end_en,
-                Mono_Scan_Speed_ev,
-                speed_en,
-            )
-            # move to the initial position
-            if step > 0:
-                yield from wait(group="EPU")
-            yield from bps.abs_set(mono_en, start_en, group="EPU")
-            print("moving to starting position")
-            yield from wait(group="EPU")
-            print("Mono in start position")
-            yield from bps.mv(epu_gap, en.gap(start_en, pol,en.scanlock.get()))
-            print("EPU in start position")
-            if step == 0:
-                monopos = mono_en.readback.get()
-                yield from bps.abs_set(
-                    epu_gap,
-                    en.gap(monopos, pol,en.scanlock.get()),
-                    wait=False,
-                    group="EPU",
-                )
-                yield from wait(group="EPU")
-            # start the mono scan
-            print("starting the fly")
-            yield from bps.mv(Mono_Scan_Start, 1)
-            monopos = mono_en.readback.get()
-            while np.abs(monopos < end_en) > 0.1:
-                yield from wait(group="EPU")
-                monopos = mono_en.readback.get()
-                yield from bps.abs_set(
-                    epu_gap,
-                    en.gap(monopos, pol,en.scanlock.get()),
-                    wait=False,
-                    group="EPU",
-                )
-                yield from create("primary")
-                for obj in devices:
-                    yield from read(obj)
-                yield from save()
-            step += 1
-
-    return (yield from inner_scan_eliot())

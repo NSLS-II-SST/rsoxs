@@ -1,10 +1,11 @@
 import numpy as np
-from ..HW.energy import en
-from ..HW.signals import Sample_TEY, Izero_Mesh, Beamstop_SAXS, Beamstop_WAXS
+from ..HW.signals import Sample_TEY, Izero_Mesh, High_Gain_diode_i400,setup_diode_i400
+from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import sample, load_sample
 from ..Functions.alignment import rotate_now
 from .energyscancore import NEXAFS_fly_scan_core, NEXAFS_scan_core
 from .energyscans import clean_up_md
+import bluesky.plan_stubs as bps
 from sst_funcs.printing import run_report, read_input
 
 
@@ -602,3 +603,173 @@ def fixed_sample_rotate_pol_list_nexafs(
             **kwargs)
         uids.append(uid)
     return uids
+
+
+
+def nexafs_plan(edge, speed='normal', speed_ratios=None, cycles=0, mode="sample", polarizations = [0],angles = None,grating='rsoxs',diode_range='high',temperatures=None,temp_ramp_speed=10,temp_wait=True,sim_mode=0, md = None, **kwargs):
+    # nexafs plan is a bit like rsoxs plan, in that it comprises a full experiment however each invdividual energy scan is going to be its own run (as it has been in the past)  this will make analysis much easier
+    valid = True
+    valid_text = ""
+    params, time = get_nexafs_scan_params(edge,speed,speed_ratios)
+    if not isinstance(params,list):
+        valid = False
+        valid_text = f'\n\nERROR - parameters from the given edge, speed, and speed_ratios are bad\n\n'
+    if cycles:
+        time *= 2 * cycles
+    for temp in temperatures:
+        
+        if temp is not None:
+            if 0<temp<350:
+                valid = False
+                valid_text += f"\n\nERROR - temperature of {temp} is out of range\n\n"
+            if temp_wait > 30:
+                valid = False
+                valid_text += f"\n\nERROR - temperature wait time of {temp_wait} minutes is too long\n\n"
+            if 0.1 > temp_ramp_speed or temp_ramp_speed > 100:
+                valid = False
+                valid_text += f"\n\nERROR - temperature ramp speed of {temp_ramp_speed} is not True/False\n\n"
+    
+    
+    if isinstance(temperatures,list) and not sim_mode:
+        yield from bps.mv(tem_tempstage.ramp_rate,temp_ramp_speed)
+    if diode_range=='high' and not sim_mode:
+        yield from setup_diode_i400()
+    elif diode_range=='low' and not sim_mode:
+        yield from High_Gain_diode_i400()
+    if max(edge) > 1200 and grating == 'rsoxs':
+        valid = False
+        valid_text += f'\n\nERROR - energy is not appropriate for this grating\n\n'
+    if not valid:
+        # don't go any further, even in simulation mode, because we know the inputs are wrong
+        if not sim_mode:
+            raise ValueError(valid_text)
+        else:
+            return valid_text
+        # if we are still valid - try to continue
+    for temp in temperatures:
+        if temp_wait and not sim_mode:
+            yield from bps.mv(tem_tempstage,temp)
+        elif not sim_mode:
+            yield from bps.mv(tem_tempstage.setpoint,temp)
+        for grazing_angle in angles:
+            for pol in polarizations:
+                if mode == "sample":
+                    if pol < grazing_angle:
+                        valid = False
+                        valid_text += "\n\nERROR - sample frame polarization less than grazing angle is not possible\n\n"
+                        if not sim_mode:
+                            print('\n\nERROR - sample frame polarization less than grazing angle is not possible\n\n Skipping this scan')
+                            next
+                    pol=epu_angle_from_grazing(pol, grazing_angle)
+                valid_text = yield from NEXAFS_fly_scan_core(
+                                    params,
+                                    cycles=cycles,
+                                    openshutter=True,
+                                    pol=pol,
+                                    angle=grazing_angle,
+                                    grating=grating,
+                                    sim_mode=sim_mode,
+                                    md=md,)
+
+    return valid_text
+
+
+def get_nexafs_scan_params(edge,speed = "normal", speed_ratios = None):
+    """
+    creates fly NEXAFS scan parameters, given an edge (which includes thresholds for different speed regions) base speed (eV/sec) and speed ratios between the different regions 
+    Args:
+        edge: String or tuple of 2 or more numbers (the only required entry)
+            if string, this should be a key in the lookup tables refering to an absorption edge energy
+            if tuple, this is the thresholds of the different ranges, i.e. start of pre edge, start of main edge, start of post edge, end etc.
+                the length of the tuple should correspond to 1- the speed ratios (or a default can be chosen if between 2 and 6 thresholds are given)
+        speed: String or Number (normal if not defined)
+            if string, this should be in the lookup table of standard speeds for scans
+            if number, this is the base speed in eV/sec
+        speed_ratios: string or tuple of numbers
+            if string, this should be in the lookup table of standard intervals
+            if a tuple, this must have one less element than the edge tuple (either explicitely entered or from the lookup table)
+                the values are the ratio of energy steps between the different regions defined by edge
+                
+    """
+    
+    edge_names = {"c":"Carbon",
+              "carbonk": "Carbon",
+              "ck": "Carbon",
+              "n": "Nitrogen",
+              "nitrogenk": "Nitrogen",
+              "nk": "Nitrogen",
+              "f": "Fluorine",
+              "fluorinek": "Fluorine",
+              "fk": "Fluorine",
+              "o": "Oxygen",
+              "oxygenk": "Oxygen",
+              "ok": "Oxygen",
+              "ca": "Calcium",
+              "calciumk": "Calcium",
+              "cak": "Calcium",
+             }
+
+
+     # these define the default edges of the intervals
+    edges = {"carbon":(250,282,297,350),
+             "oxygen":(500,525,540,560),
+             "fluorine":(650,680,700,740),
+             "aluminium":(1500,1560,1580,1600),
+             "nitrogen":(370,397,407,440),
+             "zincl": (1000,1015,1035,1085),
+             "sulfurl":(150,160,170,200),
+             "calcium":(320,345,355,380)
+            }
+     # these are the default interval ratios for each section
+    ratios_table = {
+                     "default 4":(5,1,5),
+                     "default 5":(5,1,2,5),
+                     "default 6":(5,2,1,2,5),
+                     "default 2":(1,),
+                     "default 3":(5,1),
+                    }
+
+    speed_table = {"normal": 0.2,
+                   "quick":0.4,
+                   "fast":0.5,
+                   "very fast":1,
+                   "slow":0.1,
+                   "very slow":0.05,
+                  }
+    edge_input = edge
+    if isinstance(edge,str):
+        if edge.lower() in edge_names.keys():
+            edge = edge_names[edge.lower()]
+            edge_input = edge.lower()
+        if edge.lower() in edges.keys():
+            edge = edges[edge.lower()]
+    if not isinstance(edge,tuple):
+        raise TypeError(f"invalid edge {edge} - no key of that name was found")
+    
+    if isinstance(speed,str):
+        if speed.lower() in speed_table.keys():
+            speed = speed_table[speed.lower()]
+    if not isinstance(speed, (float,int)):
+        raise TypeError(f"frame number {frame} was not found or is not a valid number")
+    
+    if speed_ratios == None:
+        if str(edge_input).lower() in ratios_table.keys():
+            speed_ratios = ratios_table[edge_input.lower()]
+        elif f"default {len(edge)}" in ratios_table.keys():
+            speed_ratios = ratios_table[f"default {len(edge)}"]
+        else:
+            speed_ratios = (1,)*(len(edge)-1)
+    else:
+        if not isinstance(speed_ratios,(tuple)):
+            speed_ratios = ratios_table[speed_ratios]
+    if not isinstance(speed_ratios,(tuple)):
+        raise TypeError(f"invalid ratios {speed_ratios}")
+    if len(speed_ratios) + 1 != len(edge):
+        raise ValueError(f'got the wrong number of intervals {len(speed_ratios)} expected {len(edge)-1}')
+    scan_params = []
+    time = 0
+    for i, ratio in enumerate(speed_ratios):
+        scan_params += [(edge[i],edge[i+1],float(ratio)*float(speed))]
+        time +=abs(edge[i+1] - edge[i]) / (float(ratio)*float(speed))
+
+    return scan_params, time
