@@ -347,6 +347,7 @@ def new_en_scan_core(
     master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
+    signals = None,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
     # grab locals
@@ -363,14 +364,10 @@ def new_en_scan_core(
         times = []
     if polarizations is None:
         polarizations = []
-    if locations is None:
-        locations = []
-    if temperatures is None:
-        temperatures = []
     if md is None:
         md = {}
     if energy is None:
-        energy = en
+        energy = en.energy
     arguments = dict(locals())
     del arguments["md"]  # no recursion here!
     arguments["signals"] = [signal.name for signal in arguments["signals"]]
@@ -429,6 +426,8 @@ def new_en_scan_core(
         valid = False
         validation += f"a provided polarization is not valid\n"
     if isinstance(temperatures,list):
+        if len(temperatures)==0:
+            temperatures = None
         if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
             valid = False
             validation += f"temperature out of range\n"
@@ -439,43 +438,44 @@ def new_en_scan_core(
         valid = False
         validation += f"energy object {energy} is not a valid ophyd device\n"
     motor_positions=[]
-    if len(locations) > 0:
-        motor_positions = [{d['motor']: d['position'] for d in location} for location in locations]
-        angles = {d.get('angle', None) for d in motor_positions}
-        angles.discard(None)
-        xs = {d.get('x', None) for d in motor_positions}
-        xs.discard(None)
-        if min(xs,default=0) < -13 or max(xs,default=0) > 13:
-            valid = False
-            validation += f"X motor is out of vaild range\n"
-        ys = {d.get('y', None) for d in motor_positions}
-        ys.discard(None)
-        if min(ys,default=0) < -190 or max(ys,default=0) > 355:
-            valid = False
-            validation += f"Y motor is out of vaild range\n"
-        zs = {d.get('z', None) for d in motor_positions}
-        zs.discard(None)
-        if min(zs,default=0) < -13 or max(zs,default=0) > 13:
-            valid = False
-            validation += f"Z motor is out of vaild range\n"
-        # temxs = {d.get('temx', None) for d in motor_positions}
-        # temxs.discard(None)
-        # if min(xs) < -13 or max(xs) > 13:
-        #     valid = False
-        #     validation += f"X motor is out of vaild range\n"
-        # temys = {d.get('temy', None) for d in motor_positions}
-        # temys.discard(None)
-        # if min(xs) < -13 or max(xs) > 13:
-        #     valid = False
-        #     validation += f"X motor is out of vaild range\n"
-        temzs = {d.get('temz', None) for d in motor_positions}
-        temzs.discard(None)
-        if min(temzs,default=0) < 0 or max(temzsdefault=0) > 150:
-            valid = False
-            validation += f"TEMz motor is out of vaild range\n"
-        if max(temzs,0) > 100 and min(ys,default=50) < 20:
-            valid = False
-            validation += f"potential clash between TEY and sample bar\n"
+    if isinstance(locations,list):
+        if len(locations)>0:
+            motor_positions = [{d['motor']: d['position'] for d in location} for location in locations]
+            angles = {d.get('angle', None) for d in motor_positions}
+            angles.discard(None)
+            xs = {d.get('x', None) for d in motor_positions}
+            xs.discard(None)
+            if min(xs,default=0) < -13 or max(xs,default=0) > 13:
+                valid = False
+                validation += f"X motor is out of vaild range\n"
+            ys = {d.get('y', None) for d in motor_positions}
+            ys.discard(None)
+            if min(ys,default=0) < -190 or max(ys,default=0) > 355:
+                valid = False
+                validation += f"Y motor is out of vaild range\n"
+            zs = {d.get('z', None) for d in motor_positions}
+            zs.discard(None)
+            if min(zs,default=0) < -13 or max(zs,default=0) > 13:
+                valid = False
+                validation += f"Z motor is out of vaild range\n"
+            # temxs = {d.get('temx', None) for d in motor_positions}
+            # temxs.discard(None)
+            # if min(xs) < -13 or max(xs) > 13:
+            #     valid = False
+            #     validation += f"X motor is out of vaild range\n"
+            # temys = {d.get('temy', None) for d in motor_positions}
+            # temys.discard(None)
+            # if min(xs) < -13 or max(xs) > 13:
+            #     valid = False
+            #     validation += f"X motor is out of vaild range\n"
+            temzs = {d.get('temz', None) for d in motor_positions}
+            temzs.discard(None)
+            if min(temzs,default=0) < 0 or max(temzs,default=0) > 150:
+                valid = False
+                validation += f"TEMz motor is out of vaild range\n"
+            if max(temzs,default=0) > 100 and min(ys,default=50) < 20:
+                valid = False
+                validation += f"potential clash between TEY and sample bar\n"
     else:
         locations = None
         temps_with_locations = False
@@ -516,23 +516,24 @@ def new_en_scan_core(
     # set up the scan cycler
     sigcycler = cycler(energy, energies)
     shutter_times = [i * 1000 for i in times]
-    yield from bps.mv(energy.scanlock, 0)
+    yield from bps.mv(en.scanlock, 0)
     yield from bps.sleep(0.5)
     yield from bps.mv(energy, energies[0])  # move to the initial energy (unlocked)
 
     if lockscan:
-        yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
+        yield from bps.mv(en.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
     old_n_exp = {}
     for det in newdets:
         old_n_exp[det.name] = det.number_exposures
         det.number_exposures = repeats
         sigcycler += cycler(det.cam.acquire_time, times.copy()) # cycler for changing each detector exposure time
     sigcycler += cycler(Shutter_open_time, shutter_times) # cycler for changing the shutter opening time
-
     if isinstance(polarizations,list):
-        sigcycler *= cycler(energy.polarization, polarizations) # cycler for polarization changes (multiplied means we do everything above for each polarization)
+        sigcycler = cycler(en.polarization, polarizations)*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
 
-
+    print(f'locations {locations}')
+    print(f'temperatures {temperatures}')
+    
     if(temps_with_locations):
         angles = [d.get('th', None) for d in motor_positions]
         xs = [d.get('x', None) for d in motor_positions]
@@ -546,7 +547,7 @@ def new_en_scan_core(
             loc_temp_cycler += cycler(tem_tempstage,temperatures) 
         else:
             loc_temp_cycler += cycler(tem_tempstage.setpoint,temperatures)
-        sigcycler *= loc_temp_cycler # add cyclers for temperature and location changes (if they are linked) one of everything above (energies, polarizations) for each temp/location
+        sigcycler = loc_temp_cycler*sigcycler # add cyclers for temperature and location changes (if they are linked) one of everything above (energies, polarizations) for each temp/location
     else:
         if isinstance(locations,list):
             angles = [d.get('th', None) for d in motor_positions]
@@ -557,15 +558,15 @@ def new_en_scan_core(
             loc_cycler += cycler(sam_Y,ys)
             loc_cycler += cycler(sam_Z,zs)
             loc_cycler += cycler(sam_Th,angles)
-            sigcycler *= loc_cycler # run every energy for every polarization and every polarization for every location
+            sigcycler = loc_cycler*sigcycler # run every energy for every polarization and every polarization for every location
         if isinstance(temperatures,list):
             if(temp_wait):
-                sigcycler *= cycler(tem_tempstage,temperatures) # run every location for each temperature step
+                sigcycler = cycler(tem_tempstage,temperatures)*sigcycler # run every location for each temperature step
             else:
-                sigcycler *= cycler(tem_tempstage.setpoint,temperatures) # run every location for each temperature step
+                sigcycler = cycler(tem_tempstage.setpoint,temperatures)*sigcycler # run every location for each temperature step
 
 
-
+    print(sigcycler)
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
     
     for det in newdets:

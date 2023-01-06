@@ -1,7 +1,7 @@
 import bluesky.plan_stubs as bps
 from copy import deepcopy
 from sst_funcs.printing import run_report
-from rsoxs_scans.acquisitions import dryrun_bar
+from rsoxs_scans.acquisition import dryrun_bar
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan
 from .alignment import load_sample, load_configuration, move_to_location,spiralsearch,rotate_sample
