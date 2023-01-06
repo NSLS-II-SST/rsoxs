@@ -71,6 +71,7 @@ def cleanup():
     # make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
     yield from bps.mv(en.scanlock, 0)
     yield from bps.mv(Shutter_control, 0)
+    
 
 
 def one_trigger_nd_step(detectors, step, pos_cache):
@@ -332,10 +333,13 @@ def new_en_scan_core(
     energies=None,# a list of energies to run through in the inner loop
     times=None,   # exposure times for each energy (same length as energies) (cycler add to energies)
 
+    repeats = 1, # number of images to take at each step
+
     polarizations=None, # polarizations to run as an outer loop (cycler multiply with previous)
     
     locations=None,       # locations to run together as an outer loop  (cycler multiply with previous) list of location dicts
     temperatures=None,       # locations to run as an outer loop  (cycler multiply with previous generally, but optionally add to locations - see next)
+    temp_wait = True,
 
     temps_with_locations = False, # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
 
@@ -424,9 +428,13 @@ def new_en_scan_core(
     if min(polarizations) < -1 or max(polarizations) > 180:
         valid = False
         validation += f"a provided polarization is not valid\n"
-    if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
-        valid = False
-        validation += f"temperature out of range\n"
+    if isinstance(temperatures,list):
+        if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
+            valid = False
+            validation += f"temperature out of range\n"
+    else:
+        temperatures = None
+        temps_with_locations=False
     if not isinstance(energy, Device):
         valid = False
         validation += f"energy object {energy} is not a valid ophyd device\n"
@@ -468,6 +476,9 @@ def new_en_scan_core(
         if max(temzs,0) > 100 and min(ys,default=50) < 20:
             valid = False
             validation += f"potential clash between TEY and sample bar\n"
+    else:
+        locations = None
+        temps_with_locations = False
     if(temps_with_locations):
         if len(temperatures)!= len(locations):
             valid = False
@@ -511,12 +522,14 @@ def new_en_scan_core(
 
     if lockscan:
         yield from bps.mv(energy.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
-
+    old_n_exp = {}
     for det in newdets:
+        old_n_exp[det.name] = det.number_exposures
+        det.number_exposures = repeats
         sigcycler += cycler(det.cam.acquire_time, times.copy()) # cycler for changing each detector exposure time
     sigcycler += cycler(Shutter_open_time, shutter_times) # cycler for changing the shutter opening time
 
-    if len(polarizations):
+    if isinstance(polarizations,list):
         sigcycler *= cycler(energy.polarization, polarizations) # cycler for polarization changes (multiplied means we do everything above for each polarization)
 
 
@@ -529,23 +542,34 @@ def new_en_scan_core(
         loc_temp_cycler += cycler(sam_Y,ys) # adding means we run the cyclers simultaenously, 
         loc_temp_cycler += cycler(sam_Z,zs)
         loc_temp_cycler += cycler(sam_Th,angles)
-        loc_temp_cycler += cycler(tem_tempstage,temperatures)
+        if(temp_wait):
+            loc_temp_cycler += cycler(tem_tempstage,temperatures) 
+        else:
+            loc_temp_cycler += cycler(tem_tempstage.setpoint,temperatures)
         sigcycler *= loc_temp_cycler # add cyclers for temperature and location changes (if they are linked) one of everything above (energies, polarizations) for each temp/location
     else:
-        angles = [d.get('th', None) for d in motor_positions]
-        xs = [d.get('x', None) for d in motor_positions]
-        ys = [d.get('y', None) for d in motor_positions]
-        zs = [d.get('z', None) for d in motor_positions]
-        loc_cycler = cycler(sam_X,xs)
-        loc_cycler += cycler(sam_Y,ys)
-        loc_cycler += cycler(sam_Z,zs)
-        loc_cycler += cycler(sam_Th,angles)
-        sigcycler *= loc_cycler # run every energy for every polarization and every polarization for every location
-        sigcycler *= cycler(tem_tempstage,temperatures) # run every location for each temperature step
+        if isinstance(locations,list):
+            angles = [d.get('th', None) for d in motor_positions]
+            xs = [d.get('x', None) for d in motor_positions]
+            ys = [d.get('y', None) for d in motor_positions]
+            zs = [d.get('z', None) for d in motor_positions]
+            loc_cycler = cycler(sam_X,xs)
+            loc_cycler += cycler(sam_Y,ys)
+            loc_cycler += cycler(sam_Z,zs)
+            loc_cycler += cycler(sam_Th,angles)
+            sigcycler *= loc_cycler # run every energy for every polarization and every polarization for every location
+        if isinstance(temperatures,list):
+            if(temp_wait):
+                sigcycler *= cycler(tem_tempstage,temperatures) # run every location for each temperature step
+            else:
+                sigcycler *= cycler(tem_tempstage.setpoint,temperatures) # run every location for each temperature step
 
 
 
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+    
+    for det in newdets:
+        det.number_exposures = old_n_exp[det.name]
 
 
 
