@@ -1,10 +1,14 @@
 import bluesky.plan_stubs as bps
+from copy import deepcopy
 from sst_funcs.printing import run_report
 from rsoxs_scans.acquisitions import dryrun_bar
-from .alignment import load_sample, load_configuration, move_to_location,spiralsearch
+from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
+from rsoxs_scans.nexafs import dryrun_nexafs_plan
+from .alignment import load_sample, load_configuration, move_to_location,spiralsearch,rotate_sample
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core
+from ..startup import RE
 
 run_report(__file__)
 
@@ -37,7 +41,10 @@ def run_bar(
     print("End of Queue")
 
 def run_queue_step(step):
-    print(f"\n----- starting acquisition step {step['acq_step']} in queue step {step['queue_step']}-----\n")
+    if step['queue_step']<1: # we haven't seen a second queue step, so we don't mention it
+        print(f"\n----- starting acquisition step {step['acq_step']}-----\n")
+    else:
+        print(f"\n----- starting acquisition step {step['acq_step']} in queue step {step['queue_step']}-----\n")
     print(step['description'])
     if step['action'] == 'diode_low':
         yield from setup_diode_i400()
@@ -68,6 +75,56 @@ def run_queue_step(step):
         yield from new_en_scan_core(**step['kwargs'])
     print(f"\n----- finished acquisition step {step['acq_step']} in queue step {step['queue_step']}-----\n")
     
+# plans for manually running a single rsoxs scan in the terminal or making your own plans
+def do_rsoxs(md=RE.md,**kwargs):
+    """
+    inputs:
+        edge, 
+        exposure_time = 1, 
+        frames='full', 
+        ratios=None, 
+        epeats =1, 
+        polarizations = [0],
+        angles = None,
+        grating='rsoxs',
+        diode_range='high',
+        temperatures=None,
+        temp_ramp_speed=10,
+        temp_wait=True, 
+        md=None,
+    """
+    outputs = dryrun_rsoxs_plan(md=md,**kwargs)
+    for i,out in enumerate(outputs):
+        out['acq_step']=i
+        out['queue_step']=0
+    print("Starting RSoXS plan")
+    for queue_step in outputs:
+        yield from run_queue_step(queue_step)
+    print("End of RSoXS plan")
     
 
-    
+def do_nexafs(md=RE.md,**kwargs):
+    """
+    inputs:
+        edge,
+        speed='normal',
+        ratios=None, 
+        cycles=0, 
+        pol_mode="sample", 
+        polarizations = [0],
+        angles = None,
+        grating='rsoxs',
+        diode_range='high',
+        temperatures=None,
+        temp_ramp_speed=10,
+        temp_wait=True, 
+        md = None,
+    """
+    outputs = dryrun_nexafs_plan(md=md,**kwargs)
+    for i,out in enumerate(outputs):
+        out['acq_step']=i
+        out['queue_step']=0
+    print("Starting NEXAFS plan")
+    for queue_step in outputs:
+        yield from run_queue_step(queue_step)
+    print("End of NEXAFS plan")
