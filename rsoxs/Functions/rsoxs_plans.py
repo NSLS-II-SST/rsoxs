@@ -33,12 +33,18 @@ motors = {
 def run_bar(
     sort_by=["sample_num"],
     rev=[False],
-    print_dry_run = True):
-    queue = dryrun_bar(sort_by=sort_by, rev=rev, print_dry_run=print_dry_run)
+    verbose = False,
+    dry_run=False):
+    if dry_run:
+        verbose = True
+    queue = dryrun_bar(sort_by=sort_by, rev=rev, print_dry_run=verbose)
+    if dry_run:
+        return None
     print("Starting Queue")
     for queue_step in queue:
         yield from run_queue_step(queue_step)
     print("End of Queue")
+    return None
 
 def run_queue_step(step):
     if step['queue_step']<1: # we haven't seen a second queue step, so we don't mention it
