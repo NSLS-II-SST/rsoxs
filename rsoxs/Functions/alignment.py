@@ -501,8 +501,8 @@ def newsample():
         )
     )
     if th != "":
-        RE.md["bar_loc"]["th"] = th
-        RE.md["angle"] = th
+        RE.md["bar_loc"]["th"] = float(th)
+        RE.md["angle"] = float(th)
 
     composition = input(
         "Sample composition or chemical formula ({}): ".format(RE.md["composition"])
@@ -677,16 +677,16 @@ def sanatize_angle(samp, force=False):
         if samp["front"]:
             # sample is on the front of the bar, so valid outputs are between -90 and 90
             if goodnumber:
-                samp["bar_loc"]["th"] = 90-np.mod(samp['angle']+3600,180)
+                samp["bar_loc"]["th"] = float(90-np.mod(samp['angle']+3600,180))
             else:
                 samp["bar_loc"]["th"] = 70 # default grazing incidence samples to 20 degrees incidence angle
                 samp["angle"] = 70
                 # front grazing sample angle is interpreted as grazing angle
         else:
             if goodnumber:
-                angle = np.mod(435-np.mod(-samp['angle']+3600,180),360)-165
+                angle = float(np.mod(435-np.mod(-samp['angle']+3600,180),360)-165)
                 if(angle < -155):
-                    angle = np.mod(435 - np.mod(samp['angle'] + 3600, 180), 360) - 165
+                    angle = float(np.mod(435 - np.mod(samp['angle'] + 3600, 180), 360) - 165)
                 samp["bar_loc"]["th"] = angle
             else:
                 samp["bar_loc"]["th"] = 110
@@ -695,13 +695,13 @@ def sanatize_angle(samp, force=False):
     else:
         if samp["front"]:
             if goodnumber:
-                samp["bar_loc"]["th"] = (
+                samp["bar_loc"]["th"] = float(
                     np.mod(345-np.mod(90+samp["angle"]+3600,180)+90,360)-165
                 )
                 if samp["bar_loc"]["x0"] < -1.8 and np.abs(samp['angle']) > 30:
                     # transmission from the left side of the bar at a incident angle more than 20 degrees,
                     # flip sample around to come from the other side - this can take a minute or two
-                    samp["bar_loc"]["th"] = (
+                    samp["bar_loc"]["th"] = float(
                         np.mod(345-np.mod(90-samp['angle']+3600,180)+90,360)-165
                     )
                 if samp["bar_loc"]["th"] >=195:
@@ -713,19 +713,19 @@ def sanatize_angle(samp, force=False):
                 samp["angle"] = 180
         else:
             if goodnumber:
-                samp["bar_loc"]["th"] = np.mod(90+samp['angle']+3600,180)-90
+                samp["bar_loc"]["th"] = float(np.mod(90+samp['angle']+3600,180)-90)
                 if samp["bar_loc"]["x0"] > -1.8 and np.abs(samp['angle']) > 30:
                     # transmission from the right side of the bar at a incident angle more than 20 degrees,
                     # flip to come from the left side
-                    samp["bar_loc"]["th"] = np.mod(90-samp['angle']+3600,180)-90
+                    samp["bar_loc"]["th"] = float(np.mod(90-samp['angle']+3600,180)-90.0)
             else:
                 samp["bar_loc"]["th"] = 0
                 samp["angle"] = 0
 
     if samp["bar_loc"]["th"] >= 195:
-        samp["bar_loc"]["th"] = 195
+        samp["bar_loc"]["th"] = 195.0
     if samp["bar_loc"]["th"] <= -155:
-        samp["bar_loc"]["th"] = -155
+        samp["bar_loc"]["th"] = -155.0
 
 
 def sample_by_value_match(bar, key, string):
@@ -1074,12 +1074,12 @@ def update_bar(inbar, loc_Q, front):
                 item, list
             ):
                 sample["location"] = item
-                sample["bar_loc"]["ximg"] = item[0]["position"]
-                sample["bar_loc"]["yimg"] = item[1]["position"]
+                sample["bar_loc"]["ximg"] = float(item[0]["position"])
+                sample["bar_loc"]["yimg"] = float(item[1]["position"])
                 if front:
-                    sample["bar_loc"]["th0"] = 0
+                    sample["bar_loc"]["th0"] = float(0)
                 else:
-                    sample["bar_loc"]["th0"] = 180
+                    sample["bar_loc"]["th0"] = float(180)
                 annotateImage(sample_image_axes, item, sample["sample_name"])
                 # advance sample and loop
                 lastclicked = samplenum
@@ -1315,7 +1315,7 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
         xoff = af1xoff - (af1xoff - af2xoff) * (ypos - af1y) / run_y
         samp["bar_loc"][
             "xoff"
-        ] = xoff  # this should pretty much be the same for both fiducials,
+        ] = float(xoff)  # this should pretty much be the same for both fiducials,
         # but just in case there is a tilt,
         # we account for that here, taking af1soff if the sample is towards the top and af2soff as it is lower
 
@@ -1326,24 +1326,24 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
             newy = ypos + y_offset + (ypos - af1y) * dy / run_y
             samp["bar_loc"][
                 "x0"
-            ] = newx  # these are the positions at 0 rotation, so for the front, we are already good
+            ] = float(newx)  # these are the positions at 0 rotation, so for the front, we are already good
         elif back:
             newx = xpos + x_offset_back + (ypos - af1y) * dxb / run_y
             newy = ypos + y_offset_back + (ypos - af1y) * dyb / run_y
-            samp["bar_loc"]["x0"] = (
+            samp["bar_loc"]["x0"] = float(
                 2 * xoff - newx
             )  # these are the positions at 0 rotation,
             # so for the back, we have to correct
         else:
             continue  # sample is on the back, and we are not doing the back of the bar, so skip
-        samp["bar_loc"]["y0"] = newy
+        samp["bar_loc"]["y0"] = float(newy)
         # recording of fiducial information as well with every sample, so they will know how to rotate
-        samp["bar_loc"]["af1y"] = af1y
-        samp["bar_loc"]["af2y"] = af2y
-        samp["bar_loc"]["af1xoff"] = af1xoff
-        samp["bar_loc"]["af2xoff"] = af2xoff
-        samp["bar_loc"]["af1zoff"] = af1zoff
-        samp["bar_loc"]["af2zoff"] = af2zoff
+        samp["bar_loc"]["af1y"] = float(af1y)
+        samp["bar_loc"]["af2y"] = float(af2y)
+        samp["bar_loc"]["af1xoff"] = float(af1xoff)
+        samp["bar_loc"]["af2xoff"] = float(af2xoff)
+        samp["bar_loc"]["af1zoff"] = float(af1zoff)
+        samp["bar_loc"]["af2zoff"] = float(af2zoff)
 
         zoff = zoffset(
             af1zoff,
@@ -1354,7 +1354,7 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
             af1y=af1y,
             af2y=af2y,
         )
-        samp["bar_loc"]["zoff"] = zoff
+        samp["bar_loc"]["zoff"] = float(zoff)
 
         # now we can rotate the sample to the desired position (in the 'angle' metadata)
         # moving z is dangerous = best to keep it at 0 by default

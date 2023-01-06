@@ -2,6 +2,7 @@ import bluesky.plan_stubs as bps
 from copy import deepcopy
 from sst_funcs.printing import run_report
 from rsoxs_scans.acquisition import dryrun_bar
+from rsoxs_scans.spreadsheets import save_samplesxls
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan
 from .alignment import load_sample, load_configuration, move_to_location,spiralsearch,rotate_sample
@@ -30,19 +31,32 @@ motors = {
 }
 
 
-def run_bar(
-    sort_by=["sample_num"],
+def run_bar(bar,
+    sort_by=["apriority"],
     rev=[False],
     verbose = False,
-    dry_run=False):
+    dry_run=False,
+    delete_as_complete=True,
+    save_each_step=''
+    ):
     if dry_run:
         verbose = True
-    queue = dryrun_bar(sort_by=sort_by, rev=rev, print_dry_run=verbose)
+    queue = dryrun_bar(bar,sort_by=sort_by, rev=rev, print_dry_run=verbose)
     if dry_run:
         return None
     print("Starting Queue")
     for queue_step in queue:
         yield from run_queue_step(queue_step)
+        if delete_as_complete:
+            for samp in bar:
+                for i,acq in enumerate(samp['acquisitions']):
+                    if acq['uuid'] == queue_step['uuid']:
+                        del samp['acquisitions'][i]
+                        if verbose:
+                            print('deleted acquisition')
+            if len(save_each_step)>0:
+                save_samplesxls(bar,save_each_step)
+                print(f'saved xslx file to {save_each_step}')
     print("End of Queue")
     return None
 
