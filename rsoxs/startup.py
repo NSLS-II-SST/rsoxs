@@ -161,7 +161,7 @@ RE.subscribe(print_scan_ids, "start")
 
 control_layer = os.getenv("OPHYD_CONTROL_LAYER")
 
-# print(f'You are using the "{control_layer}" control layer')
+print(f'You are using the "{control_layer}" control layer')
 
 # getting rid of the warnings
 import logging
