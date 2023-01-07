@@ -59,6 +59,7 @@ class GreateyesTransform(TransformPlugin):
 
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
+
     image = C(ImagePlugin, "image1:")
     cam = C(GreatEyesDetCamWithVersions, "cam1:")
     transform_type = 0
@@ -115,12 +116,12 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 "yellow",
                 85,
             )
-        #self.cam.num_images.set(self.number_exposures)
+        # self.cam.num_images.set(self.number_exposures)
         self.trans1.enable.set(1)
         self.trans1.type.set(self.transform_type)
         self.image.nd_array_port.set("TRANS1")
         self.tiff.nd_array_port.set("TRANS1")
-        self.stage_sigs['cam.num_images'] = self.number_exposures
+        self.stage_sigs["cam.num_images"] = self.number_exposures
 
         return [self].append(super().stage(*args, **kwargs))
 
@@ -129,9 +130,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         #    print(f'Warning: It looks like the {self.name} restarted, putting in default values again')
         #    self.cam.temperature.set(-80)
         if self.cam.enable_cooling.get() != 1:
-            print(
-                f"Warning: It looks like the {self.name} restarted, putting in default values again"
-            )
+            print(f"Warning: It looks like the {self.name} restarted, putting in default values again")
             self.cam.temperature.set(-80)
             self.cam.enable_cooling.set(1)
             self.cam.bin_x.set(self.binvalue)
@@ -143,14 +142,14 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def shutter(self):
         switch = {0: "disabled", 1: "enabled", 3: "unknown", 4: "unknown", 2: "enabled"}
-        #return "Shutter is {}".format(switch[self.cam.sync.get()])
+        # return "Shutter is {}".format(switch[self.cam.sync.get()])
         return "Shutter is {}".format(switch[self.cam.shutter_mode.get()])
         # return ('Shutter is {}'.format(switch[self.cam.shutter_mode.get()]))
 
     def shutter_on(self):
         # self.cam.sync.set(1)
         if self.useshutter:
-            #self.cam.sync.set(1)
+            # self.cam.sync.set(1)
             self.cam.shutter_mode.det(2)
         else:
             print("not turning on shutter because detector is in simulation mode")

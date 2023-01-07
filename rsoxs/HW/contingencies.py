@@ -1,8 +1,6 @@
 import logging
 import bluesky.plan_stubs as bps
-from bluesky.suspenders import (
-SuspendBoolHigh, SuspendFloor, SuspendCeil, SuspendBoolLow, SuspendWhenChanged
-)
+from bluesky.suspenders import SuspendBoolHigh, SuspendFloor, SuspendCeil, SuspendBoolLow, SuspendWhenChanged
 from sst_funcs.printing import run_report
 from ..Functions.contingencies import (
     beamdown_notice,
@@ -13,21 +11,22 @@ from ..Functions.contingencies import (
     MakeSafeHandler,
     det_down_notice,
     temp_bad_notice,
-    temp_ok_notice
+    temp_ok_notice,
 )
 from sst_hw.gatevalves import gvll
 from sst_hw.shutters import psh4, FEsh1
-from ..HW.signals import ring_current,sst_control
+from ..HW.signals import ring_current, sst_control
 from ..HW.motors import sam_X
 from sst_hw.vacuum import rsoxs_pg_main_val
 from ..HW.detectors import (
-        start_det_cooling,
-        stop_det_cooling,
-        saxs_det,waxs_det,
-        dark_frame_preprocessor_waxs_spirals,
-        dark_frame_preprocessor_waxs,
-        dark_frame_preprocessor_saxs
-        )
+    start_det_cooling,
+    stop_det_cooling,
+    saxs_det,
+    waxs_det,
+    dark_frame_preprocessor_waxs_spirals,
+    dark_frame_preprocessor_waxs,
+    dark_frame_preprocessor_saxs,
+)
 from ..startup import RE
 
 
@@ -36,19 +35,14 @@ run_report(__file__)
 
 def waxs_back_on():
     yield from bps.mv(
-        waxs_det.cam.temperature,-80,
-        waxs_det.cam.enable_cooling,1,
-        waxs_det.cam.bin_x,4,
-        waxs_det.cam.bin_y,4)
-
+        waxs_det.cam.temperature, -80, waxs_det.cam.enable_cooling, 1, waxs_det.cam.bin_x, 4, waxs_det.cam.bin_y, 4
+    )
 
 
 def saxs_back_on():
     yield from bps.mv(
-        saxs_det.cam.temperature,-80,
-        saxs_det.cam.enable_cooling,1,
-        saxs_det.cam.bin_x,4,
-        saxs_det.cam.bin_y,4)
+        saxs_det.cam.temperature, -80, saxs_det.cam.enable_cooling, 1, saxs_det.cam.bin_x, 4, saxs_det.cam.bin_y, 4
+    )
 
 
 suspend_gvll = SuspendBoolLow(
@@ -96,7 +90,6 @@ suspend_waxs_temp_low = SuspendFloor(
 )
 
 
-
 suspend_waxs_temp_high = SuspendCeil(
     waxs_det.cam.temperature_actual,
     resume_thresh=-78,
@@ -119,7 +112,6 @@ suspend_saxs_temp_low = SuspendFloor(
 )
 
 
-
 suspend_saxs_temp_high = SuspendCeil(
     saxs_det.cam.temperature_actual,
     resume_thresh=-78,
@@ -129,7 +121,6 @@ suspend_saxs_temp_high = SuspendCeil(
     pre_plan=det_down_notice,
     post_plan=temp_ok_notice,
 )
-
 
 
 suspend_pressure = SuspendCeil(
@@ -144,17 +135,11 @@ suspend_pressure = SuspendCeil(
 
 suspend_control = SuspendWhenChanged(
     sst_control,
-    expected_value='RSoXS',
+    expected_value="RSoXS",
     allow_resume=True,
     sleep=1,
     tripped_message="RSoXS does not currently have control",
 )
-
-
-
-
-
-
 
 
 suspendx = SuspendBoolHigh(
@@ -178,13 +163,10 @@ suspendgx = SuspendBoolHigh(
 
 logger = logging.getLogger("bluesky")
 mail_handler = OSEmailHandler()
-mail_handler.setLevel(
-    "ERROR"
-)  # Only email for if the level is ERROR or higher (CRITICAL).
+mail_handler.setLevel("ERROR")  # Only email for if the level is ERROR or higher (CRITICAL).
 
 safe_handler = MakeSafeHandler()
 safe_handler.setLevel("ERROR")  # is this correct?
-
 
 
 def turn_on_checks():
@@ -216,8 +198,6 @@ def turn_off_checks():
     logger.removeHandler(mail_handler)
 
 
-
-
 def waxs_spiral_mode():
     try:
         RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
@@ -228,6 +208,7 @@ def waxs_spiral_mode():
     except ValueError:
         pass
     RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
+
 
 def waxs_normal_mode():
     try:

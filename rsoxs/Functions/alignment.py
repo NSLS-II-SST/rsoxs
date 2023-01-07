@@ -16,7 +16,7 @@ from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
 from ..HW.detectors import saxs_det, waxs_det, set_exposure
 from sst_hw.shutters import psh10
-from ..HW.energy import en, set_polarization, grating_to_1200,grating_to_250,grating_to_rsoxs
+from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
 from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 from ..HW.motors import (
@@ -32,26 +32,28 @@ from ..HW.motors import (
     BeamStopS,
     TEMX,
     TEMY,
-    TEMZ
+    TEMZ,
 )
 from . import configurations
 from ..HW.slits import slits1, slits2, slits3
 from sst_hw.motors import Exit_Slit
 from sst_funcs.printing import boxed_text, colored
 from .common_functions import args_to_string
-from .configurations import (WAXSNEXAFS,
-        WAXS,
-        SAXS,
-        SAXSNEXAFS,
-        SAXS_rsoxs_grating,
-        WAXS_rsoxs_grating,
-        SAXSNEXAFS_rsoxs_grating,
-        WAXSNEXAFS_rsoxs_grating,
-        SAXS_liquid,
-        WAXS_liquid,
-        WAXSNEXAFS_SAXSslits,
-        WAXS_SAXSslits,
-        TEYNEXAFS)
+from .configurations import (
+    WAXSNEXAFS,
+    WAXS,
+    SAXS,
+    SAXSNEXAFS,
+    SAXS_rsoxs_grating,
+    WAXS_rsoxs_grating,
+    SAXSNEXAFS_rsoxs_grating,
+    WAXSNEXAFS_rsoxs_grating,
+    SAXS_liquid,
+    WAXS_liquid,
+    WAXSNEXAFS_SAXSslits,
+    WAXS_SAXSslits,
+    TEYNEXAFS,
+)
 
 run_report(__file__)
 
@@ -64,25 +66,17 @@ def user():
             "{}".format(str(RE.md["proposal_id"])).center(50, " "), "yellow"
         )
     if len(str(RE.md["SAF"])) > 0:
-        text += "\n   SAF ID:              " + colored(
-            "{}".format(str(RE.md["SAF"])).center(50, " "), "yellow"
-        )
+        text += "\n   SAF ID:              " + colored("{}".format(str(RE.md["SAF"])).center(50, " "), "yellow")
     if len(RE.md["user_name"]) > 0:
-        text += "\n   User Name:           " + colored(
-            "{}".format(RE.md["user_name"]).center(50, " "), "yellow"
-        )
+        text += "\n   User Name:           " + colored("{}".format(RE.md["user_name"]).center(50, " "), "yellow")
     if len(RE.md["user_email"]) > 0:
-        text += "\n   User Email:          " + colored(
-            "{}".format(RE.md["user_name"]).center(50, " "), "yellow"
-        )
+        text += "\n   User Email:          " + colored("{}".format(RE.md["user_name"]).center(50, " "), "yellow")
     if len(RE.md["user_id"]) > 0:
         text += "\n   User ID:             " + colored(
             "{}".format(str(RE.md["user_id"])).center(50, " "), "yellow"
         )
     if len(RE.md["institution"]) > 0:
-        text += "\n   Institution:         " + colored(
-            "{}".format(RE.md["institution"]).center(50, " "), "yellow"
-        )
+        text += "\n   Institution:         " + colored("{}".format(RE.md["institution"]).center(50, " "), "yellow")
     if len(RE.md["project_name"]) > 0:
         text += "\n   project:             " + colored(
             "{}".format(RE.md["project_name"]).center(50, " "), "yellow"
@@ -98,45 +92,29 @@ def sample():
     title = "Sample metadata - stored in every scan:"
     text = ""
     if len(str(RE.md["proposal_id"])) > 0:
-        text += "   proposal ID:           " + colored(
-            "{}".format(RE.md["proposal_id"]).center(48, " "), "cyan"
-        )
+        text += "   proposal ID:           " + colored("{}".format(RE.md["proposal_id"]).center(48, " "), "cyan")
     if len(str(RE.md["SAF"])) > 0:
-        text += "\n   SAF id:                " + colored(
-            "{}".format(RE.md["SAF"]).center(48, " "), "cyan"
-        )
+        text += "\n   SAF id:                " + colored("{}".format(RE.md["SAF"]).center(48, " "), "cyan")
     if len(str(RE.md["user_name"])) > 0:
-        text += "\n   User Name:             " + colored(
-            "{}".format(RE.md["user_name"]).center(48, " "), "cyan"
-        )
+        text += "\n   User Name:             " + colored("{}".format(RE.md["user_name"]).center(48, " "), "cyan")
     if len(str(RE.md["institution"])) > 0:
-        text += "\n   Institution:           " + colored(
-            "{}".format(RE.md["institution"]).center(48, " "), "cyan"
-        )
+        text += "\n   Institution:           " + colored("{}".format(RE.md["institution"]).center(48, " "), "cyan")
     if len(str(RE.md["sample_name"])) > 0:
-        text += "\n   Sample Name:           " + colored(
-            "{}".format(RE.md["sample_name"]).center(48, " "), "cyan"
-        )
+        text += "\n   Sample Name:           " + colored("{}".format(RE.md["sample_name"]).center(48, " "), "cyan")
     if len(str(RE.md["sample_priority"])) > 0:
         text += "\n   Sample Priority:       " + colored(
             "{}".format(RE.md["sample_priority"]).center(48, " "), "cyan"
         )
     if len(str(RE.md["sample_desc"])) > 0:
-        text += "\n   Sample Description:    " + colored(
-            "{}".format(RE.md["sample_desc"]).center(48, " "), "cyan"
-        )
+        text += "\n   Sample Description:    " + colored("{}".format(RE.md["sample_desc"]).center(48, " "), "cyan")
     if len(str(RE.md["sample_id"])) > 0:
         text += "\n   Sample ID:             " + colored(
             "{}".format(str(RE.md["sample_id"])).center(48, " "), "cyan"
         )
     if len(str(RE.md["sample_set"])) > 0:
-        text += "\n   Sample Set:            " + colored(
-            "{}".format(RE.md["sample_set"]).center(48, " "), "cyan"
-        )
+        text += "\n   Sample Set:            " + colored("{}".format(RE.md["sample_set"]).center(48, " "), "cyan")
     if len(str(RE.md["sample_date"])) > 0:
-        text += "\n   Sample Creation Date:  " + colored(
-            "{}".format(RE.md["sample_date"]).center(48, " "), "cyan"
-        )
+        text += "\n   Sample Creation Date:  " + colored("{}".format(RE.md["sample_date"]).center(48, " "), "cyan")
     if len(str(RE.md["project_name"])) > 0:
         text += "\n   Project name:          " + colored(
             "{}".format(RE.md["project_name"]).center(48, " "), "cyan"
@@ -158,17 +136,13 @@ def sample():
             "{}".format(RE.md["bar_loc"]["th"]).center(48, " "), "cyan"
         )
     if len(str(RE.md["composition"])) > 0:
-        text += "\n   Composition(formula):  " + colored(
-            "{}".format(RE.md["composition"]).center(48, " "), "cyan"
-        )
+        text += "\n   Composition(formula):  " + colored("{}".format(RE.md["composition"]).center(48, " "), "cyan")
     if len(str(RE.md["density"])) > 0:
         text += "\n   Density:               " + colored(
             "{}".format(str(RE.md["density"])).center(48, " "), "cyan"
         )
     if len(str(RE.md["components"])) > 0:
-        text += "\n   List of Components:    " + colored(
-            "{}".format(RE.md["components"]).center(48, " "), "cyan"
-        )
+        text += "\n   List of Components:    " + colored("{}".format(RE.md["components"]).center(48, " "), "cyan")
     if len(str(RE.md["thickness"])) > 0:
         text += "\n   Thickness:             " + colored(
             "{}".format(str(RE.md["thickness"])).center(48, " "), "cyan"
@@ -178,9 +152,7 @@ def sample():
             "{}".format(RE.md["sample_state"]).center(48, " "), "cyan"
         )
     if len(str(RE.md["notes"])) > 0:
-        text += "\n   Notes:                 " + colored(
-            "{}".format(RE.md["notes"]).center(48, " "), "cyan"
-        )
+        text += "\n   Notes:                 " + colored("{}".format(RE.md["notes"]).center(48, " "), "cyan")
     boxed_text(title, text, "red", 80, shrink=False)
 
 
@@ -206,11 +178,7 @@ def newuser():
     if user_name != "":
         RE.md["user_name"] = user_name
 
-    user_email = input(
-        "Your email for beamline status notifications ({}): ".format(
-            RE.md["user_email"]
-        )
-    )
+    user_email = input("Your email for beamline status notifications ({}): ".format(RE.md["user_email"]))
     if user_email != "":
         RE.md["user_email"] = user_email
 
@@ -218,9 +186,7 @@ def newuser():
     if project_name != "":
         RE.md["project_name"] = project_name
 
-    project_desc = input(
-        "Your project description ({}): ".format(RE.md["project_desc"])
-    )
+    project_desc = input("Your project description ({}): ".format(RE.md["project_desc"]))
     if project_desc != "":
         RE.md["project_desc"] = project_desc
     # if new, add user to database get unique ID.
@@ -292,9 +258,7 @@ def move_to_location(locs=get_sample_location()):
     }
     for order in orderlist:
         outputlist = [
-            [switch[items["motor"]], float(items["position"])]
-            for items in locs
-            if items["order"] == order
+            [switch[items["motor"]], float(items["position"])] for items in locs if items["order"] == order
         ]
         flat_list = [item for sublist in outputlist for item in sublist]
         yield from bps.mv(*flat_list)
@@ -310,12 +274,12 @@ def get_md_from_config(config):
     return config_func()[1]
 
 
-def load_configuration(config,sim_mode=False):
+def load_configuration(config, sim_mode=False):
     """
     :param config: string containing a name of a configuration
     :return:
     """
-    if(sim_mode):
+    if sim_mode:
         return f"moved to {config} configuration"
     yield from move_to_location(get_location_from_config(config))
     RE.md.update(get_md_from_config(config))
@@ -399,7 +363,7 @@ def user_dict(
     }
 
 
-def load_sample(sam_dict,sim_mode=False):
+def load_sample(sam_dict, sim_mode=False):
     """
     move to a sample location and load the metadata with the sample information
 
@@ -407,11 +371,12 @@ def load_sample(sam_dict,sim_mode=False):
     :return:
     """
 
-    if(sim_mode):
+    if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
     yield from move_to_location(locs=sam_dict["location"])
     yield from bps.sleep(0)
+
 
 def load_user_dict_to_md(user_dict):
     RE.md.update(user_dict)
@@ -427,35 +392,25 @@ def newsample():
         "This information will tag future data until this changes, please be as thorough as possible\n"
         "current values in parentheses, leave blank for no change"
     )
-    sample_name = input(
-        "Your sample name  - be concise ({}): ".format(RE.md["sample_name"])
-    )
+    sample_name = input("Your sample name  - be concise ({}): ".format(RE.md["sample_name"]))
     if sample_name != "":
         RE.md["sample_name"] = sample_name
 
     sample_priority = input(
-        "Your sample priority  - 0 - highest to 100-lowest ({}): ".format(
-            RE.md["sample_priority"]
-        )
+        "Your sample priority  - 0 - highest to 100-lowest ({}): ".format(RE.md["sample_priority"])
     )
     if sample_priority != "":
         RE.md["sample_priority"] = sample_priority
 
-    sample_desc = input(
-        "Describe your sample - be thorough ({}): ".format(RE.md["sample_desc"])
-    )
+    sample_desc = input("Describe your sample - be thorough ({}): ".format(RE.md["sample_desc"]))
     if sample_desc != "":
         RE.md["sample_desc"] = sample_desc
 
-    sample_id = input(
-        "Your sample id - if you have one ({}): ".format(RE.md["sample_id"])
-    )
+    sample_id = input("Your sample id - if you have one ({}): ".format(RE.md["sample_id"]))
     if sample_id != "":
         RE.md["sample_id"] = sample_id
 
-    proposal_id = input(
-        "Your Proposal ID from PASS ({}): ".format(RE.md["proposal_id"])
-    )
+    proposal_id = input("Your Proposal ID from PASS ({}): ".format(RE.md["proposal_id"]))
     if proposal_id != "":
         RE.md["proposal_id"] = proposal_id
 
@@ -467,9 +422,7 @@ def newsample():
     if saf_id != "":
         RE.md["SAF"] = saf_id
 
-    sample_set = input(
-        "What set does this sample belong to ({}): ".format(RE.md["sample_set"])
-    )
+    sample_set = input("What set does this sample belong to ({}): ".format(RE.md["sample_set"]))
     if sample_set != "":
         RE.md["sample_set"] = sample_set
 
@@ -477,9 +430,7 @@ def newsample():
     if sample_date != "":
         RE.md["sample_date"] = sample_date
 
-    project_name = input(
-        "Is there an associated project name ({}): ".format(RE.md["project_name"])
-    )
+    project_name = input("Is there an associated project name ({}): ".format(RE.md["project_name"]))
     if project_name != "":
         RE.md["project_name"] = project_name
 
@@ -505,9 +456,7 @@ def newsample():
         RE.md["bar_loc"]["th"] = float(th)
         RE.md["angle"] = float(th)
 
-    composition = input(
-        "Sample composition or chemical formula ({}): ".format(RE.md["composition"])
-    )
+    composition = input("Sample composition or chemical formula ({}): ".format(RE.md["composition"]))
     if composition != "":
         RE.md["composition"] = composition
 
@@ -523,9 +472,7 @@ def newsample():
     if thickness != "":
         RE.md["thickness"] = thickness
 
-    sample_state = input(
-        'Sample state "Broken/Fresh" ({}): '.format(RE.md["sample_state"])
-    )
+    sample_state = input('Sample state "Broken/Fresh" ({}): '.format(RE.md["sample_state"]))
     if sample_state != "":
         RE.md["sample_state"] = sample_state
 
@@ -533,22 +480,17 @@ def newsample():
     if notes != "":
         RE.md["notes"] = notes
 
-    grazing = input(
-        "Is the sample for grazing incidence? ({}): ".format(RE.md["grazing"])
-    )
+    grazing = input("Is the sample for grazing incidence? ({}): ".format(RE.md["grazing"]))
     if grazing != "":
         RE.md["grazing"] = bool(grazing)
-    front = input(
-        "Is the sample on the front of the bar? ({}): ".format(RE.md["front"])
-    )
+    front = input("Is the sample on the front of the bar? ({}): ".format(RE.md["front"]))
     if front != "":
         RE.md["front"] = bool(front)
     height = input("Sample height? ({}): ".format(RE.md["height"]))
     if height != "":
         RE.md["height"] = float(height)
 
-    RE.md['acquisitions'] = []
-
+    RE.md["acquisitions"] = []
 
     loc = input(
         "New Location? (if blank use current location x={:.2f},y={:.2f},z={:.2f},th={:.2f}): ".format(
@@ -564,45 +506,33 @@ def newsample():
         if xval != "":
             locs.append({"motor": "x", "position": xval, "order": 0})
         else:
-            locs.append(
-                {"motor": "x", "position": sam_X.user_readback.get(), "order": 0}
-            )
+            locs.append({"motor": "x", "position": sam_X.user_readback.get(), "order": 0})
         yval = input("Y ({:.2f}): ".format(sam_Y.user_readback.get()))
         if yval != "":
             locs.append({"motor": "y", "position": yval, "order": 0})
         else:
-            locs.append(
-                {"motor": "y", "position": sam_Y.user_readback.get(), "order": 0}
-            )
+            locs.append({"motor": "y", "position": sam_Y.user_readback.get(), "order": 0})
 
         zval = input("Z ({:.2f}): ".format(sam_Z.user_readback.get()))
         if zval != "":
             locs.append({"motor": "z", "position": zval, "order": 0})
         else:
-            locs.append(
-                {"motor": "z", "position": sam_Z.user_readback.get(), "order": 0}
-            )
+            locs.append({"motor": "z", "position": sam_Z.user_readback.get(), "order": 0})
 
         thval = input("Theta ({:.2f}): ".format(sam_Th.user_readback.get()))
         if thval != "":
             locs.append({"motor": "th", "position": thval, "order": 0})
         else:
-            locs.append(
-                {"motor": "th", "position": sam_Th.user_readback.get(), "order": 0}
-            )
+            locs.append({"motor": "th", "position": sam_Th.user_readback.get(), "order": 0})
         return get_sample_dict(locations=locs, acq=[])
     else:
         return get_sample_dict(acq=[])  # uses current location by default
 
 
-
-
 def list_samples(bar):
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
-        text += "\n {} {}".format(
-            index, sample["sample_name"]
-        )
+        text += "\n {} {}".format(index, sample["sample_name"])
         acqs = bar[index]["acquisitions"]
         for acq in acqs:
             text += "\n   {} of {} in {} config, priority {}".format(
@@ -633,16 +563,16 @@ def sanatize_angle(samp, force=False):
         if samp["front"]:
             # sample is on the front of the bar, so valid outputs are between -90 and 90
             if goodnumber:
-                samp["bar_loc"]["th"] = float(90-np.mod(samp['angle']+3600,180))
+                samp["bar_loc"]["th"] = float(90 - np.mod(samp["angle"] + 3600, 180))
             else:
-                samp["bar_loc"]["th"] = 70 # default grazing incidence samples to 20 degrees incidence angle
+                samp["bar_loc"]["th"] = 70  # default grazing incidence samples to 20 degrees incidence angle
                 samp["angle"] = 70
                 # front grazing sample angle is interpreted as grazing angle
         else:
             if goodnumber:
-                angle = float(np.mod(435-np.mod(-samp['angle']+3600,180),360)-165)
-                if(angle < -155):
-                    angle = float(np.mod(435 - np.mod(samp['angle'] + 3600, 180), 360) - 165)
+                angle = float(np.mod(435 - np.mod(-samp["angle"] + 3600, 180), 360) - 165)
+                if angle < -155:
+                    angle = float(np.mod(435 - np.mod(samp["angle"] + 3600, 180), 360) - 165)
                 samp["bar_loc"]["th"] = angle
             else:
                 samp["bar_loc"]["th"] = 110
@@ -651,29 +581,27 @@ def sanatize_angle(samp, force=False):
     else:
         if samp["front"]:
             if goodnumber:
-                samp["bar_loc"]["th"] = float(
-                    np.mod(345-np.mod(90+samp["angle"]+3600,180)+90,360)-165
-                )
-                if samp["bar_loc"]["x0"] < -1.8 and np.abs(samp['angle']) > 30:
+                samp["bar_loc"]["th"] = float(np.mod(345 - np.mod(90 + samp["angle"] + 3600, 180) + 90, 360) - 165)
+                if samp["bar_loc"]["x0"] < -1.8 and np.abs(samp["angle"]) > 30:
                     # transmission from the left side of the bar at a incident angle more than 20 degrees,
                     # flip sample around to come from the other side - this can take a minute or two
                     samp["bar_loc"]["th"] = float(
-                        np.mod(345-np.mod(90-samp['angle']+3600,180)+90,360)-165
+                        np.mod(345 - np.mod(90 - samp["angle"] + 3600, 180) + 90, 360) - 165
                     )
-                if samp["bar_loc"]["th"] >=195:
+                if samp["bar_loc"]["th"] >= 195:
                     samp["bar_loc"]["th"] = 180
-                if samp["bar_loc"]["th"] <=-155:
+                if samp["bar_loc"]["th"] <= -155:
                     samp["bar_loc"]["th"] = -150
             else:
                 samp["bar_loc"]["th"] = 180
                 samp["angle"] = 180
         else:
             if goodnumber:
-                samp["bar_loc"]["th"] = float(np.mod(90+samp['angle']+3600,180)-90)
-                if samp["bar_loc"]["x0"] > -1.8 and np.abs(samp['angle']) > 30:
+                samp["bar_loc"]["th"] = float(np.mod(90 + samp["angle"] + 3600, 180) - 90)
+                if samp["bar_loc"]["x0"] > -1.8 and np.abs(samp["angle"]) > 30:
                     # transmission from the right side of the bar at a incident angle more than 20 degrees,
                     # flip to come from the left side
-                    samp["bar_loc"]["th"] = float(np.mod(90-samp['angle']+3600,180)-90.0)
+                    samp["bar_loc"]["th"] = float(np.mod(90 - samp["angle"] + 3600, 180) - 90.0)
             else:
                 samp["bar_loc"]["th"] = 0
                 samp["angle"] = 0
@@ -700,9 +628,8 @@ def sample_by_name(bar, name):
     return sample_by_value_match(bar, "sample_name", name)
 
 
-def alignment_rel_scan(det,motor,start_rel,end_rel,steps):
+def alignment_rel_scan(det, motor, start_rel, end_rel, steps):
     savemd = RE.md.deepcopy()
-
 
 
 def offset_bar(bar, xoff, yoff, zoff, thoff):
@@ -728,7 +655,7 @@ def default_sample(name):
         "acquisitions": [],
         "components": "",
         "composition": "",
-        "bar_loc": {'spot':'A0'},
+        "bar_loc": {"spot": "A0"},
         "bar_spot": "0C",
         "front": True,
         "grazing": False,
@@ -772,6 +699,46 @@ def spiralsearch(
     sim_mode=False,
     grating=None,
 ):
+    """conduct a spiral grid pattern of exposures
+
+    Parameters
+    ----------
+    diameter : float, optional
+        _description_, by default 0.6
+    stepsize : float, optional
+        _description_, by default 0.2
+    energy : int, optional
+        _description_, by default 270
+    pol : int, optional
+        _description_, by default 0
+    angle : _type_, optional
+        _description_, by default None
+    exposure : int, optional
+        _description_, by default 1
+    master_plan : _type_, optional
+        _description_, by default None
+    dets : list, optional
+        _description_, by default []
+    sim_mode : bool, optional
+        _description_, by default False
+    grating : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Yields
+    ------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
     valid = True
     validation = ""
     newdets = []
@@ -787,9 +754,9 @@ def spiralsearch(
         validation += "No detectors are given\n"
 
     if angle is not None:
-            if -155 > angle or angle > 195:
-                valid = False
-                validation += f"angle of {angle} is out of range\n"
+        if -155 > angle or angle > 195:
+            valid = False
+            validation += f"angle of {angle} is out of range\n"
     if sim_mode:
         if valid:
             retstr = f"scanning {newdets} at {energy} eV \n"
@@ -797,30 +764,28 @@ def spiralsearch(
             return retstr
         else:
             return validation
-    if grating not in [None,'1200',1200,'250',250,'rsoxs']:
+    if grating not in [None, "1200", 1200, "250", 250, "rsoxs"]:
         valid = False
-        validation = f'invalid choice of grating {grating}'
+        validation = f"invalid choice of grating {grating}"
     if not valid:
         raise ValueError(validation)
 
-
-    if grating in [1200,'1200']:
+    if grating in [1200, "1200"]:
         yield from grating_to_1200()
-    elif grating in [250,'250']:
+    elif grating in [250, "250"]:
         yield from grating_to_250()
-    elif grating == 'rsoxs':
+    elif grating == "rsoxs":
         yield from grating_to_rsoxs()
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
-    set_exposure(exposure) # TODO: make this yield from ...
+    set_exposure(exposure)  # TODO: make this yield from ...
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
 
     if angle is not None:
-        print(f'moving angle to {angle}')
+        print(f"moving angle to {angle}")
         yield from rotate_now(angle)
-
 
     yield from bp.spiral_square(
         newdets,
@@ -841,9 +806,7 @@ def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
         yield from load_sample(samp)
         RE.md["project_name"] = "spiral_searches"
         sample()
-        rsoxs_bot.send_message(
-            f'running spiral scan on {samp["proposal_id"]} {samp["sample_name"]}'
-        )
+        rsoxs_bot.send_message(f'running spiral scan on {samp["proposal_id"]} {samp["sample_name"]}')
         yield from spiralsearch(diameter, stepsize, master_plan="spiralsearch_all")
 
 
@@ -851,9 +814,7 @@ def spiralsearchwaxs_all(barin=[], diameter=0.5, stepsize=0.2):
     for samp in barin:
         yield from load_sample(samp)
         RE.md["project_name"] = "spiral_searches"
-        yield from spiralsearchwaxs(
-            diameter, stepsize, master_plan="spiralsearchwaxs_all"
-        )
+        yield from spiralsearchwaxs(diameter, stepsize, master_plan="spiralsearchwaxs_all")
 
 
 def map_bar_from_spirals(bar, num_previous_scans=150):
@@ -880,14 +841,9 @@ def map_bar_from_spirals(bar, num_previous_scans=150):
         data = scan.table()
         print("Sample: " + samp["sample_name"])
         print(
-            "Scan date: "
-            + datetime.datetime.fromtimestamp(scan.start["time"]).strftime(
-                "%A, %B %d, %Y %I:%M:%S"
-            )
+            "Scan date: " + datetime.datetime.fromtimestamp(scan.start["time"]).strftime("%A, %B %d, %Y %I:%M:%S")
         )
-        print(
-            "Enter good point number from spiral scan or anything non-numeric to skip:"
-        )
+        print("Enter good point number from spiral scan or anything non-numeric to skip:")
         good_point = input()
         if good_point.isnumeric():
             sam_x = data[good_point]["RSoXS Sample Outboard-Inboard"]
@@ -928,9 +884,7 @@ def image_bar(bar, path=None, front=True):
     imageuid = yield from bp.list_scan([SampleViewer_cam], sam_viewer, ypos)
     print(imageuid)
     images = list(db[imageuid].data("Sample Imager Detector Area Camera_image"))
-    image = stitch_sample(
-        images, 25, -6
-    )  # this will start the interactive pointing of samples
+    image = stitch_sample(images, 25, -6)  # this will start the interactive pointing of samples
     if isinstance(path, str):
         im = Image.fromarray(image)
         im.save(path)
@@ -1010,9 +964,7 @@ def update_bar(inbar, loc_Q, front):
         while True:
             #        for sample in bar:
             sample = bar[samplenum]
-            if (
-                sample["front"] != front
-            ):  # skip if we are not on the right side of the sample bar
+            if sample["front"] != front:  # skip if we are not on the right side of the sample bar
                 # (only locate samples that we can see in this image!)
                 samplenum += 1
                 if samplenum >= len(bar):
@@ -1021,7 +973,8 @@ def update_bar(inbar, loc_Q, front):
                 else:
                     continue
             print(sample)
-            print(f'Right-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
+            print(
+                f'Right-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
                 + "Press n on plot or enter to skip to next sample, p for previous sample, esc to end"
             )
             # ipython input x,y or click in plt which outputs x, y location
@@ -1035,9 +988,7 @@ def update_bar(inbar, loc_Q, front):
                 else:
                     # print('got something')
                     break
-            if item != ("enter" or "escape" or "n" or "p") and isinstance(
-                item, list
-            ):
+            if item != ("enter" or "escape" or "n" or "p") and isinstance(item, list):
                 sample["location"] = item
                 sample["bar_loc"]["ximg"] = float(item[0]["position"])
                 sample["bar_loc"]["yimg"] = float(item[1]["position"])
@@ -1104,17 +1055,11 @@ def stitch_sample(images, step_size, y_off, from_image=None, flip_file=False):
             image = imageb[0]
             i += 1
             if y_off > 0:
-                result = np.concatenate(
-                    (image[(y_off * i) :, :], result[:-(y_off), pixel_overlap:]), axis=1
-                )
+                result = np.concatenate((image[(y_off * i) :, :], result[:-(y_off), pixel_overlap:]), axis=1)
             elif y_off < 0:
-                result = np.concatenate(
-                    (image[: (y_off * i), :], result[-(y_off):, pixel_overlap:]), axis=1
-                )
+                result = np.concatenate((image[: (y_off * i), :], result[-(y_off):, pixel_overlap:]), axis=1)
             else:
-                result = np.concatenate(
-                    (image[:, :], result[:, pixel_overlap:]), axis=1
-                )
+                result = np.concatenate((image[:, :], result[:, pixel_overlap:]), axis=1)
         # result = np.flipud(result)
 
     fig, ax = plt.subplots()
@@ -1153,10 +1098,7 @@ def plot_click(event):
 def plot_key_press(event):
     global loc_Q
     if not loc_Q.full() and (
-        event.key == "enter"
-        or event.key == "escape"
-        or event.key == "n"
-        or event.key == "p"
+        event.key == "enter" or event.key == "escape" or event.key == "n" or event.key == "p"
     ):
         loc_Q.put(event.key, block=False)
 
@@ -1229,9 +1171,7 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
 
     x_offset = af1x - af1x_img  # offset from X-rays to image in x
     y_offset = af1y - af1y_img  # offset from X-rays to image in y
-    y_image_offset = (
-        af1y_img - af2y_img
-    )  # distance between fiducial y positions (should be ~ -190)
+    y_image_offset = af1y_img - af2y_img  # distance between fiducial y positions (should be ~ -190)
     if back:
         x_offset_back = af1xback - af1xback_img  # offset from X-rays to image in x on the back
         y_offset_back = af1y - af1yback_img  # offset from X-rays to image in x
@@ -1248,14 +1188,10 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
             " really sure, rerun with training_wheels=false."
         )
 
-    dx = (
-        af2x - af2x_img - x_offset
-    )  # offset of Af2 X-rays to image in x relative to Af1 (mostly rotating)
+    dx = af2x - af2x_img - x_offset  # offset of Af2 X-rays to image in x relative to Af1 (mostly rotating)
     # dx is the total offset needed for a position in the image to be located with X-rays at the bottom of the bar
     # the
-    dy = (
-        af2y - af2y_img - y_offset
-    )  # offset of Af2 X-rays to image in y relative to Af1 (mostly stretching)
+    dy = af2y - af2y_img - y_offset  # offset of Af2 X-rays to image in y relative to Af1 (mostly stretching)
     if back:
         dxb = (
             af2xback - af1xback + af1xback_img - af2xback_img
@@ -1263,24 +1199,20 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
         # offset from the top of the bar to the bottom of the bar with X-rays  minus
         # offset of the top of the bar to the bottom in the image
         # dxb is the extra bit needed to move the bottom of the bar to correct for this rotation
-        dyb = (
-            (af2y - af1y)  - (af2yback_img - af1yback_img)
+        dyb = (af2y - af1y) - (
+            af2yback_img - af1yback_img
         )  # offset of Af2 X-rays to image in y relative to Af1 (this is scaling the image - should be 0)
         # dyb is the extra bit needed to scale the bottom of the bar to correct for this scaling
     # dx, dy, dyb, and dxb are all relative correction factors, which are from the top of the bar to the bottom,
     # we use run_y to translate this to a offset per mm
-    run_y = (
-        af2y - af1y
-    )  # (distance between the fiducial markers) (above are the total delta over this run,
+    run_y = af2y - af1y  # (distance between the fiducial markers) (above are the total delta over this run,
     # in between this will be scaled
 
     for samp in bar:
         xpos = samp["bar_loc"]["ximg"]  # x position from the image
         ypos = samp["bar_loc"]["yimg"]  # y position from the image
         xoff = af1xoff - (af1xoff - af2xoff) * (ypos - af1y) / run_y
-        samp["bar_loc"][
-            "xoff"
-        ] = float(xoff)  # this should pretty much be the same for both fiducials,
+        samp["bar_loc"]["xoff"] = float(xoff)  # this should pretty much be the same for both fiducials,
         # but just in case there is a tilt,
         # we account for that here, taking af1soff if the sample is towards the top and af2soff as it is lower
 
@@ -1289,15 +1221,13 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
             # new position is the image position, plus the offset from the image to the x-rays, plus a linear correction
             # from the top of the bar to the bottom
             newy = ypos + y_offset + (ypos - af1y) * dy / run_y
-            samp["bar_loc"][
-                "x0"
-            ] = float(newx)  # these are the positions at 0 rotation, so for the front, we are already good
+            samp["bar_loc"]["x0"] = float(
+                newx
+            )  # these are the positions at 0 rotation, so for the front, we are already good
         elif back:
             newx = xpos + x_offset_back + (ypos - af1y) * dxb / run_y
             newy = ypos + y_offset_back + (ypos - af1y) * dyb / run_y
-            samp["bar_loc"]["x0"] = float(
-                2 * xoff - newx
-            )  # these are the positions at 0 rotation,
+            samp["bar_loc"]["x0"] = float(2 * xoff - newx)  # these are the positions at 0 rotation,
             # so for the back, we have to correct
         else:
             continue  # sample is on the back, and we are not doing the back of the bar, so skip
@@ -1323,9 +1253,7 @@ def correct_bar(bar, fiduciallist, include_back, training_wheels=True):
 
         # now we can rotate the sample to the desired position (in the 'angle' metadata)
         # moving z is dangerous = best to keep it at 0 by default
-        rotate_sample(
-            samp
-        )  # this will take the positions found above and the desired incident angle and
+        rotate_sample(samp)  # this will take the positions found above and the desired incident angle and
         # rotate the location of the sample accordingly
 
 
@@ -1336,8 +1264,8 @@ def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
     the fiducials.
     """
 
-    m = (af2zoff - af1zoff) / (af2y - af1y) # slope of bar
-    z0 = af1zoff + m * (y-af1y)
+    m = (af2zoff - af1zoff) / (af2y - af1y)  # slope of bar
+    z0 = af1zoff + m * (y - af1y)
 
     # offset the line by the front/back offset + height
     if front:
@@ -1354,9 +1282,7 @@ def rotatedx(x0, theta, zoff, xoff=1.88, thoff=1.6):
     find the correct x position to move to at a different rotation angle
     """
     return (
-        xoff
-        + (x0 - xoff) * np.cos((theta - thoff) * np.pi / 180)
-        - zoff * np.sin((theta - thoff) * np.pi / 180)
+        xoff + (x0 - xoff) * np.cos((theta - thoff) * np.pi / 180) - zoff * np.sin((theta - thoff) * np.pi / 180)
     )
 
 
@@ -1367,9 +1293,7 @@ def rotatedz(x0, theta, zoff, xoff=1.88, thoff=1.6):
     find the correct z position to move to to keep a particular sample at the same intersection point with X-rays
     """
     return (
-        zoff
-        + (x0 - xoff) * np.sin((theta - thoff) * np.pi / 180)
-        - zoff * np.cos((theta - thoff) * np.pi / 180)
+        zoff + (x0 - xoff) * np.sin((theta - thoff) * np.pi / 180) - zoff * np.cos((theta - thoff) * np.pi / 180)
     )
 
 
@@ -1401,7 +1325,7 @@ def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
     yield from bps.mv(Shutter_control, 0)
     yield from load_configuration("SAXSNEXAFS")
     Beamstop_SAXS.kind = "hinted"
-    #yield from bps.mv(DiodeRange, 7)
+    # yield from bps.mv(DiodeRange, 7)
     bec.enable_plots()
     startys = [3, -188.0]  # af2 first because it is a safer location
     maxlocs = []
@@ -1411,7 +1335,7 @@ def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
         yield from bp.rel_scan([Beamstop_SAXS], sam_Y, -1, 0.5, 16)
         yield from bps.mv(Shutter_control, 0)
         maxlocs.append(bec.peaks.max["SAXS Beamstop"][0])
-        yield from bps.mv(sam_Y,bec.peaks.max["SAXS Beamstop"][0])
+        yield from bps.mv(sam_Y, bec.peaks.max["SAXS Beamstop"][0])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
             yield from bps.mv(Shutter_control, 1)
@@ -1425,9 +1349,7 @@ def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
             yield from bps.mv(Shutter_control, 0)
             yield from bps.sleep(3)
             maxlocs.append(bec.peaks.max["SAXS Beamstop"][0])
-    print(
-        maxlocs
-    )  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
+    print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
     bec.disable_plots()
 
 
@@ -1444,9 +1366,7 @@ def rotate_sample(samp, force=False):
     rotate a sample position to the requested theta position
     the requested sample position is set in the angle metadata (sample['angle'])
     """
-    sanatize_angle(
-        samp, force
-    )  # makes sure the requested angle is translated into a real angle for acquisition
+    sanatize_angle(samp, force)  # makes sure the requested angle is translated into a real angle for acquisition
     theta_new = samp["bar_loc"]["th"]
     x0 = samp["bar_loc"]["x0"]
     y0 = samp["bar_loc"]["y0"]
@@ -1484,9 +1404,7 @@ def sample_recenter_sample(samp):
     xoff = samp["bar_loc"]["xoff"]
     zoff = samp["bar_loc"]["zoff"]
     # find the x0 location which would result in this new position
-    newx0 = rotatedx(
-        newrotatedx, -newangle, zoff, xoff=xoff
-    )  # we rotate by the negative angle to get back to x0
+    newx0 = rotatedx(newrotatedx, -newangle, zoff, xoff=xoff)  # we rotate by the negative angle to get back to x0
     samp["bar_loc"]["x0"] = newx0
     samp["bar_loc"]["y0"] = newy  # y and y0 are the same, so we can just copy this
     samp["angle"] = newangle

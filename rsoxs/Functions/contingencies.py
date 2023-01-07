@@ -12,6 +12,7 @@ from sst_funcs.printing import run_report
 
 run_report(__file__)
 
+
 def pause_notices(until=None, **kwargs):
     # pause_notices turns off emails on errors either until a specified time or for a specified duration.
     #
@@ -21,7 +22,7 @@ def pause_notices(until=None, **kwargs):
     #
 
     global no_notifications_until
-    if until is None and len(kwargs)== 0:
+    if until is None and len(kwargs) == 0:
         print("You need to specify either a duration or a timeout.")
     elif until is None:
         no_notifications_until = datetime.datetime.now() + datetime.timedelta(**kwargs)
@@ -50,8 +51,7 @@ def send_notice_plan(subject, msg):
 def enc_clr_x():
     send_notice(
         "SST had a small problem",
-        "the encoder loss has happened on the RSoXS beamline"
-        "\rEverything is probably just fine",
+        "the encoder loss has happened on the RSoXS beamline" "\rEverything is probably just fine",
     )
     xpos = sam_X.user_readback.get()
     yield from sam_X.clear_encoder_loss()
@@ -63,8 +63,7 @@ def enc_clr_x():
 def enc_clr_gx():
     send_notice(
         "SST had a small problem",
-        "the encoder loss has happened on the RSoXS beamline"
-        "\rEverything is probably just fine",
+        "the encoder loss has happened on the RSoXS beamline" "\rEverything is probably just fine",
     )
 
     yield from gratingx.clear_encoder_loss()
@@ -76,28 +75,27 @@ def enc_clr_gx():
 
 def det_down_notice():
     send_notice(
-        f"<@U04EZ5DSB33> {get_user_slack_tag()} SST-1 detector seems to have failed", # username for rsoxs slack U016YV35UAJ
+        f"<@U04EZ5DSB33> {get_user_slack_tag()} SST-1 detector seems to have failed",  # username for rsoxs slack U016YV35UAJ
         "The temperature is reading below -90C which is a mistake"
-        "\rScans have been paused until the detector and IOC are restarted."
+        "\rScans have been paused until the detector and IOC are restarted.",
     )
+
+
 def det_up_notice():
-    send_notice(
-        "SST-1 detector seems to have recovered",
-        "\rScans should resume shortly."
-    )
+    send_notice("SST-1 detector seems to have recovered", "\rScans should resume shortly.")
+
 
 def temp_bad_notice():
     send_notice(
-        "SST-1 detector seems to be out of temperature range",
-        "\rScans will pause until the detecor recovers."
+        "SST-1 detector seems to be out of temperature range", "\rScans will pause until the detecor recovers."
     )
+
 
 def temp_ok_notice():
     send_notice(
-        bls_email + "," + user_email,
-        "SST-1 detector seems to have recovered",
-        "\rScans should resume shortly."
+        bls_email + "," + user_email, "SST-1 detector seems to have recovered", "\rScans should resume shortly."
     )
+
 
 def beamdown_notice():
     send_notice(
@@ -123,15 +121,17 @@ def beamup_notice():
     )
     yield from bps.null()
 
+
 def get_user_slack_tag():
-    user_slack_tag = ''
-    if 'user_slack_tag' in RE.md.keys():
-        if type(RE.md['user_slack_tag']) is list:
-            for tag in RE.md['user_slack_tag']:
-                user_slack_tag += f'<@{tag}> '
+    user_slack_tag = ""
+    if "user_slack_tag" in RE.md.keys():
+        if type(RE.md["user_slack_tag"]) is list:
+            for tag in RE.md["user_slack_tag"]:
+                user_slack_tag += f"<@{tag}> "
         else:
             user_slack_tag += f'<@{RE.md["user_slack_tag"]}>'
     return user_slack_tag
+
 
 class OSEmailHandler(logging.Handler):
     def emit(self, record):
