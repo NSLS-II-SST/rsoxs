@@ -46,7 +46,7 @@ def run_bar(bar,
     dry_run=False,
     delete_as_complete=True,
     save_each_step='',
-    group=0
+    group='all',
     ):
     if dry_run:
         verbose = True
