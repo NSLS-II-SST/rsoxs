@@ -547,17 +547,8 @@ def newsample():
     if height != "":
         RE.md["height"] = float(height)
 
-    acquisitions = []
-    add_default_acq = input("add acquisition (full_carbon_scan - WAXS)? : ")
-    if add_default_acq == "":
-        acquisitions.append(
-            {
-                "plan_name": "full_carbon_scan",
-                "args": (),
-                "kwargs": {},
-                "configuration": "WAXS",
-            }
-        )
+    RE.md['acquisitions'] = []
+
 
     loc = input(
         "New Location? (if blank use current location x={:.2f},y={:.2f},z={:.2f},th={:.2f}): ".format(
@@ -599,60 +590,24 @@ def newsample():
             locs.append(
                 {"motor": "th", "position": sam_Th.user_readback.get(), "order": 0}
             )
-        return get_sample_dict(locations=locs, acq=acquisitions)
+        return get_sample_dict(locations=locs, acq=[])
     else:
-        return get_sample_dict(acq=acquisitions)  # uses current location by default
+        return get_sample_dict(acq=[])  # uses current location by default
 
 
-def avg_scan_time(plan_name, nscans=50, new_scan_duration=600):
-    if plan_name == "normal_incidence_rotate_pol_nexafs":
-        multiple = 6
-        plan_name = "fly_Carbon_NEXAFS"
-    elif (
-        plan_name == "fixed_pol_rotate_sample_nexafs"
-        or plan_name == "fixed_sample_rotate_pol_nexafs"
-    ):
-        multiple = 5
-        plan_name = "fly_Carbon_NEXAFS"
-    else:
-        multiple = 1
-    scans = db0(plan_name=plan_name)
-    durations = np.array([])
-    for i, sc in enumerate(scans):
-        if "exit_status" in sc.stop.keys():
-            if sc.stop["exit_status"] == "success":
-                durations = np.append(durations, sc.stop["time"] - sc.start["time"])
-            if i > nscans:
-                break
-    if len(durations) > 0:
-        return np.mean(durations) * multiple
-    else:
-        # we have never run a scan of this type before (?!?) - assume it takes some default value (10 min)
-        scans = db0(master_plan=plan_name)
-        durations = np.array([])
-        for i, sc in enumerate(scans):
-            if "exit_status" in sc.stop.keys():
-                if sc.stop["exit_status"] == "success":
-                    durations = np.append(durations, sc.stop["time"] - sc.start["time"])
-                if i > nscans:
-                    break
-        if len(durations) > 0:
-            return np.mean(durations) * multiple
-        else:
-            return new_scan_duration
 
 
 def list_samples(bar):
-    text = "  i   priority  Sample Name"
+    text = "  i  Sample Name"
     for index, sample in enumerate(bar):
-        text += "\n {}  {} {}".format(
-            index, sample["sample_priority"], sample["sample_name"]
+        text += "\n {} {}".format(
+            index, sample["sample_name"]
         )
         acqs = bar[index]["acquisitions"]
         for acq in acqs:
-            text += "\n   {}({}) in {} config, priority {}".format(
-                acq["plan_name"],
-                args_to_string(**acq["kwargs"]),
+            text += "\n   {} of {} in {} config, priority {}".format(
+                acq["type"],
+                acq["edge"],
                 acq["configuration"],
                 acq["priority"],
             )
