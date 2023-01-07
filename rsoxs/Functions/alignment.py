@@ -16,7 +16,7 @@ from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
 from ..HW.detectors import saxs_det, waxs_det, set_exposure
 from sst_hw.shutters import psh10
-from ..HW.energy import en, set_polarization
+from ..HW.energy import en, set_polarization, grating_to_1200,grating_to_250,grating_to_rsoxs
 from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 from ..HW.motors import (
@@ -34,6 +34,7 @@ from ..HW.motors import (
     TEMY,
     TEMZ
 )
+from . import configurations
 from ..HW.slits import slits1, slits2, slits3
 from sst_hw.motors import Exit_Slit
 from sst_funcs.printing import boxed_text, colored
@@ -300,12 +301,12 @@ def move_to_location(locs=get_sample_location()):
 
 
 def get_location_from_config(config):
-    config_func = getattr(rsoxs.HW.signals, config)
+    config_func = getattr(configurations, config)
     return config_func()[0]
 
 
 def get_md_from_config(config):
-    config_func = getattr(rsoxs.HW.signals, config)
+    config_func = getattr(configurations, config)
     return config_func()[1]
 
 
@@ -813,9 +814,9 @@ def spiralsearch(
     exposure=1,
     master_plan=None,
     dets=[],
-    sim_mode=False
+    sim_mode=False,
+    grating=None,
 ):
-
     valid = True
     validation = ""
     newdets = []
@@ -841,10 +842,19 @@ def spiralsearch(
             return retstr
         else:
             return validation
-
+    if grating not in [None,'1200',1200,'250',250,'rsoxs']:
+        valid = False
+        validation = f'invalid choice of grating {grating}'
     if not valid:
         raise ValueError(validation)
 
+
+    if grating in [1200,'1200']:
+        yield from grating_to_1200()
+    elif grating in [250,'250']:
+        yield from grating_to_250()
+    elif grating == 'rsoxs':
+        yield from grating_to_rsoxs()
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
     set_exposure(exposure) # TODO: make this yield from ...
