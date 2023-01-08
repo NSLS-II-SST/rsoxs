@@ -116,6 +116,7 @@ def run_bar(
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
         message += f'expected time remaining {time_sec(queue_step["time_after"])} plus overhead\n'
 
+    message = message[:message.rfind('expected')]
     message += f"End of Queue"
     rsoxs_bot.send_message(message)
     boxed_text("queue status", message, "red", width=120, shrink=True)
