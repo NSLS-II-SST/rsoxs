@@ -87,7 +87,7 @@ def run_bar(
         boxed_text("queue status", message, "red", width=120, shrink=True)
         rsoxs_bot.send_message(message)
 
-        slack_message_start = queue_step.get("slack_message_end", "")
+        slack_message_start = queue_step.get("slack_message_start", "")
         if len(slack_message_start) > 0:
             rsoxs_bot.send_message(slack_message_start)
         start_time = datetime.datetime.now()
