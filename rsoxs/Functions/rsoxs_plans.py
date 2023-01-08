@@ -124,9 +124,9 @@ def run_bar(
 
 def run_queue_step(step):
     if step["acq_index"] < 1:  # we haven't seen a second queue step, so we don't mention it
-        print(f"\n----- starting queue step {step['queue_step']}-----\n")
+        print(f"\n----- starting queue step {step['queue_step']+1}-----\n")
     else:
-        print(f"\n----- starting queue step {step['queue_step']} in acquisition # {step['acq_index']}-----\n")
+        print(f"\n----- starting queue step {step['queue_step']+1} in acquisition # {step['acq_index']+1}-----\n")
     print(step["description"])
     if step["action"] == "diode_low":
         yield from setup_diode_i400()
@@ -156,9 +156,9 @@ def run_queue_step(step):
     if step["action"] == "rsoxs_scan_core":
         yield from new_en_scan_core(**step["kwargs"])
     if step["acq_index"] < 1:
-        print(f"\n----- finished queue step {step['queue_step']}-----\n")
+        print(f"\n----- finished queue step {step['queue_step']+1}-----\n")
     else:
-        print(f"\n----- finished queue step {step['queue_step']} in acquisition # {step['acq_index']}-----\n")
+        print(f"\n----- finished queue step {step['queue_step']+1} in acquisition # {step['acq_index']+1}-----\n")
 
 
 # plans for manually running a single rsoxs scan in the terminal or making your own plans
