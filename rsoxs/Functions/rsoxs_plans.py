@@ -83,7 +83,7 @@ def run_bar(
     message = ""
     for i, queue_step in enumerate(queue):
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
-        message += f"which should take {time_sec(queue_step['acq_time'])} pul overhead\n"
+        message += f"which should take {time_sec(queue_step['acq_time'])} plus overhead\n"
         boxed_text("queue status", message, "red", width=120, shrink=True)
         rsoxs_bot.send_message(message)
 
