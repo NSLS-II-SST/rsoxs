@@ -80,41 +80,41 @@ def run_bar(
         return None
     print("Starting Queue")
     queue_start_time = datetime.datetime.now()
-    message = ''
+    message = ""
     for i, queue_step in enumerate(queue):
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
         message += f"which should take {time_sec(queue_step['acq_time'])} pul overhead\n"
         boxed_text("queue status", message, "red", width=120, shrink=True)
         rsoxs_bot.send_message(message)
-        
+
         slack_message_start = queue_step.get("slack_message_end", "")
         if len(slack_message_start) > 0:
-                rsoxs_bot.send_message(slack_message_start)
+            rsoxs_bot.send_message(slack_message_start)
         start_time = datetime.datetime.now()
 
-        for step in queue_step['steps']:
+        for step in queue_step["steps"]:
             yield from run_queue_step(step)
 
         slack_message_end = queue_step.get("slack_message_end", "")
         if len(slack_message_end) > 0:
-                rsoxs_bot.send_message(slack_message_end)
+            rsoxs_bot.send_message(slack_message_end)
         actual_acq_time = datetime.datetime.now() - start_time
         actual_total_time = datetime.datetime.now() - queue_start_time
-        
+
         if delete_as_complete:
             for samp in bar:
                 for i, acq in enumerate(samp["acquisitions"]):
-                    if acq["uid"] == old_uid:
+                    if acq["uid"] == queue_step["uid"]:
                         del samp["acquisitions"][i]
                         if verbose:
                             print("deleted acquisition")
             if len(save_each_step) > 0:
                 save_samplesxlsx(bar, save_each_step)
                 print(f"saved xslx file to {save_each_step}")
-        
+
         message = f"Finished.  Took {time_sec(actual_acq_time)} \n"
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
-        message += f"expected time remaining {time_sec(queue_step['time_after'])} plus overhead\n"
+        message += f'expected time remaining {time_sec(queue_step["time_after"])} plus overhead\n'
 
     message += f"End of Queue"
     rsoxs_bot.send_message(message)
@@ -123,7 +123,7 @@ def run_bar(
 
 
 def run_queue_step(step):
-    if step["queue_step"] < 1:  # we haven't seen a second queue step, so we don't mention it
+    if step["acq_index"] < 1:  # we haven't seen a second queue step, so we don't mention it
         print(f"\n----- starting queue step {step['queue_step']}-----\n")
     else:
         print(f"\n----- starting queue step {step['queue_step']} in acquisition # {step['acq_index']}-----\n")
