@@ -2,7 +2,7 @@ import bluesky.plan_stubs as bps
 import datetime
 from copy import deepcopy
 from sst_funcs.printing import run_report, boxed_text
-from rsoxs_scans.acquisition import dryrun_bar,time_sec
+from rsoxs_scans.acquisition import dryrun_bar, time_sec
 from rsoxs_scans.spreadsheets import save_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan
