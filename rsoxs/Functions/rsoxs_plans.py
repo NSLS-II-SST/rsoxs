@@ -2,8 +2,8 @@ import bluesky.plan_stubs as bps
 import datetime
 from copy import deepcopy
 from sst_funcs.printing import run_report, boxed_text
-from rsoxs_scans.acquisition import dryrun_bar
-from rsoxs_scans.spreadsheets import save_samplesxls
+from rsoxs_scans.acquisition import dryrun_bar,time_sec
+from rsoxs_scans.spreadsheets import save_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
@@ -14,13 +14,6 @@ from ..startup import RE
 from ..HW.slackbot import rsoxs_bot
 
 run_report(__file__)
-
-
-def time_sec(seconds):
-    if isinstance(seconds, datetime.timedelta):
-        seconds = seconds.total_seconds()
-    dt = datetime.timedelta(seconds=seconds)
-    return str(dt).split(".")[0]
 
 
 actions = {
@@ -104,7 +97,7 @@ def run_bar(
                         if verbose:
                             print("deleted acquisition")
             if len(save_each_step) > 0:
-                save_samplesxls(bar, save_each_step)
+                save_samplesxlsx(bar, save_each_step)
                 print(f"saved xslx file to {save_each_step}")
         if queue_step["acq_index"] > acq_step:  # new acquisition
             print(f"acq_index is {acq_step}")
@@ -148,7 +141,7 @@ def run_bar(
                     if verbose:
                         print("deleted acquisition")
         if len(save_each_step) > 0:
-            save_samplesxls(bar, save_each_step)
+            save_samplesxlsx(bar, save_each_step)
             print(f"saved xslx file to {save_each_step}")
     total_time = datetime.datetime.now() - queue_start_time
     message = f"Finished.  Took {time_sec(acq_time)} \n"
