@@ -18,7 +18,7 @@ from ..HW.motors import (
     sam_viewer,
 )
 from sst_hw.motors import Exit_Slit
-from .configurations import all_out, WAXSmode, SAXSmode
+from .configurations import all_out
 from ..HW.detectors import (
     set_exposure,
     saxs_det,
@@ -163,24 +163,6 @@ def nmode(line):
 
 
 del nmode
-
-
-@register_line_magic
-def wmode(line):
-    RE(WAXSmode())
-
-
-del wmode
-
-
-@register_line_magic
-def smode(line):
-    RE(SAXSmode())
-
-
-del smode
-
-# various
 
 
 @register_line_magic

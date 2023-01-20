@@ -130,9 +130,9 @@ def run_queue_step(step):
         print(f"\n----- starting queue step {step['queue_step']+1} in acquisition # {step['acq_index']+1}-----\n")
     print(step["description"])
     if step["action"] == "diode_low":
-        yield from setup_diode_i400()
-    if step["action"] == "diode_high":
         yield from High_Gain_diode_i400()
+    if step["action"] == "diode_high":
+        yield from setup_diode_i400()
     if step["action"] == "load_configuration":
         yield from load_configuration(step["kwargs"]["configuration"])
     if step["action"] == "load_sample":

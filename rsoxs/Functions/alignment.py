@@ -44,15 +44,8 @@ from .configurations import (
     WAXS,
     SAXS,
     SAXSNEXAFS,
-    SAXS_rsoxs_grating,
-    WAXS_rsoxs_grating,
-    SAXSNEXAFS_rsoxs_grating,
-    WAXSNEXAFS_rsoxs_grating,
     SAXS_liquid,
     WAXS_liquid,
-    WAXSNEXAFS_SAXSslits,
-    WAXS_SAXSslits,
-    TEYNEXAFS,
 )
 
 run_report(__file__)

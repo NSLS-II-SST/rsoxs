@@ -531,8 +531,8 @@ def new_en_scan_core(
     if isinstance(polarizations,list):
         sigcycler = cycler(en.polarization, polarizations)*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
 
-    print(f'locations {locations}')
-    print(f'temperatures {temperatures}')
+    #print(f'locations {locations}')
+    #print(f'temperatures {temperatures}')
     
     if(temps_with_locations):
         angles = [d.get('th', None) for d in motor_positions]
@@ -566,7 +566,7 @@ def new_en_scan_core(
                 sigcycler = cycler(tem_tempstage.setpoint,temperatures)*sigcycler # run every location for each temperature step
 
 
-    print(sigcycler)
+    #print(sigcycler)
     yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
     
     for det in newdets:
@@ -649,7 +649,7 @@ def NEXAFS_scan_core(
 
 def NEXAFS_fly_scan_core(
     scan_params,
-    openshutter=False,
+    openshutter=True,
     pol=0,
     grating="best",
     enscan_type=None,
