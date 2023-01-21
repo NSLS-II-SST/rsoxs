@@ -147,7 +147,7 @@ def buildeputable(
 
 def do_some_eputables_2022_en():
 
-    yield from load_configuration("WAXSNEXAFS_rsoxs_grating")
+    yield from load_configuration("WAXSNEXAFS")
     # angles = [0,5,15,25,40,50,60,70,80,90]
     # phases = [0,
     #           6688.9843608114115,
@@ -323,7 +323,7 @@ def do_2022_eputables3():
     mono_en.kind = "hinted"
     mono_en.read_attrs = ["readback"]
     bec.enable_plots()  # TODO: this will work, but not needed - need to move all plotting to a seperate app
-    yield from load_configuration("WAXSNEXAFS_rsoxs_grating")
+    yield from load_configuration("WAXSNEXAFS")
     yield from bps.mv(slits1.hsize, 1)
     yield from bps.mv(slits2.hsize, 1)
     yield from bps.mv(epu_mode, 3)

@@ -258,12 +258,6 @@ def mirror1_NEXAFSpos():
     )
 
 
-def SAXSmode():
-    yield from psh10.close()
-    yield from slits_in_SAXS()
-    yield from bps.mv(Shutter_Y, 2.2, Izero_Y, -29, Det_S, -15, Det_W, -94, BeamStopW, 3, BeamStopS, 67)
-
-
 # SAXS slits for the new rsoxs grating
 # ┌─── Upstream Scatter Slits ────────────────────────────────────────────────┐
 # │      vertical   size   =   0.025 mm                                       │
@@ -290,7 +284,7 @@ def SAXSmode():
 # │      vertical   center =  -0.400 mm                                       │
 # │      horizontal size   =   0.849 mm                                       │
 # │      horizontal center =   0.900 mm
-def SAXS_rsoxs_grating():
+def SAXS():
     return [
         [
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
@@ -327,7 +321,7 @@ def SAXS_rsoxs_grating():
     ]
 
 
-def SAXSNEXAFS_rsoxs_grating():
+def SAXSNEXAFS():
     return [
         [
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
@@ -363,7 +357,7 @@ def SAXSNEXAFS_rsoxs_grating():
     ]
 
 
-def WAXSNEXAFS_rsoxs_grating():
+def WAXSNEXAFS():
     return [
         [
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
@@ -386,7 +380,7 @@ def WAXSNEXAFS_rsoxs_grating():
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
-            "RSoXS_Config": "WAXSNEXAFS_rsoxs_grating",
+            "RSoXS_Config": "WAXSNEXAFS",
             "RSoXS_Main_DET": "Beamstop_WAXS",
             "RSoXS_WAXS_SDD": None,
             "RSoXS_WAXS_BCX": None,
@@ -398,7 +392,7 @@ def WAXSNEXAFS_rsoxs_grating():
     ]
 
 
-def WAXS_rsoxs_grating():
+def WAXS():
     return [
         [
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
@@ -504,294 +498,6 @@ def WAXS_liquid():
         },
     ]
 
-
-def SAXS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.153, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.4, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.5, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits3.vsize, "position": 1, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.5, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
-            {"motor": Det_S, "position": -15, "order": 0},
-            {"motor": BeamStopS, "position": 67.7, "order": 0},
-            {"motor": BeamStopW, "position": 3, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "SAXS",
-            "RSoXS_Main_DET": "SAXS",
-            "SAXS_Mask": [(473, 472), (510, 471), (515, 1024), (476, 1024)],
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": 516,
-            "RSoXS_SAXS_BCX": 493.4,
-            "RSoXS_SAXS_BCY": 514.4,
-        },
-    ]
-
-
-def SAXSNEXAFS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.153, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.4, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.5, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits3.vsize, "position": 1, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.5, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
-            {"motor": Det_S, "position": -100, "order": 0},
-            {"motor": BeamStopS, "position": 67.7, "order": 0},
-            {"motor": BeamStopW, "position": 3, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "SAXSNEXAFS",
-            "RSoXS_Main_DET": "Beamstop_SAXS",
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def TEYNEXAFS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.153, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.5, "order": 0},
-            {"motor": slits2.vsize, "position": 0.35, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.73, "order": 0},
-            {"motor": slits2.hsize, "position": 0.4, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.423, "order": 0},
-            {"motor": slits3.vsize, "position": 1.6, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.17, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.49, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
-            {"motor": Det_S, "position": -100, "order": 0},
-            {"motor": BeamStopS, "position": 3, "order": 0},
-            {"motor": BeamStopW, "position": 3, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "TEYNEXAFS",
-            "RSoXS_Main_DET": "Beamstop_SAXS",
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def WAXSmode():
-    yield from psh10.close()
-    yield from slits_in_WAXS()
-    yield from bps.mv(Shutter_Y, 2.2, Izero_Y, -29, Det_W, -10, BeamStopW, 71.4, sam_Y, -125)
-
-
-def WAXS_SAXSslits():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.153, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.4, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.5, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits3.vsize, "position": 1, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.5, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -10, "order": 1},
-            {"motor": BeamStopW, "position": 71.4, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "WAXS",
-            "RSoXS_Main_DET": "WAXS",
-            "RSoXS_WAXS_SDD": 39.19,
-            "RSoXS_WAXS_BCX": 396.3,
-            "RSoXS_WAXS_BCY": 542.76,
-            "WAXS_Mask": [(367, 545), (406, 578), (880, 0), (810, 0)],
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def WAXSNEXAFS_SAXSslits():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.153, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.4, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.5, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits3.vsize, "position": 1, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.5, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -94, "order": 1},
-            {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": 71.4, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "WAXSNEXAFS_SAXSslits",
-            "RSoXS_Main_DET": "WAXS",
-            "RSoXS_WAXS_SDD": 38.4,
-            "RSoXS_WAXS_BCX": 394.84,
-            "RSoXS_WAXS_BCY": 543.18,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def WAXS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.05, "order": 1},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 1},
-            {"motor": slits1.hsize, "position": 0.3, "order": 1},
-            {"motor": slits1.hcenter, "position": 0.55, "order": 1},
-            {"motor": slits2.vsize, "position": 0.45, "order": 1},
-            {"motor": slits2.vcenter, "position": -1.05, "order": 1},
-            {"motor": slits2.hsize, "position": 0.5, "order": 1},
-            {"motor": slits2.hcenter, "position": 0.45, "order": 1},
-            {"motor": slits3.vsize, "position": 1.1, "order": 1},
-            {"motor": slits3.vcenter, "position": -0.625, "order": 1},
-            {"motor": slits3.hsize, "position": 1.2, "order": 1},
-            {"motor": slits3.hcenter, "position": 0.55, "order": 1},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -10, "order": 1},
-            {"motor": BeamStopW, "position": 71.4, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "WAXS",
-            "RSoXS_Main_DET": "WAXS",
-            "RSoXS_WAXS_SDD": 38.4,
-            "RSoXS_WAXS_BCX": 394.84,
-            "RSoXS_WAXS_BCY": 543.18,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def WAXSNEXAFS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.05, "order": 1},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 1},
-            {"motor": slits1.hsize, "position": 0.3, "order": 1},
-            {"motor": slits1.hcenter, "position": 0.55, "order": 1},
-            {"motor": slits2.vsize, "position": 0.45, "order": 1},
-            {"motor": slits2.vcenter, "position": -1.05, "order": 1},
-            {"motor": slits2.hsize, "position": 0.5, "order": 1},
-            {"motor": slits2.hcenter, "position": 0.45, "order": 1},
-            {"motor": slits3.vsize, "position": 1.1, "order": 1},
-            {"motor": slits3.vcenter, "position": -0.625, "order": 1},
-            {"motor": slits3.hsize, "position": 1.2, "order": 1},
-            {"motor": slits3.hcenter, "position": 0.55, "order": 1},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -94, "order": 1},
-            {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": 71.4, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "WAXSNEXAFS",
-            "RSoXS_Main_DET": "Beamstop_WAXS",
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-
-def oldTEYNEXAFS():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.025, "order": 1},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 1},
-            {"motor": slits1.hsize, "position": 0.4, "order": 1},
-            {"motor": slits1.hcenter, "position": 0.5, "order": 1},
-            {"motor": slits2.vsize, "position": 0.6, "order": 1},
-            {"motor": slits2.vcenter, "position": -1.05, "order": 1},
-            {"motor": slits2.hsize, "position": 0.6, "order": 1},
-            {"motor": slits2.hcenter, "position": 0.31, "order": 1},
-            {"motor": slits3.vsize, "position": 0.9, "order": 1},
-            {"motor": slits3.vcenter, "position": -0.625, "order": 1},
-            {"motor": slits3.hsize, "position": 1.3, "order": 1},
-            {"motor": slits3.hcenter, "position": 0.25, "order": 1},
-            {"motor": Shutter_Y, "position": 2.2, "order": 1},
-            {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -94, "order": 1},
-            {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": 71.4, "order": 0},
-            {"motor": BeamStopS, "position": 3, "order": 1},
-        ],
-        {
-            "RSoXS_Config": "TEYWAXS",
-            "RSoXS_Main_DET": "RSoXS_Sample_TEY",
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
 
 
 def all_out():

@@ -44,15 +44,8 @@ from .configurations import (
     WAXS,
     SAXS,
     SAXSNEXAFS,
-    SAXS_rsoxs_grating,
-    WAXS_rsoxs_grating,
-    SAXSNEXAFS_rsoxs_grating,
-    WAXSNEXAFS_rsoxs_grating,
     SAXS_liquid,
     WAXS_liquid,
-    WAXSNEXAFS_SAXSslits,
-    WAXS_SAXSslits,
-    TEYNEXAFS,
 )
 
 run_report(__file__)
@@ -648,9 +641,6 @@ def offset_bar(bar, xoff, yoff, zoff, thoff):
 
 def default_sample(name):
     return {
-        "data_session": "pass-310704",  # we set the default folder here - most data shouldn't be taken
-        "PROPOSAL_ID": "C-310704",
-        "SAF": 309227,
         "institution": "NIST",
         "acquisitions": [],
         "components": "",
@@ -664,17 +654,13 @@ def default_sample(name):
         "density": "",
         "location": [],
         "project_desc": "Calibration",
-        "samp_user_id": 1,
-        "sample_date": "2021-03-09 00:00:00",
         "sample_id": name,
         "sample_name": name,
-        "sample_priority": 0,
         "sample_desc": name,
         "project_name": "Calibration",
         "notes": "",
         "sample_set": "",
         "sample_state": "back",
-        "thickness": 0,
     }
 
 
