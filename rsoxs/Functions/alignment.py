@@ -695,9 +695,11 @@ def spiralsearch(
     angle=None,
     exposure=1,
     master_plan=None,
+    enscan_type='spiral',
     dets=[],
     sim_mode=False,
     grating=None,
+    md=None,
 ):
     """conduct a spiral grid pattern of exposures
 
@@ -742,6 +744,15 @@ def spiralsearch(
     valid = True
     validation = ""
     newdets = []
+    if md is None:
+        md = {}
+    arguments = dict(locals())
+    del arguments["md"]  # no recursion here!
+    md.setdefault("plan_history", [])
+    md["plan_history"].append(
+        {"plan_name": "spiralsearch", "arguments": arguments}
+    )
+    md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
     for det in dets:
         if not isinstance(det, Device):
             try:
