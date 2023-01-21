@@ -90,7 +90,7 @@ def BSs_out():
 
 
 def Detectors_out():
-    yield from bps.mv(Det_S, -94, Det_W, -94)
+    yield from bps.mv(Det_S, -94, Det_W, -100)
 
 
 def Detectors_edge():
