@@ -66,7 +66,7 @@ def DetW_edge():
 
 
 def DetW_in():
-    yield from bps.mv(Det_W, -10)
+    yield from bps.mv(Det_W, -5)
 
 
 def DetW_out():
@@ -409,7 +409,7 @@ def WAXS():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -10, "order": 1},
+            {"motor": Det_W, "position": -5, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
@@ -481,7 +481,7 @@ def WAXS_liquid():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -10, "order": 1},
+            {"motor": Det_W, "position": -5, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
