@@ -163,7 +163,7 @@ def run_queue_step(step):
 
 
 # plans for manually running a single rsoxs scan in the terminal or making your own plans
-def do_rsoxs(md=RE.md, **kwargs):
+def do_rsoxs(md=deepcopy(dict(RE.md)), **kwargs):
     """
     inputs:
         edge,
@@ -182,7 +182,7 @@ def do_rsoxs(md=RE.md, **kwargs):
     """
     outputs = dryrun_rsoxs_plan(md=md, **kwargs)
     for i, out in enumerate(outputs):
-        out["acq_step"] = i
+        out["acq_index"] = i
         out["queue_step"] = 0
     print("Starting RSoXS plan")
     for queue_step in outputs:
@@ -190,7 +190,7 @@ def do_rsoxs(md=RE.md, **kwargs):
     print("End of RSoXS plan")
 
 
-def do_nexafs(md=RE.md, **kwargs):
+def do_nexafs(md=deepcopy(dict(RE.md)), **kwargs):
     """
     inputs:
         edge,
@@ -209,7 +209,7 @@ def do_nexafs(md=RE.md, **kwargs):
     """
     outputs = dryrun_nexafs_plan(md=md, **kwargs)
     for i, out in enumerate(outputs):
-        out["acq_step"] = i
+        out["acq_index"] = i
         out["queue_step"] = 0
     print("Starting NEXAFS plan")
     for queue_step in outputs:

@@ -678,6 +678,7 @@ def NEXAFS_fly_scan_core(
     validation = ""
     energies = np.empty(0)
     speeds = []
+    scan_params = deepcopy(scan_params)
     for scanparam in scan_params:
         (sten, enden, speed) = scanparam
         energies = np.append(energies, np.linspace(sten, enden, 10))
