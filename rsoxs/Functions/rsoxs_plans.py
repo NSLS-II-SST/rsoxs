@@ -38,7 +38,6 @@ def run_bar(
     rev=[False],
     verbose=False,
     dry_run=False,
-    delete_as_complete=True,
     save_each_step="",
     group="all",
 ):
@@ -81,6 +80,7 @@ def run_bar(
     print("Starting Queue")
     queue_start_time = datetime.datetime.now()
     message = ""
+    acq_uids = []
     for i, queue_step in enumerate(queue):
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
         message += f"which should take {time_sec(queue_step['acq_time'])} plus overhead\n"
@@ -93,24 +93,25 @@ def run_bar(
         start_time = datetime.datetime.now()
 
         for step in queue_step["steps"]:
-            yield from run_queue_step(step)
-
+            output = yield from run_queue_step(step)
+            acq_uids.append(output)
+            
         slack_message_end = queue_step.get("slack_message_end", "")
         if len(slack_message_end) > 0:
             rsoxs_bot.send_message(slack_message_end)
         actual_acq_time = datetime.datetime.now() - start_time
         actual_total_time = datetime.datetime.now() - queue_start_time
 
-        if delete_as_complete:
-            for samp in bar:
-                for i, acq in enumerate(samp["acquisitions"]):
-                    if acq["uid"] == queue_step["uid"]:
-                        del samp["acquisitions"][i]
-                        if verbose:
-                            print("deleted acquisition")
-            if len(save_each_step) > 0:
-                save_samplesxlsx(bar, save_each_step)
-                print(f"saved xslx file to {save_each_step}")
+        
+        for samp in bar:
+            for i, acq in enumerate(samp["acquisitions"]):
+                if acq["uid"] == queue_step["uid"]:
+                    samp["acquisitions"][i].get('runs',[]).append(acq_uids)
+                    if verbose:
+                        print("marked acquisition as run")
+        if len(save_each_step) > 0:
+            save_samplesxlsx(bar, save_each_step)
+            print(f"saved xslx file to {save_each_step}")
 
         message = f"Finished.  Took {time_sec(actual_acq_time)} \n"
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
@@ -130,32 +131,32 @@ def run_queue_step(step):
         print(f"\n----- starting queue step {step['queue_step']+1} in acquisition # {step['acq_index']+1}-----\n")
     print(step["description"])
     if step["action"] == "diode_low":
-        yield from High_Gain_diode_i400()
+        return (yield from High_Gain_diode_i400())
     if step["action"] == "diode_high":
-        yield from setup_diode_i400()
+        return (yield from setup_diode_i400())
     if step["action"] == "load_configuration":
-        yield from load_configuration(step["kwargs"]["configuration"])
+        return (yield from load_configuration(step["kwargs"]["configuration"]))
     if step["action"] == "load_sample":
-        yield from load_sample(step["kwargs"]["sample"])
+        return (yield from load_sample(step["kwargs"]["sample"]))
     if step["action"] == "temp":
         if step["kwargs"]["wait"]:
-            yield from bps.mv(tem_tempstage, step["kwargs"]["temp"])
+            return (yield from bps.mv(tem_tempstage, step["kwargs"]["temp"]))
         else:
-            yield from bps.mv(tem_tempstage.setpoint, step["kwargs"]["temp"])
+            return (yield from bps.mv(tem_tempstage.setpoint, step["kwargs"]["temp"]))
     if step["action"] == "temp":
         if step["kwargs"]["wait"]:
-            yield from bps.mv(tem_tempstage, step["kwargs"]["temp"])
+            return (yield from bps.mv(tem_tempstage, step["kwargs"]["temp"]))
         else:
-            yield from bps.mv(tem_tempstage.setpoint, step["kwargs"]["temp"])
+            return (yield from bps.mv(tem_tempstage.setpoint, step["kwargs"]["temp"]))
     if step["action"] == "move":
-        yield from bps.mv(motors[step["kwargs"]["motor"]], step["kwargs"]["position"])
+        return (yield from bps.mv(motors[step["kwargs"]["motor"]], step["kwargs"]["position"]))
         # use the motors look up table above to get the motor object by name
     if step["action"] == "spiral_scan_core":
-        yield from spiralsearch(**step["kwargs"])
+        return (yield from spiralsearch(**step["kwargs"]))
     if step["action"] == "nexafs_scan_core":
-        yield from NEXAFS_fly_scan_core(**step["kwargs"])
+        return (yield from NEXAFS_fly_scan_core(**step["kwargs"]))
     if step["action"] == "rsoxs_scan_core":
-        yield from new_en_scan_core(**step["kwargs"])
+        return (yield from new_en_scan_core(**step["kwargs"]))
     if step["acq_index"] < 1:
         print(f"\n----- finished queue step {step['queue_step']+1}-----\n")
     else:
