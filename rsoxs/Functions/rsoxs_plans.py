@@ -106,7 +106,7 @@ def run_bar(
         for samp in bar:
             for i, acq in enumerate(samp["acquisitions"]):
                 if acq["uid"] == queue_step["uid"]:
-                    samp["acquisitions"][i].get('runs',[]).append(acq_uids)
+                    samp["acquisitions"][i]['runs'] = samp["acquisitions"][i].get('runs',[]).append(acq_uids)
                     if verbose:
                         print("marked acquisition as run")
         if len(save_each_step) > 0:
