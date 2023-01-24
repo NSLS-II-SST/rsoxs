@@ -734,8 +734,8 @@ def spiralsearch(
         md = {}
     arguments = dict(locals())
     del arguments["md"]  # no recursion here!
-    md.setdefault("plan_history", [])
-    md["plan_history"].append(
+    md.setdefault("acq_history", [])
+    md["acq_history"].append(
         {"plan_name": "spiralsearch", "arguments": arguments}
     )
     md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })

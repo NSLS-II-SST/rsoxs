@@ -175,8 +175,8 @@ def en_scan_core(
     arguments["energy"] = arguments["energy"].name
     if md is None:
         md = {}
-    md.setdefault("plan_history", [])
-    md["plan_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
+    md.setdefault("acq_history", [])
+    md["acq_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
     md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
     # print the current sample information
     # sample()  # print the sample information  Removing this because RE will no longer be loaded with sample data
@@ -374,8 +374,8 @@ def new_en_scan_core(
     arguments["energy"] = arguments["energy"].name
     if md is None:
         md = {}
-    md.setdefault("plan_history", [])
-    md["plan_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
+    md.setdefault("acq_history", [])
+    md["acq_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
     md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
     # print the current sample information
     # sample()  # print the sample information  Removing this because RE will no longer be loaded with sample data
@@ -668,8 +668,8 @@ def NEXAFS_fly_scan_core(
     del arguments["md"]  # no recursion here!
     if md is None:
         md = {}
-    md.setdefault("plan_history", [])
-    md["plan_history"].append(
+    md.setdefault("acq_history", [])
+    md["acq_history"].append(
         {"plan_name": "NEXAFS_fly_scan_core", "arguments": arguments}
     )
     md.update({"plan_name": enscan_type, "master_plan": master_plan})
