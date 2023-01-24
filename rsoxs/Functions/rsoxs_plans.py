@@ -40,6 +40,7 @@ def run_bar(
     dry_run=False,
     save_each_step="",
     group="all",
+    repeat_previous_runs = False
 ):
     """_summary_
 
@@ -74,7 +75,7 @@ def run_bar(
     """
     if dry_run:
         verbose = True
-    queue = dryrun_bar(bar, sort_by=sort_by, rev=rev, print_dry_run=verbose, group=group)
+    queue = dryrun_bar(bar, sort_by=sort_by, rev=rev, print_dry_run=verbose, group=group, repeat_previous_runs = repeat_previous_runs)
     if dry_run or len(queue) == 0:
         return None
     print("Starting Queue")
@@ -107,7 +108,9 @@ def run_bar(
             for i, acq in enumerate(samp["acquisitions"]):
                 if acq["uid"] == queue_step["uid"]:
                     print(f'Acquisition uids adding {acq_uids}')
-                    samp["acquisitions"][i]['runs'] = samp["acquisitions"][i].get('runs',[]).append(acq_uids)
+                    acq.setdefault('runs',[]).append(acq_uids)
+                    print(f'Acquisition runs is now {acq["runs"]}')
+                    acq_uids = []
                     if verbose:
                         print("marked acquisition as run")
         if len(save_each_step) > 0:
