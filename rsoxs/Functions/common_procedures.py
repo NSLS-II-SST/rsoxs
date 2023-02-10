@@ -130,7 +130,7 @@ def buildeputable(
                 "PeakCurrentBS": heightsbs,
                 }
         dataframe = pd.DataFrame(data=data)
-        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2022Nov_" + name + ".csv")
+        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Feb_" + name + ".csv")
         count += 1
         if count > 20:
             count = 0
@@ -145,9 +145,11 @@ def buildeputable(
     # print(ens,gaps)
 
 
-def do_some_eputables_2022_en():
+def do_some_eputables_2023_en():
 
     yield from load_configuration("WAXSNEXAFS")
+    yield from bps.mv(slits1.hsize, 1)
+    yield from bps.mv(slits2.hsize, 1)
     # angles = [0,5,15,25,40,50,60,70,80,90]
     # phases = [0,
     #           6688.9843608114115,
@@ -195,14 +197,14 @@ def do_some_eputables_2022_en():
               24889.02500863509,
               27000,
               29500]
+    yield from buildeputable(105, 2200, 20, 5, 14000, 15000, 'C', '1200', 'CW_1200_H1')
+    yield from buildeputable(105, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_1200_H1')
     startingens = [70,70,70,95,125,155,185,200,200,185,160,140]
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f'linear{angle}deg_rsoxs_H1')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "1200", f'linear23_{angle}deg_1200_H1')
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f'linear{180-angle}deg_rsoxs_H1')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "1200", f'linear23_{180-angle}deg_1200_H1')
 
-    #yield from buildeputable(315, 1300, 20, 5, 14000, 15000, 'C', '1200', 'CW_250_H3')
-    #yield from buildeputable(315, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_250_H3')
 
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
@@ -316,7 +318,7 @@ def do_2020_eputables():
 # yield from bps.mv(epu_mode,2)
 
 
-def do_2022_eputables3():
+def do_2023_eputables():
     Izero_Mesh.kind = "hinted"
     Beamstop_WAXS.kind = "hinted"
     mono_en.readback.kind = "hinted"
@@ -329,37 +331,37 @@ def do_2022_eputables3():
     yield from bps.mv(epu_mode, 3)
 
     yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_July2020_phase4000_0", 0, 1200
+        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_0", 0, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase29500_1200", 29500, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase29500_1200", 29500, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase26000_1200", 26000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase26000_1200", 26000, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase23000_1200", 23000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase23000_1200", 23000, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase21000_1200", 21000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase21000_1200", 21000, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase18000_1200", 18000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase18000_1200", 18000, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase15000_1200", 15000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase15000_1200", 15000, 1200
     )
     yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_July2020_phase12000_1200", 12000, 1200
+        14000, 30000, 500, 2, 150, "_Feb2023_phase12000_1200", 12000, 1200
     )
     yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_July2020_phase8000_1200", 8000, 1200
+        14000, 35000, 500, 1, 80, "_Feb2023_phase8000_1200", 8000, 1200
     )
     yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_July2020_phase4000_1200", 4000, 1200
+        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200
     )
     yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_July2020_phase4000_1200", 4000, 1200
+        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200
     )
 
 
