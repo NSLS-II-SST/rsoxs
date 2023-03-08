@@ -94,7 +94,7 @@ def run_bar(
         start_time = datetime.datetime.now()
 
         for step in queue_step["steps"]:
-            output = yield from run_queue_step(step)
+            output = (yield from run_queue_step(step))
             acq_uids.append(output)
             
         slack_message_end = queue_step.get("slack_message_end", "")

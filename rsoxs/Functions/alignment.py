@@ -733,6 +733,9 @@ def spiralsearch(
     if md is None:
         md = {}
     arguments = dict(locals())
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
     del arguments["md"]  # no recursion here!
     md.setdefault("acq_history", [])
     md["acq_history"].append(
@@ -750,7 +753,7 @@ def spiralsearch(
         valid = False
         validation += "No detectors are given\n"
 
-    if angle is not None:
+    if isinstance(angle,(float,int)):
         if -155 > angle or angle > 195:
             valid = False
             validation += f"angle of {angle} is out of range\n"
@@ -780,7 +783,7 @@ def spiralsearch(
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
 
-    if angle is not None:
+    if isinstance(angle,(float,int)):
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
 
@@ -1324,7 +1327,7 @@ def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
     Beamstop_SAXS.kind = "hinted"
     # yield from bps.mv(DiodeRange, 7)
     bec.enable_plots()
-    startys = [3, -188.0]  # af2 first because it is a safer location
+    startys = [3, -187.0]  # af2 first because it is a safer location
     maxlocs = []
     for startxs, starty in zip(startxss, startys):
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)

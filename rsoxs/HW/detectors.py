@@ -118,17 +118,17 @@ def dark_plan(det):
     yield from det.skinnyunstage()
     yield from det.skinnystage()
     oldmode = det.cam.image_mode.get()
-    yield from bps.abs_set(det.cam.image_mode,1)
+    yield from bps.mv(det.cam.image_mode,1)
     n_exp = det.cam.num_images.get()
-    yield from bps.abs_set(det.cam.num_images,1)
+    yield from bps.mv(det.cam.num_images,1)
     yield from bps.mv(det.cam.shutter_mode, 0)
     yield from bps.trigger(det, group="darkframe-trigger")
     yield from bps.wait("darkframe-trigger")
     snapshot = bluesky_darkframes.SnapshotDevice(det)
     if det.useshutter:
         yield from bps.mv(det.cam.shutter_mode, 2)
-    yield from bps.abs_set(det.cam.image_mode,oldmode)
-    yield from bps.abs_set(det.cam.num_images,n_exp)
+    yield from bps.mv(det.cam.image_mode,oldmode)
+    yield from bps.mv(det.cam.num_images,n_exp)
     yield from det.skinnyunstage()
     yield from det.skinnystage()
     return snapshot
@@ -152,7 +152,7 @@ dark_frame_preprocessor_saxs = bluesky_darkframes.DarkFramePreprocessor(
 dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
     dark_plan=dark_plan,
     detector=waxs_det,
-    max_age=600,
+    max_age=1200,
     locked_signals=[
         waxs_det.cam.acquire_time,
         Det_W.user_setpoint,
@@ -168,7 +168,7 @@ dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
 dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
     dark_plan=dark_plan,
     detector=waxs_det,
-    max_age=120,
+    max_age=1200,
     locked_signals=[
         waxs_det.cam.acquire_time,
         Det_W.user_setpoint,

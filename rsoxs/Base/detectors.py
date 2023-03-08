@@ -122,7 +122,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.image.nd_array_port.set("TRANS1")
         self.tiff.nd_array_port.set("TRANS1")
         self.stage_sigs["cam.num_images"] = self.number_exposures
-
+        #self.cam.num_images.set(self.number_exposures)
         return [self].append(super().stage(*args, **kwargs))
 
     def trigger(self, *args, **kwargs):

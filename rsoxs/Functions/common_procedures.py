@@ -197,13 +197,13 @@ def do_some_eputables_2023_en():
               24889.02500863509,
               27000,
               29500]
-    yield from buildeputable(105, 2200, 20, 5, 14000, 15000, 'C', '1200', 'CW_1200_H1')
-    yield from buildeputable(105, 2200, 20, 5, 14000, 15000, 'CW', '1200', 'C_1200_H1')
-    startingens = [70,70,70,95,125,155,185,200,200,185,160,140]
+    #yield from buildeputable(110, 1300, 20, 3, 14000, 15000, 'C', '1200', 'CW_1200_H1')
+    #yield from buildeputable(110, 1300, 20, 3, 14000, 15000, 'CW', '1200', 'C_1200_H1')
+    startingens = [110,110,110,110,125,155,185,200,200,185,160,140]
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "1200", f'linear23_{angle}deg_1200_H1')
+        yield from buildeputable(sten, 1300, 25, 3, 14000, ph, "L", "1200", f'linear_{angle}deg_1200_H1')
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "1200", f'linear23_{180-angle}deg_1200_H1')
+        yield from buildeputable(sten, 1300, 25, 3, 14000, ph, "L3", "1200", f'linear_{180-angle}deg_1200_H1')
 
 
     # 1200l/pp from 400 to 1400 eV

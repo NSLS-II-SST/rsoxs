@@ -176,6 +176,10 @@ def en_scan_core(
     if md is None:
         md = {}
     md.setdefault("acq_history", [])
+
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
     md["acq_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
     md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
     # print the current sample information
@@ -375,6 +379,10 @@ def new_en_scan_core(
     if md is None:
         md = {}
     md.setdefault("acq_history", [])
+
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
     md["acq_history"].append({"plan_name": "en_scan_core", "arguments": arguments})
     md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
     # print the current sample information
@@ -669,6 +677,10 @@ def NEXAFS_fly_scan_core(
     if md is None:
         md = {}
     md.setdefault("acq_history", [])
+
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
     md["acq_history"].append(
         {"plan_name": "NEXAFS_fly_scan_core", "arguments": arguments}
     )
@@ -762,7 +774,7 @@ def NEXAFS_fly_scan_core(
     if openshutter:
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
-    uid = yield from finalize_wrapper(fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol),cleanup())
+    uid = (yield from finalize_wrapper(fly_scan_eliot(scan_params,sigs=signals, md=md, locked=locked, polarization=pol),cleanup()))
 
     return uid
 
