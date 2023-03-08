@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from sst_hw.diode import Shutter_control, Shutter_enable
-from ..startup import db
+from ..startup import db, bec, sd
 from ..HW.energy import en
 
 
@@ -101,12 +101,23 @@ def fly_max(
         pass
     else:
         _md["hints"].setdefault("dimensions", dimensions)
-
-
+    for detector in detectors:
+        detector.kind='hinted'
+    bec.enable_plots()
+    old_monitor_list = sd.monitors
+    sd.monitors.clear()
+    old_baseline = sd.baseline
+    sd.baseline.clear()
+    yield from bps.sleep(0.2)
     yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
-    max_signal, max_motor = find_optimum_motor_pos(db, -1, motor=motor.name, channel=signals[0])
+    max_signal, max_motor = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_name=signals[0])
     yield from bps.mv(motor, max_motor)
     peaklist.append([max_motor, max_signal])
+    for detector in detectors:
+        detector.kind = 'normal'
+    bec.disable_plots
+    sd.monitors =old_monitor_list
+    sd.baseline = old_baseline
     return max_motor
 
 
@@ -142,6 +153,8 @@ def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
                                      take_pre_data=True, timeout=None, period=None, md=None):
     mon1 = monitor_list[0]
     mon_rest = monitor_list[1:]
+    #TODO check if the monitors are already in sd.monitors, if so ignore them
+    #make mon1 a none then?
     ramp_plan = bp.ramp_plan(go_plan, mon1, inner_plan_func,
                                 take_pre_data=take_pre_data, timeout=timeout, period=period, md=md)
 
