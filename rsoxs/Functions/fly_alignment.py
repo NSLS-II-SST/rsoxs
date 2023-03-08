@@ -165,6 +165,8 @@ def process_monitor_scan(db, uid):
     hdr = db[uid]
     df = {}
     for stream_name in hdr.stream_names:
+        if 'monitor' not in stream_name:
+            continue
         t = hdr.table(stream_name=stream_name)
         this_time = t['time'].astype(dtype=int).values * 1e-9
         if not 'time' in df.keys():
