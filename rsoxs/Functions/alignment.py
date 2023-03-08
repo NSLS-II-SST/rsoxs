@@ -1415,3 +1415,5 @@ def read_positions(bar):
     # this reads those positions and sets the default positions (x0 and y0) to match
     for samp in bar:
         sample_recenter_sample(samp)
+
+
