@@ -151,10 +151,19 @@ def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep
 
 def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
                                      take_pre_data=True, timeout=None, period=None, md=None):
-    mon1 = monitor_list[0]
-    mon_rest = monitor_list[1:]
+    final_monitor_list = []
+    for monitor in monitor_list:
+        if monitor not in sd.monitors:
+            final_monitor_list.append(monitor)
+        else:
+            final_monitor_list.append(None)
+            
+    
+    mon1 = final_monitor_list[0]
+    mon_rest = final_monitor_list[1:]
     #TODO check if the monitors are already in sd.monitors, if so ignore them
     #make mon1 a none then?
+    
     ramp_plan = bp.ramp_plan(go_plan, mon1, inner_plan_func,
                                 take_pre_data=take_pre_data, timeout=timeout, period=period, md=md)
 
