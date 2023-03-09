@@ -100,24 +100,23 @@ def buildeputable(
         yield from bps.mv(epu_gap, max(14000, startinggap - 500 * widfract))
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
-        yield from tune_max(
+        yield from fly_max(
             [Izero_Mesh, Beamstop_WAXS],
             ["RSoXS Au Mesh Current",
             "WAXS Beamstop",],
             epu_gap,
             min(99500, max(14000, startinggap - 500 * widfract)),
             min(100000, max(15000, startinggap + 1500 * widfract)),
-            3 * widfract,
+            [100,10],
             10,
-            3,
+            True,
             True,
             peaklist
         )
-        [maxread, max_xI_signals, max_I_signals] = peaklist[-1]
-        startinggap = max_xI_signals["RSoXS Au Mesh Current"]
-        gapbs = max_xI_signals["WAXS Beamstop"]
-        height = max_I_signals["RSoXS Au Mesh Current"]
-        heightbs = max_I_signals["WAXS Beamstop"]
+        startinggap = peaklist[-1]["RSoXS Au Mesh Current"]['en_epugap']
+        gapbs = peaklist[-1]["WAXS Beamstop"]['en_epugap']
+        height = peaklist[-1]["RSoXS Au Mesh Current"]["RSoXS Au Mesh Current"]
+        heightbs = peaklist[-1]["WAXS Beamstop"]["WAXS Beamstop"]
         gaps.append(startinggap)
         gapsbs.append(gapbs)
         heights.append(height)
@@ -142,6 +141,7 @@ def buildeputable(
     plt.close()
     plt.close()
     plt.close()
+    print(peaklist)
     # print(ens,gaps)
 
 
@@ -162,21 +162,21 @@ def do_some_eputables_2023_en():
     #           24889.02500863509,
     #           29500]
 
-#    startingens = [95,125,155,185,200,200,185,160]
-#    for angle,ph,sten in zip(angles[5:],phases[5:],startingens[5:]):
-#        yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L", "250", f'linear{angle}deg_250')
-#    for angle,ph,sten in zip(angles,phases,startingens):
-#        yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L3", "250", f'linear{180-angle}deg_250')
+    # startingens = [95,125,155,185,200,200,185,160]
+    # for angle,ph,sten in zip(angles[5:],phases[5:],startingens[5:]):
+    #     yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L", "250", f'linear{angle}deg_250')
+    # for angle,ph,sten in zip(angles,phases,startingens):
+    #     yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L3", "250", f'linear{180-angle}deg_250')
 
     # startgaps = [33271.94497611413,
     #             29889.652490430373,
     #             27174.560460333993,
-    #             24965.844827621615,
-    #             23564.225919905086,
-    #             22983.602525718445,
-    #             22874.408275853402,
-    #             23677.309482826902]
-    #
+    #              24965.844827621615,
+    #              23564.225919905086,
+    #              22983.602525718445,
+    #              22874.408275853402,
+    #              23677.309482826902]
+    
     # for angle,ph,stgp in zip(angles,phases,startgaps):
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
     # for angle,ph,stgp in zip(angles,phases,startgaps):
@@ -197,13 +197,14 @@ def do_some_eputables_2023_en():
               24889.02500863509,
               27000,
               29500]
-    #yield from buildeputable(110, 1300, 20, 3, 14000, 15000, 'C', '1200', 'CW_1200_H1')
-    #yield from buildeputable(110, 1300, 20, 3, 14000, 15000, 'CW', '1200', 'C_1200_H1')
-    startingens = [110,110,110,110,125,155,185,200,200,185,160,140]
+    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'C', 'rsoxs', 'CW_r_H1')
+    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'CW', 'rsoxs', 'C_r_H1')
+    startingens = [75,80,100,110,125,155,185,200,200,185,160,140]
+    #startingens = [95,125,155,185,200,200,185,160]
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 25, 3, 14000, ph, "L", "1200", f'linear_{angle}deg_1200_H1')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f'linear_{angle}deg_r_H1')
     for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 25, 3, 14000, ph, "L3", "1200", f'linear_{180-angle}deg_1200_H1')
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f'linear_{180-angle}deg_r_H1')
 
 
     # 1200l/pp from 400 to 1400 eV
@@ -617,7 +618,7 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
             range_ratio=30,
             open_shutter=True,
         )
-        grating_measured.append(peaklist[0][0])
+        grating_measured.append(peaklist[0]["RSoXS Sample Current"]["Mono Grating"])
         mirror_measured.append(mirror2.read()['Mono Mirror']['value'])
         energy_measured.append(291.65)
         m_measured.append(m_order)

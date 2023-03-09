@@ -64,9 +64,10 @@ def fly_max(
     ----------
     detectors : Signal
         list of 'readable' objects
-    signals : string
+    signals : list of strings
         detector fields whose output is to maximize
-        (the first will be the primary, but secondardy maxes will be recorded)
+        (the first will be maximized, but secondardy maxes will be recorded during the scans for the first - 
+        if the maxima are not in the same range this will not be useful)
     motor : object
         any 'settable' object (motor, temp controller, etc.)
     start : float
@@ -83,8 +84,7 @@ def fly_max(
         metadata
 
     """
-    signal = signals[0]
-    
+
     _md = {
         "detectors": [det.name for det in detectors],
         "motors": [motor.name],
@@ -120,10 +120,10 @@ def fly_max(
         range = np.abs(start-stop)
         print(f'starting scan from {start} to {stop} at {velocity}')
         yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
-        max_signal, max_motor = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_name=signals[0])
-        print(f'maximum signal of {max_signal} found at {max_motor}')
-        low_side = max((min_val,max_motor - (range/(2*range_ratio))))
-        high_side = min((max_val,max_motor + (range/(2*range_ratio))))
+        signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_names=signals)
+        print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor.name]}')
+        low_side = max((min_val,signal_dict[signals[0]][motor.name] - (range/(2*range_ratio))))
+        high_side = min((max_val,signal_dict[signals[0]][motor.name] + (range/(2*range_ratio))))
         if snake:
             direction *=-1
         if(direction>0):
@@ -132,14 +132,14 @@ def fly_max(
         else:
             start = high_side
             stop = low_side
-    yield from bps.mv(motor, max_motor)
+    yield from bps.mv(motor, signal_dict[signals[0]][motor.name])
 
-    peaklist.append([max_motor, max_signal])
+    peaklist.append(signal_dict)
     for detector in detectors:
         detector.kind = 'normal'
     motor.kind='normal'
     bec.disable_plots
-    return max_motor
+    return signal_dict
 
 
 def return_NullStatus_decorator(plan):
@@ -213,13 +213,16 @@ def process_monitor_scan(db, uid):
     return pd.DataFrame(df)
 
 
-def find_optimum_motor_pos(db, uid, motor_name='hhm_pitch', signal_name='apb_ch1'):
+def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_names=['RSoXS Au Mesh Current','SAXS Beamstop']):
     df = process_monitor_scan(db, uid)
-    idx = df[signal_name].idxmax()
+    max_signal_dict = {}
+    for monitor in signal_names:
+        idx = df[monitor].idxmax()
+        max_signal_dict[monitor]['time'] =  idx 
+        max_signal_dict[monitor][motor_name] = df[motor_name][idx]
+        max_signal_dict[monitor][monitor] = df[monitor][idx]
     
-    motor_value = df[motor_name][idx]
-    signal_value = df[signal_name][idx]
-    return signal_value, motor_value
+    return max_signal_dict
 
 
 
@@ -247,7 +250,7 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                            velocities=[.2],
                            open_shutter=True,
                            peaklist=peaklist)
-        maxlocs.append(peaklist[0][0])
+        maxlocs.append(peaklist['SAXS Beamstop']["RSoXS Sample Up-Down"])
         yield from bps.mv(sam_Y, peaklist[0][0])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
@@ -261,6 +264,6 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                                 velocities=[.2],
                                 open_shutter=True,
                                 peaklist=peaklist)
-            maxlocs.append(peaklist[0][0])
+            maxlocs.append(peaklist['SAXS Beamstop']["RSoXS Sample Outboard-Inboard"])
     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
     bec.disable_plots()
