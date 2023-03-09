@@ -686,6 +686,7 @@ def spiralsearch(
     sim_mode=False,
     grating=None,
     md=None,
+    force=False,
 ):
     """conduct a spiral grid pattern of exposures
 
@@ -711,7 +712,10 @@ def spiralsearch(
         _description_, by default False
     grating : _type_, optional
         _description_, by default None
-
+    md : _type_, optional
+        the sample dictionary, by default None
+    force : bool, optional
+        force a spiral even if one was already started, by default False
     Returns
     -------
     _type_
@@ -732,6 +736,9 @@ def spiralsearch(
     newdets = []
     if md is None:
         md = {}
+    if len(md.get('spiral_started',''))>0 and not force:
+        print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
+        yield from bps.null()
     arguments = dict(locals())
     for argument in arguments:
         if isinstance(argument,np.ndarray):
@@ -786,7 +793,7 @@ def spiralsearch(
     if isinstance(angle,(float,int)):
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
-
+    RE.md['spiral_started'] = RE.md['scan_id']+1
     yield from bp.spiral_square(
         newdets,
         sam_X,
@@ -799,6 +806,7 @@ def spiralsearch(
         y_num=num,
         md={"plan_name": "spiralsearch", "master_plan": master_plan},
     )
+    RE.md['spiral_started'] = db[-1]['start']['uid']
 
 
 def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
@@ -1417,3 +1425,21 @@ def read_positions(bar):
         sample_recenter_sample(samp)
 
 
+def resolve_spirals(bar):
+    for samp in bar:
+        if len(str(samp.get('spiral_started',''))) > 0 and len(samp.get('spiral_done','')) == 0:
+            h = db[samp['spiral_started']]
+            ys = np.array(list(h.data('RSoXS Sample Up-Down')))
+            xs = np.array(list(h.data('RSoXS Sample Outboard-Inboard')))
+            th = np.array(list(h.data('RSoXS Sample Rotation','baseline')))[0]
+            z = np.array(list(h.data('RSoXS Sample Downstream-Upstream','baseline')))[0]
+            if len(ys) == len(xs) and len(ys > 0):
+                im_num = int(input(f"sample {samp['sample_name']} scan {h['start']['scan_id']} which image is best?  "))
+                accept = input(f"image {im_num} at ({xs[im_num],ys[im_num]}) is correct (y,n)?")
+                if accept in ['y','Y','yes']:
+                    samp['location'] = [{'motor':'x','position':xs[im_num]},
+                                        {'motor':'y','position':ys[im_num]},
+                                        {'motor':'th','position':th},
+                                        {'motor':'z','position':z}]
+                    samp['spiral_done']={"scan":h['start']['uid'],
+                                         'best_num':im_num}

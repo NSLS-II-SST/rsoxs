@@ -602,7 +602,8 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
     bec.enable_plots()
     for cff,m_order in zip(cs,ms):
         m_set, g_set = get_mirror_grating_angles(291.65, cff, k, m_order)
-        yield from bps.mv(grating, g_set, mirror2, m_set)
+        yield from bps.mv(grating, g_set, mirror2, m_set, grating.velocity,0.1,mirror2.velocity,0.1)
+        yield from bps.sleep(0.2)
         peaklist = []
         yield from fly_max(
             detectors = [Izero_Mesh, Sample_TEY],
@@ -610,9 +611,10 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
             motor = grating,
             start = g_set - .2,
             stop = g_set + .2,
-            velocities=[0.02,0.002],
-            snake = True,
+            velocities=[0.02,0.0005],
+            snake = False,
             peaklist= peaklist,
+            range_ratio=30,
             open_shutter=True,
         )
         grating_measured.append(peaklist[0][0])

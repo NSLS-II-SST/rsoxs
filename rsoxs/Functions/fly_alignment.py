@@ -164,6 +164,7 @@ def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep
         yield from bps.mv(Shutter_control, 0)
         if velocity is not None:
             yield from bps.mv(motor.velocity, old_motor_velocity)
+            yield from bps.sleep(sleep)
     if open_shutter:
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
@@ -224,7 +225,7 @@ def find_optimum_motor_pos(db, uid, motor_name='hhm_pitch', signal_name='apb_ch1
 
 
 def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
-    thoffset = 1.6
+    thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
     startxss = [f2, [4.2, 3.5, 1, 1.1]]
@@ -243,7 +244,7 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                            sam_Y,
                            starty-1,
                            starty+1,
-                           velocities=[.5],
+                           velocities=[.2],
                            open_shutter=True,
                            peaklist=peaklist)
         maxlocs.append(peaklist[0][0])
@@ -257,7 +258,7 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                                 sam_X,
                                 startx - 0.5 * xrange,
                                 startx + 0.5 * xrange,
-                                velocities=[.5],
+                                velocities=[.2],
                                 open_shutter=True,
                                 peaklist=peaklist)
             maxlocs.append(peaklist[0][0])
