@@ -10,6 +10,20 @@ from sst_hw.diode import Shutter_control, Shutter_enable
 from ..startup import db, bec, sd
 from ..HW.energy import en
 
+from ..HW.signals import Beamstop_SAXS
+from ..HW.motors import (
+    sam_X,
+    sam_Y,
+    sam_Th,
+    sam_Z,
+    Shutter_Y,
+    Izero_Y,
+    Det_S,
+    Det_W,
+    BeamStopW,
+    BeamStopS)
+from .alignment import load_configuration
+
 
 def fly_max(
     detectors,
@@ -17,8 +31,8 @@ def fly_max(
     motor,
     start,
     stop,
-    velocity,
-    step_factor=3.0,
+    velocities,
+    range_ratio=10,
     open_shutter=True,
     snake=False,
     peaklist=[],
@@ -59,12 +73,10 @@ def fly_max(
         start of range
     stop : float
         end of range, note: start < stop
-    velocity : float
-        speed to set motor to during run.
-    step_factor : float, optional
-        used in calculating new range after each pass
-        unused for now
-        note: step_factor > 1.0, default = 3
+    velocities : list of floats
+        list of speeds to set motor to during run.
+    range_ratio : float
+        how much less range for subsequent scans (default 10)
     snake : bool, optional
         if False (default), always scan from start to stop
     md : dict, optional
@@ -72,23 +84,18 @@ def fly_max(
 
     """
     signal = signals[0]
-    if step_factor <= 1.0:
-        raise ValueError("step_factor must be greater than 1.0")
-    try:
-        (motor_name,) = motor.hints["fields"]
-    except (AttributeError, ValueError):
-        motor_name = motor.name
+    
     _md = {
         "detectors": [det.name for det in detectors],
         "motors": [motor.name],
         "plan_args": {
             "detectors": list(map(repr, detectors)),
             "motor": repr(motor),
-            "signals" : list(map(repr, signals)),
+            "signals" : list(signals),
             "start": start,
             "stop": stop,
-            "velocity": velocity,
-            "step_factor": step_factor,
+            "velocities": velocities,
+            "range_ratio": range_ratio,
             "snake": snake,
         },
         "plan_name": "fly_max",
@@ -103,21 +110,35 @@ def fly_max(
         _md["hints"].setdefault("dimensions", dimensions)
     for detector in detectors:
         detector.kind='hinted'
+    motor.kind='hinted'
     bec.enable_plots()
-    old_monitor_list = sd.monitors
-    sd.monitors.clear()
-    old_baseline = sd.baseline
-    sd.baseline.clear()
-    yield from bps.sleep(0.2)
-    yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
-    max_signal, max_motor = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_name=signals[0])
+    max_val = max((start,stop))
+    min_val = min((start,stop))
+    direction = 1
+
+    for velocity in velocities:
+        range = np.abs(start-stop)
+        print(f'starting scan from {start} to {stop} at {velocity}')
+        yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
+        max_signal, max_motor = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_name=signals[0])
+        print(f'maximum signal of {max_signal} found at {max_motor}')
+        low_side = max((min_val,max_motor - (range/(2*range_ratio))))
+        high_side = min((max_val,max_motor + (range/(2*range_ratio))))
+        if snake:
+            direction *=-1
+        if(direction>0):
+            start = low_side
+            stop = high_side
+        else:
+            start = high_side
+            stop = low_side
     yield from bps.mv(motor, max_motor)
+
     peaklist.append([max_motor, max_signal])
     for detector in detectors:
         detector.kind = 'normal'
+    motor.kind='normal'
     bec.disable_plots
-    sd.monitors =old_monitor_list
-    sd.baseline = old_baseline
     return max_motor
 
 
@@ -152,22 +173,24 @@ def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep
 def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
                                      take_pre_data=True, timeout=None, period=None, md=None):
     final_monitor_list = []
+    num_monitors = 0
     for monitor in monitor_list:
         if monitor not in sd.monitors:
             final_monitor_list.append(monitor)
+            num_monitors+=1
         else:
             final_monitor_list.append(None)
             
     
     mon1 = final_monitor_list[0]
     mon_rest = final_monitor_list[1:]
-    #TODO check if the monitors are already in sd.monitors, if so ignore them
-    #make mon1 a none then?
     
     ramp_plan = bp.ramp_plan(go_plan, mon1, inner_plan_func,
                                 take_pre_data=take_pre_data, timeout=timeout, period=period, md=md)
-
-    yield from monitor_during_wrapper(ramp_plan, mon_rest)
+    if (num_monitors>0 and type(mon1) == type(None)) or (num_monitors>1 and type(mon1) != type(None)):
+        yield from monitor_during_wrapper(ramp_plan, mon_rest)
+    else:
+        yield from ramp_plan
 
 
 def process_monitor_scan(db, uid):
@@ -175,6 +198,7 @@ def process_monitor_scan(db, uid):
     df = {}
     for stream_name in hdr.stream_names:
         if 'monitor' not in stream_name:
+            print(stream_name)
             continue
         t = hdr.table(stream_name=stream_name)
         this_time = t['time'].astype(dtype=int).values * 1e-9
@@ -196,3 +220,46 @@ def find_optimum_motor_pos(db, uid, motor_name='hhm_pitch', signal_name='apb_ch1
     signal_value = df[signal_name][idx]
     return signal_value, motor_value
 
+
+
+
+def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
+    thoffset = 1.6
+    angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
+    xrange = 3.5
+    startxss = [f2, [4.2, 3.5, 1, 1.1]]
+    yield from bps.mv(Shutter_enable, 0)
+    yield from bps.mv(Shutter_control, 0)
+    yield from load_configuration("SAXSNEXAFS")
+    Beamstop_SAXS.kind = "hinted"
+    bec.enable_plots()
+    startys = [3, -187.0]  # af2 first because it is a safer location
+    maxlocs = []
+    for startxs, starty in zip(startxss, startys):
+        yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
+        peaklist = []
+        yield from fly_max([Beamstop_SAXS],
+                           ['SAXS Beamstop'],
+                           sam_Y,
+                           starty-1,
+                           starty+1,
+                           velocities=[.5],
+                           open_shutter=True,
+                           peaklist=peaklist)
+        maxlocs.append(peaklist[0][0])
+        yield from bps.mv(sam_Y, peaklist[0][0])
+        for startx, angle in zip(startxs, angles):
+            yield from bps.mv(sam_X, startx, sam_Th, angle)
+            yield from bps.mv(Shutter_control, 1)
+            peaklist = []
+            yield from fly_max([Beamstop_SAXS],
+                                ['SAXS Beamstop'],
+                                sam_X,
+                                startx - 0.5 * xrange,
+                                startx + 0.5 * xrange,
+                                velocities=[.5],
+                                open_shutter=True,
+                                peaklist=peaklist)
+            maxlocs.append(peaklist[0][0])
+    print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
+    bec.disable_plots()
