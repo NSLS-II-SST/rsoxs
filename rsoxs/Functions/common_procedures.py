@@ -41,7 +41,7 @@ from sst_hw.vacuum import rsoxs_ll_gpwr
 from ..startup import bec
 from sst_funcs.printing import run_report
 from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
-
+from .fly_alignment import fly_max
 run_report(__file__)
 
 
@@ -604,21 +604,18 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
         m_set, g_set = get_mirror_grating_angles(291.65, cff, k, m_order)
         yield from bps.mv(grating, g_set, mirror2, m_set)
         peaklist = []
-        yield from bps.mv(Shutter_control, 1)
-        yield from tune_max(
-            [Izero_Mesh, Sample_TEY],
-            ["RSoXS Sample Current"],
-            grating,
-            g_set - .2,
-            g_set + .2,
-            0.00001,
-            50,
-            5,
-            True,
-            peaklist
+        yield from fly_max(
+            detectors = [Izero_Mesh, Sample_TEY],
+            signals = ["RSoXS Sample Current"],
+            motor = grating,
+            start = g_set - .2,
+            stop = g_set + .2,
+            velocities=[0.02,0.002],
+            snake = True,
+            peaklist= peaklist,
+            open_shutter=True,
         )
-        yield from bps.mv(Shutter_control, 0)
-        grating_measured.append(peaklist[0][0]['Mono Grating']['value'])
+        grating_measured.append(peaklist[0][0])
         mirror_measured.append(mirror2.read()['Mono Mirror']['value'])
         energy_measured.append(291.65)
         m_measured.append(m_order)
