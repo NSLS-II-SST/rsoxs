@@ -218,6 +218,7 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
     max_signal_dict = {}
     for monitor in signal_names:
         idx = df[monitor].idxmax()
+        max_signal_dict[monitor] = {}
         max_signal_dict[monitor]['time'] =  idx 
         max_signal_dict[monitor][motor_name] = df[motor_name][idx]
         max_signal_dict[monitor][monitor] = df[monitor][idx]
@@ -250,8 +251,8 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                            velocities=[.2],
                            open_shutter=True,
                            peaklist=peaklist)
-        maxlocs.append(peaklist['SAXS Beamstop']["RSoXS Sample Up-Down"])
-        yield from bps.mv(sam_Y, peaklist[0][0])
+        maxlocs.append(peaklist[-1]['SAXS Beamstop']["RSoXS Sample Up-Down"])
+        yield from bps.mv(sam_Y, peaklist[-1]['SAXS Beamstop']["RSoXS Sample Up-Down"])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
             yield from bps.mv(Shutter_control, 1)
@@ -264,6 +265,6 @@ def fly_find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
                                 velocities=[.2],
                                 open_shutter=True,
                                 peaklist=peaklist)
-            maxlocs.append(peaklist['SAXS Beamstop']["RSoXS Sample Outboard-Inboard"])
+            maxlocs.append(peaklist[-1]['SAXS Beamstop']["RSoXS Sample Outboard-Inboard"])
     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
     bec.disable_plots()

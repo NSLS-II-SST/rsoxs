@@ -645,12 +645,12 @@ def default_sample(name):
         "acquisitions": [],
         "components": "",
         "composition": "",
-        "bar_loc": {"spot": "A0"},
-        "bar_spot": "0C",
+        "bar_loc": {"spot": "0A"},
+        "bar_spot": "0A",
         "front": True,
         "grazing": False,
         "height": 0.0,
-        "angle": 90,
+        "angle": 0,
         "density": "",
         "location": [],
         "project_desc": "Calibration",
@@ -660,7 +660,8 @@ def default_sample(name):
         "project_name": "Calibration",
         "notes": "",
         "sample_set": "",
-        "sample_state": "back",
+        "sample_state": "",
+        "proposal_id" : 310704,
     }
 
 
@@ -980,9 +981,9 @@ def update_bar(inbar, loc_Q, front):
                     break
                 else:
                     continue
-            print(sample)
+            #print(sample)
             print(
-                f'Right-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
+                f'\nRight-click on {sample["sample_name"]} location (recorded location is {sample["bar_loc"]["spot"]}).  '
                 + "Press n on plot or enter to skip to next sample, p for previous sample, esc to end"
             )
             # ipython input x,y or click in plt which outputs x, y location

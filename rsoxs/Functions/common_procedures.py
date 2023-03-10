@@ -629,4 +629,8 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
     fit = find_best_offsets(mirror_measured,grating_measured,m_measured,energy_measured,k)
     print(fit)
     print(fit.x)
+    accept = input("Accept these values and set the offset (y/n)? ")
+    if accept in ['y','Y','yes']:
+        yield from bps.mvr(mirror2.user_offset,-fit.x[0], grating.user_offset,-fit.x[1])
+    bec.disable_plots()
     return fit
