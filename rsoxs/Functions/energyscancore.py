@@ -51,6 +51,7 @@ from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sampl
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
+from ..Functions.fly_alignment import find_optimum_motor_pos,bec,db, return_NullStatus_decorator, ramp_plan_with_multiple_monitors
 from sst_hw.diode import (
     Shutter_open_time,
     Shutter_control,
@@ -1122,4 +1123,3 @@ def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
             yield from abs_set(det.cam.image_mode, 1)
 
     return (yield from inner_scan_eliot())
-
