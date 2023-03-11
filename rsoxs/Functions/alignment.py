@@ -737,7 +737,7 @@ def spiralsearch(
     newdets = []
     if md is None:
         md = {}
-    if len(md.get('spiral_started',''))>0 and not force:
+    if len(md['bar_loc'].get('spiral_started',''))>0 and not force:
         print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
         yield from bps.null()
     arguments = dict(locals())
@@ -794,7 +794,7 @@ def spiralsearch(
     if isinstance(angle,(float,int)):
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
-    RE.md['spiral_started'] = RE.md['scan_id']+1
+    RE.md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
     yield from bp.spiral_square(
         newdets,
         sam_X,
@@ -805,9 +805,9 @@ def spiralsearch(
         y_range=diameter,
         x_num=num,
         y_num=num,
-        md={"plan_name": "spiralsearch", "master_plan": master_plan},
+        md=md,
     )
-    RE.md['spiral_started'] = db[-1]['start']['uid']
+    RE.md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 
 def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
@@ -1428,8 +1428,8 @@ def read_positions(bar):
 
 def resolve_spirals(bar):
     for samp in bar:
-        if len(str(samp.get('spiral_started',''))) > 0 and len(samp.get('spiral_done','')) == 0:
-            h = db[samp['spiral_started']]
+        if len(str(samp['bar_loc'].get('spiral_started',''))) > 0 and len(samp['bar_loc'].get('spiral_done','')) == 0:
+            h = db[samp['bar_loc']['spiral_started']]
             ys = np.array(list(h.data('RSoXS Sample Up-Down')))
             xs = np.array(list(h.data('RSoXS Sample Outboard-Inboard')))
             th = np.array(list(h.data('RSoXS Sample Rotation','baseline')))[0]
@@ -1442,5 +1442,5 @@ def resolve_spirals(bar):
                                         {'motor':'y','position':ys[im_num]},
                                         {'motor':'th','position':th},
                                         {'motor':'z','position':z}]
-                    samp['spiral_done']={"scan":h['start']['uid'],
+                    samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
                                          'best_num':im_num}
