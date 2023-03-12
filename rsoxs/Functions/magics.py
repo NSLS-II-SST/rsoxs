@@ -26,7 +26,7 @@ from ..HW.detectors import (
     snapshot,
     exposure,
 )
-from ..Functions.alignment import sample, user
+from ..Functions.alignment import sample
 from ..startup import RE
 from ..HW.energy import en, set_polarization
 from sst_funcs.printing import run_report, boxed_text
@@ -298,12 +298,8 @@ def md(line):
     sample()
 
 
-@register_line_magic
-def u(line):
-    user()
 
-
-del md, u
+del md
 
 
 class RSoXSPrompt(Prompts):
@@ -328,7 +324,6 @@ ip.prompts = RSoXSPrompt(ip)
 
 
 def beamline_status():
-    # user()
     sample()
     boxed_text(
         "Detector status",

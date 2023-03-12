@@ -51,36 +51,6 @@ from .configurations import (
 run_report(__file__)
 
 
-def user():
-    title = "User metadata - stored in every scan:"
-    text = ""
-    if len(f'{RE.md["proposal_id"]}') > 0:
-        text += "   proposal ID:           " + colored(
-            "{}".format(str(RE.md["proposal_id"])).center(50, " "), "yellow"
-        )
-    if len(str(RE.md["SAF"])) > 0:
-        text += "\n   SAF ID:              " + colored("{}".format(str(RE.md["SAF"])).center(50, " "), "yellow")
-    if len(RE.md["user_name"]) > 0:
-        text += "\n   User Name:           " + colored("{}".format(RE.md["user_name"]).center(50, " "), "yellow")
-    if len(RE.md["user_email"]) > 0:
-        text += "\n   User Email:          " + colored("{}".format(RE.md["user_name"]).center(50, " "), "yellow")
-    if len(RE.md["user_id"]) > 0:
-        text += "\n   User ID:             " + colored(
-            "{}".format(str(RE.md["user_id"])).center(50, " "), "yellow"
-        )
-    if len(RE.md["institution"]) > 0:
-        text += "\n   Institution:         " + colored("{}".format(RE.md["institution"]).center(50, " "), "yellow")
-    if len(RE.md["project_name"]) > 0:
-        text += "\n   project:             " + colored(
-            "{}".format(RE.md["project_name"]).center(50, " "), "yellow"
-        )
-    if len(RE.md["project_desc"]) > 0:
-        text += "\n   Project Description: " + colored(
-            "{}".format(RE.md["project_desc"]).center(50, " "), "yellow"
-        )
-    boxed_text(title, text, "green", 80, shrink=False)
-
-
 def sample():
     title = "Sample metadata - stored in every scan:"
     text = ""
@@ -88,8 +58,6 @@ def sample():
         text += "   proposal ID:           " + colored("{}".format(RE.md["proposal_id"]).center(48, " "), "cyan")
     if len(str(RE.md["SAF"])) > 0:
         text += "\n   SAF id:                " + colored("{}".format(RE.md["SAF"]).center(48, " "), "cyan")
-    if len(str(RE.md["user_name"])) > 0:
-        text += "\n   User Name:             " + colored("{}".format(RE.md["user_name"]).center(48, " "), "cyan")
     if len(str(RE.md["institution"])) > 0:
         text += "\n   Institution:           " + colored("{}".format(RE.md["institution"]).center(48, " "), "cyan")
     if len(str(RE.md["sample_name"])) > 0:
@@ -115,10 +83,6 @@ def sample():
     if len(str(RE.md["project_desc"])) > 0:
         text += "\n   Project Description:   " + colored(
             "{}".format(RE.md["project_desc"]).center(48, " "), "cyan"
-        )
-    if len(str(RE.md["samp_user_id"])) > 0:
-        text += "\n   Creator User ID:       " + colored(
-            "{}".format(str(RE.md["samp_user_id"])).center(48, " "), "cyan"
         )
     if len(str(RE.md["bar_loc"]["spot"])) > 0:
         text += "\n   Location on Bar:       " + colored(
@@ -148,45 +112,6 @@ def sample():
         text += "\n   Notes:                 " + colored("{}".format(RE.md["notes"]).center(48, " "), "cyan")
     boxed_text(title, text, "red", 80, shrink=False)
 
-
-def newuser():
-    print(
-        "This information will tag future data until this changes, please be as thorough as possible\n"
-        "current values in parentheses, leave blank for no change"
-    )
-
-    proposal_id = input("Your proposal id ({}): ".format(RE.md["proposal_id"]))
-    if proposal_id != "":
-        RE.md["proposal_id"] = proposal_id
-
-    SAF_id = input("Your SAF id ({}): ".format(RE.md["SAF"]))
-    if SAF_id != "":
-        RE.md["SAF"] = SAF_id
-
-    institution = input("Your institution ({}): ".format(RE.md["institution"]))
-    if institution != "":
-        RE.md["institution"] = institution
-
-    user_name = input("Your name ({}): ".format(RE.md["user_name"]))
-    if user_name != "":
-        RE.md["user_name"] = user_name
-
-    user_email = input("Your email for beamline status notifications ({}): ".format(RE.md["user_email"]))
-    if user_email != "":
-        RE.md["user_email"] = user_email
-
-    project_name = input("Your project ({}): ".format(RE.md["project_name"]))
-    if project_name != "":
-        RE.md["project_name"] = project_name
-
-    project_desc = input("Your project description ({}): ".format(RE.md["project_desc"]))
-    if project_desc != "":
-        RE.md["project_desc"] = project_desc
-    # if new, add user to database get unique ID.
-    user_id = "0"
-    RE.md["user_id"] = user_id
-    user()
-    return user_dict()
 
 
 def get_location(motor_list):
@@ -292,7 +217,6 @@ def get_sample_dict(acq=[], locations=None):
     saf_id = RE.md["SAF"]
     institution = RE.md["institution"]
     project_desc = RE.md["project_desc"]
-    samp_user_id = RE.md["samp_user_id"]
     composition = RE.md["composition"]
     bar_loc = RE.md["bar_loc"]
     density = RE.md["density"]
@@ -318,7 +242,6 @@ def get_sample_dict(acq=[], locations=None):
         "sample_date": sample_date,
         "project_name": project_name,
         "project_desc": project_desc,
-        "samp_user_id": samp_user_id,
         "composition": composition,
         "bar_loc": bar_loc,
         "density": density,
@@ -336,25 +259,6 @@ def get_sample_dict(acq=[], locations=None):
     }
 
 
-def user_dict(
-    user_id=RE.md["user_id"],
-    proposal_id=RE.md["proposal_id"],
-    saf_id=RE.md["SAF"],
-    institution=RE.md["institution"],
-    user_name=RE.md["user_name"],
-    project_name=RE.md["project_name"],
-    project_desc=RE.md["project_desc"],
-):
-    return {
-        "user_id": user_id,
-        "proposal_id": proposal_id,
-        "saf_id": saf_id,
-        "institution": institution,
-        "user_name": user_name,
-        "project_name": project_name,
-        "project_desc": project_desc,
-    }
-
 
 def load_sample(sam_dict, sim_mode=False):
     """
@@ -369,10 +273,6 @@ def load_sample(sam_dict, sim_mode=False):
     RE.md.update(sam_dict)
     yield from move_to_location(locs=sam_dict["location"])
     yield from bps.sleep(0)
-
-
-def load_user_dict_to_md(user_dict):
-    RE.md.update(user_dict)
 
 
 def newsample():
@@ -430,10 +330,6 @@ def newsample():
     project_desc = input("Describe the project ({}): ".format(RE.md["project_desc"]))
     if project_desc != "":
         RE.md["project_desc"] = project_desc
-
-    samp_user_id = input("Associated User ID ({}): ".format(RE.md["samp_user_id"]))
-    if samp_user_id != "":
-        RE.md["samp_user_id"] = samp_user_id
 
     bar_loc = input("Location on the Bar ({}): ".format(RE.md["bar_loc"]["spot"]))
     if bar_loc != "":
@@ -732,15 +628,16 @@ def spiralsearch(
     ValueError
         _description_
     """
+    if md is None:
+        md = {}
+    if len(str(md.get('bar_loc',{}).get('spiral_started','')))>0 and not force:
+        print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
+        yield from bps.null()
+        return ''
+    arguments = dict(locals())
     valid = True
     validation = ""
     newdets = []
-    if md is None:
-        md = {}
-    if len(md['bar_loc'].get('spiral_started',''))>0 and not force:
-        print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
-        yield from bps.null()
-    arguments = dict(locals())
     for argument in arguments:
         if isinstance(argument,np.ndarray):
             argument = list(argument)
@@ -777,7 +674,6 @@ def spiralsearch(
         validation = f"invalid choice of grating {grating}"
     if not valid:
         raise ValueError(validation)
-
     if grating in [1200, "1200"]:
         yield from grating_to_1200()
     elif grating in [250, "250"]:
@@ -794,7 +690,7 @@ def spiralsearch(
     if isinstance(angle,(float,int)):
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
-    RE.md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
+    md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
     yield from bp.spiral_square(
         newdets,
         sam_X,
@@ -807,7 +703,7 @@ def spiralsearch(
         y_num=num,
         md=md,
     )
-    RE.md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
+    md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 
 def spiralsearch_all(barin=[], diameter=0.5, stepsize=0.2):
