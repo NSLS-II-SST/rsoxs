@@ -199,7 +199,7 @@ def do_some_eputables_2023_en():
               29500]
     yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'C', 'rsoxs', 'CW_r_H1')
     yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'CW', 'rsoxs', 'C_r_H1')
-    startingens = [75,80,100,110,125,155,185,200,200,185,160,140]
+    startingens = [75,80,100,110,125,155,185,200,200,185,160,160,155]
     #startingens = [95,125,155,185,200,200,185,160]
     for angle,ph,sten in zip(angles,phases,startingens):
         yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f'linear_{angle}deg_r_H1')
