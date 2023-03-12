@@ -1180,7 +1180,7 @@ def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
     # return the offset intersect
 
 
-def rotatedx(x0, theta, zoff, xoff=1.88, thoff=1.6):
+def rotatedx(x0, theta, zoff, xoff=1.88, thoff=0):
     """
     given the x position at 0 rotation (from the image of the sample bar)
     and a rotation angle, the offset of rotation in z and x (as well as a potential theta offset)
@@ -1191,7 +1191,7 @@ def rotatedx(x0, theta, zoff, xoff=1.88, thoff=1.6):
     )
 
 
-def rotatedz(x0, theta, zoff, xoff=1.88, thoff=1.6):
+def rotatedz(x0, theta, zoff, xoff=1.88, thoff=0):
     """
     given the x position at 0 rotation (from the image of the sample bar)
     and a rotation angle, the offset of rotation in z and x axes (as well as a potential theta offset)
@@ -1221,7 +1221,7 @@ def af_rotation(xfm90, xf0, xf90, xf180):
 
 
 def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
-    thoffset = 1.6
+    thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
     xnum = 36
