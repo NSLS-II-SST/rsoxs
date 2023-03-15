@@ -590,12 +590,14 @@ def vent():
     print("")
 
 
-def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
+def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250,detector = Sample_TEY,signal="RSoXS Sample Current"):
     #RE(load_sample(sample_by_name(bar, 'HOPG')))
+#RE(tune_pgm(cs=[1.35,1.37,1.385,1.4,1.425,1.45],ms=[1,1,1,1,1],energy=291.65,pol=90,k=250))
+#RE(tune_pgm(cs=[1.55,1.6,1.65,1.7,1.75,1.8],ms=[1,1,1,1,1],energy=291.65,pol=90,k=1200))
+
     yield from bps.mv(en.polarization, pol)
     yield from bps.mv(en,energy)
-    Sample_TEY.kind = 'hinted'
-    Izero_Mesh.kind = 'normal'
+    detector.kind = 'hinted'
     mirror_measured = []
     grating_measured = []
     energy_measured = []
@@ -607,8 +609,8 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
         yield from bps.sleep(0.2)
         peaklist = []
         yield from fly_max(
-            detectors = [Izero_Mesh, Sample_TEY],
-            signals = ["RSoXS Sample Current"],
+            detectors = [detector],
+            signals = [signal],
             motor = grating,
             start = g_set - .2,
             stop = g_set + .2,
@@ -618,7 +620,7 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
             range_ratio=30,
             open_shutter=True,
         )
-        grating_measured.append(peaklist[0]["RSoXS Sample Current"]["Mono Grating"])
+        grating_measured.append(peaklist[0][signal]["Mono Grating"])
         mirror_measured.append(mirror2.read()['Mono Mirror']['value'])
         energy_measured.append(291.65)
         m_measured.append(m_order)
@@ -628,9 +630,9 @@ def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250):
     print(f'orders: {m_measured}')
     fit = find_best_offsets(mirror_measured,grating_measured,m_measured,energy_measured,k)
     print(fit)
-    print(fit.x)
     accept = input("Accept these values and set the offset (y/n)? ")
     if accept in ['y','Y','yes']:
         yield from bps.mvr(mirror2.user_offset,-fit.x[0], grating.user_offset,-fit.x[1])
     bec.disable_plots()
+    detector.kind = 'normal'
     return fit
