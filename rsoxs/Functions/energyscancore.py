@@ -21,6 +21,7 @@ from collections import defaultdict
 from bluesky import preprocessors as bpp
 from bluesky import FailedStatus
 import numpy as np
+from functools import partial
 from ophyd import Device
 from ophyd.status import StatusTimeoutError
 import warnings
@@ -101,6 +102,7 @@ def new_en_scan_core(
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
     signals = None,
+    check_exp = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
     # grab locals
@@ -324,7 +326,14 @@ def new_en_scan_core(
 
 
     #print(sigcycler)
-    yield from finalize_wrapper(bp.scan_nd(newdets + signals, sigcycler, md=md),cleanup())
+    yield from finalize_wrapper(
+        bp.scan_nd(newdets + signals, 
+                   sigcycler, 
+                   md=md,
+                   per_step=partial(exp_adjusted_one_nd_step,check_exp)
+                   ),
+        cleanup()
+    )
     
     for det in newdets:
         det.number_exposures = old_n_exp[det.name]
@@ -745,7 +754,7 @@ def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_an
                 warnings.warn(f'underexposed at {old_time}ms, trying again at {new_time}ms')
             if(over_exposed and not under_exposed):
                 new_time = old_time / 10
-                if new_time < 0.002:
+                if new_time < 2:
                     warnings.warn('over exposed, but minimum exposure time reached')
                     break
                 warnings.warn(f'over exposed at {old_time}ms, trying again at {new_time}ms')
