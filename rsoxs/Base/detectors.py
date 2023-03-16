@@ -146,7 +146,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
             self.saturated = True
 
     def check_exposure_low(self, old_value, value, **kwargs):
-        if value < self.underexposure_num_pixels:
+        if value > self.underexposure_num_pixels:
             self.under_exposed = True
         else:
             self.under_exposed = False
