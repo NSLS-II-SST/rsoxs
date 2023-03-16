@@ -24,6 +24,7 @@ from ..HW.motors import (
     BeamStopS)
 from .alignment import load_configuration
 
+time_offset_defaults = {'en_monoen_readback_monitor':-0.8}
 
 def fly_max(
     detectors,
@@ -36,8 +37,9 @@ def fly_max(
     open_shutter=True,
     snake=False,
     peaklist=[],
-    *,
+    time_offsets = time_offset_defaults,
     md=None,
+    **kwargs,
 ):
     r"""
     plan: tune a motor to the maximum of signal(motor)
@@ -82,6 +84,8 @@ def fly_max(
         if False (default), always scan from start to stop
     md : dict, optional
         metadata
+    time_offsets : dict, optional
+        stream names time offsets dictionary in seconds
 
     """
 
@@ -120,7 +124,7 @@ def fly_max(
         range = np.abs(start-stop)
         print(f'starting scan from {start} to {stop} at {velocity}')
         yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
-        signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_names=signals)
+        signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_names=signals, time_offsets = time_offsets)
         print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor.name]}')
         low_side = max((min_val,signal_dict[signals[0]][motor.name] - (range/(2*range_ratio))))
         high_side = min((max_val,signal_dict[signals[0]][motor.name] + (range/(2*range_ratio))))
@@ -194,7 +198,9 @@ def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
         yield from ramp_plan
 
 
-def process_monitor_scan(db, uid):
+def process_monitor_scan(db, uid, time_offsets=None):
+    if time_offsets == None:
+        time_offsets = {}
     hdr = db[uid]
     df = {}
     for stream_name in hdr.stream_names:
@@ -202,7 +208,7 @@ def process_monitor_scan(db, uid):
             print(stream_name)
             continue
         t = hdr.table(stream_name=stream_name)
-        this_time = t['time'].astype(dtype=int).values * 1e-9
+        this_time = t['time'].astype(dtype=int).values * 1e-9 + time_offsets.get(stream_name,0.0)
         if not 'time' in df.keys():
             df['time'] = this_time
 
@@ -213,8 +219,8 @@ def process_monitor_scan(db, uid):
     return pd.DataFrame(df)
 
 
-def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_names=['RSoXS Au Mesh Current','SAXS Beamstop']):
-    df = process_monitor_scan(db, uid)
+def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_names=['RSoXS Au Mesh Current','SAXS Beamstop'], time_offsets = None):
+    df = process_monitor_scan(db, uid, time_offsets)
     max_signal_dict = {}
     for monitor in signal_names:
         idx = df[monitor].idxmax()
