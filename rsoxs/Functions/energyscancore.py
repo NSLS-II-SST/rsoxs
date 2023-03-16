@@ -1,7 +1,7 @@
 from cycler import cycler
 from bluesky.utils import Msg, short_uid as _short_uid
 import bluesky.utils as utils
-from bluesky.plan_stubs import trigger_and_read
+from bluesky.plan_stubs import trigger_and_read, move_per_step, stage, unstage
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import (
@@ -22,6 +22,7 @@ from bluesky import FailedStatus
 import numpy as np
 from ophyd import Device
 from ophyd.status import StatusTimeoutError
+import warnings
 from copy import deepcopy
 from ..HW.energy import (
     en,
@@ -674,4 +675,87 @@ def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
 
     return (yield from inner_scan_eliot())
 
+# example code from Tom
+# def my_custom(motors, dectectors, positions, my, stuff):
+#     ...
 
+# yield from scan_nd(..., per_step=partial(my_custom, my='a', stuff='b'))
+# 
+# 
+# 
+# reading = yield from trigger_and_read(dets)
+# while try_again(reading):
+#     yield from adjust_eposure()
+#     reading = yield from trigger_and_read(dets)
+
+def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_and_read, check_exposure=False):
+    """
+    Inner loop of an N-dimensional step scan
+
+
+
+    This is the default function for ``per_step`` param`` in ND plans.
+
+    Parameters
+    ----------
+    detectors : iterable
+        devices to read
+    step : dict
+        mapping motors to positions in this step
+    pos_cache : dict
+        mapping motors to their last-set positions
+    take_reading : plan, optional
+        function to do the actual acquisition ::
+
+           def take_reading(dets, name='primary'):
+                yield from ...
+
+        Callable[List[OphydObj], Optional[str]] -> Generator[Msg], optional
+
+        Defaults to `trigger_and_read`
+    check_exposure : Boolean
+        true - check the exposure level of the detectors, change exposure time and retake as necessary
+        false - don't check - normal per step
+
+    """
+    motors = step.keys()
+    yield from move_per_step(step, pos_cache)
+    yield from take_reading(list(detectors) + list(motors))
+    if(check_exposure):
+        under_exposed = False
+        over_exposed = False
+        for det in detectors:
+            if det.under_exposed.get():
+                under_exposed = True
+            if det.over_exposed.get():
+                over_exposed = True
+        while(under_exposed or over_exposed):
+            old_time = Shutter_open_time.get()
+            if(under_exposed and not over_exposed):
+                if old_time<200:
+                    new_time = old_time * 10
+                if old_time<1000:
+                    new_time = old_time * 4
+                if old_time<5000:
+                    new_time = old_time * 2
+                else:
+                    warnings.warn('underexposed, but maximum exposure time reached')
+                    break
+                warnings.warn(f'underexposed at {old_time}ms, trying again at {new_time}ms')
+            if(over_exposed and not under_exposed):
+                new_time = old_time / 10
+                if new_time < 0.002:
+                    warnings.warn('over exposed, but minimum exposure time reached')
+                    break
+                warnings.warn(f'over exposed at {old_time}ms, trying again at {new_time}ms')
+            Shutter_open_time.move(new_time)
+            for det in detectors:
+                det.cam.acquire_time = new_time/1000
+            yield from take_reading(list(detectors) + list(motors))
+            under_exposed = False
+            over_exposed = False
+            for det in detectors:
+                if det.under_exposed.get():
+                    under_exposed = True
+                if det.over_exposed.get():
+                    over_exposed = True
