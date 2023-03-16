@@ -65,17 +65,6 @@ class GreateyesTransform(TransformPlugin):
 
     type = C(EpicsSignal, "Type")
 
-class check_saturated(Signal):
-    value = False
-    def get(self):
-        self.value = self.parent.stats2.hist_above.get() > 1000
-        return self.value
-    
-class check_under_exposed(Signal):
-    value = False
-    def get(self):
-        self.value = self.parent.stats2.hist_below.get() > 700000
-        return self.value
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
@@ -94,8 +83,18 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     stats1 = C(StatsWithHist, "Stats1:")
     stats2 = C(StatsWithHist, 'Stats2:')
-    over_exposed = C(check_saturated)
-    under_exposed = C(check_under_exposed)
+    over_exposed = False
+    under_exposed = False
+    saturation_high_threshold = 200000
+    saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
+    saturation_low_threshold = 500
+    saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
+    saturated = False
+    high_sat_check = [False,False]
+
+    underexposure_min_value = 2000
+    underexposure_num_pixels = 700000 # 700000 pixels reading under 2000 counts means underexposed
+    under_exposed = False
     # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
@@ -111,12 +110,16 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setup_cam()
+        self.stats1.hist_below.subscribe(self.check_saturation_low)
+        self.stats2.hist_below.subscribe(self.check_exposure_low)
+        self.stats1.hist_above.subscribe(self.check_saturation_high)
+
     def setup_cam(self):
         self.stats1.kind = 'hinted'
-        self.stats1.hist_min.set(500).wait()
-        self.stats2.hist_min.set(2000).wait()
-        self.stats1.hist_max.set(6000).wait()
-        self.stats2.hist_max.set(200000).wait()
+        self.stats1.hist_min.set(self.saturation_low_pixel_count).wait()
+        self.stats2.hist_min.set(self.underexposure_min_value).wait()
+        self.stats1.hist_max.set(self.saturation_high_threshold).wait()
+        self.stats2.hist_max.set(self.saturation_high_threshold).wait()
         self.trans1.enable.set(1).wait()
         self.trans1.type.set(self.transform_type).wait()
         self.image.nd_array_port.set("TRANS1").wait()
@@ -126,6 +129,29 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.cam.bin_x.set(self.binvalue).wait()
         self.cam.bin_y.set(self.binvalue).wait()
 
+    def check_saturation_high(self, old_value, value, **kwargs):
+        if value > self.saturation_high_pixel_count:
+            self.high_sat_check[0] = True
+        else:
+            self.high_sat_check[1] = False
+        if True in self.high_sat_check:
+            self.saturated = True
+
+    def check_saturation_low(self, old_value, value, **kwargs):
+        if value > self.saturation_low_pixel_count:
+            self.high_sat_check[1] = True
+        else:
+            self.high_sat_check[1] = False
+        if True in self.high_sat_check:
+            self.saturated = True
+
+    def check_exposure_low(self, old_value, value, **kwargs):
+        if value < self.underexposure_num_pixels:
+            self.under_exposed = True
+        else:
+            self.under_exposed = False
+
+    
     def sim_mode_on(self):
         self.useshutter = False
         self.cam.sync.set(0)
