@@ -68,8 +68,8 @@ class GreateyesTransform(TransformPlugin):
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
-    image = C(ImagePlugin, "image1:")
-    cam = C(GreatEyesDetCamWithVersions, "cam1:")
+    image = C(ImagePlugin, "image1:",kind='config')
+    cam = C(GreatEyesDetCamWithVersions, "cam1:",kind='config')
     transform_type = 0
     number_exposures = 1
     tiff = C(
@@ -79,27 +79,26 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         read_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
         read_attrs=[],
         root="/nsls2/data/sst/assets/",
+        kind='hinted'
     )
 
-    stats1 = C(StatsWithHist, "Stats1:")
+    stats1 = C(StatsWithHist, "Stats1:",kind='hinted')
     stats2 = C(StatsWithHist, 'Stats2:')
-    over_exposed = False
-    under_exposed = False
+    under_exposed = C(Signal,value=False,kind='hinted',name='under_exposed')
     saturation_high_threshold = 200000
     saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
     saturation_low_threshold = 500
     saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
-    saturated = False
+    saturated = C(Signal,value=False,kind='hinted',name='saturated')
     high_sat_check = [False,False]
 
     underexposure_min_value = 2000
     underexposure_num_pixels = 700000 # 700000 pixels reading under 2000 counts means underexposed
-    under_exposed = False
     # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
-    trans1 = C(GreateyesTransform, "Trans1:")
-    roi1 = C(ROIPlugin, "ROI1:")
+    trans1 = C(GreateyesTransform, "Trans1:",kind='config')
+    roi1 = C(ROIPlugin, "ROI1:",kind='config')
     # roi2 = C(ROIPlugin, 'ROI2:')
     # roi3 = C(ROIPlugin, 'ROI3:')
     # roi4 = C(ROIPlugin, 'ROI4:')
@@ -133,23 +132,21 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         if value > self.saturation_high_pixel_count:
             self.high_sat_check[0] = True
         else:
-            self.high_sat_check[1] = False
-        if True in self.high_sat_check:
-            self.saturated = True
+            self.high_sat_check[0] = False
+        self.saturated.set(True in self.high_sat_check)
 
     def check_saturation_low(self, old_value, value, **kwargs):
         if value > self.saturation_low_pixel_count:
             self.high_sat_check[1] = True
         else:
             self.high_sat_check[1] = False
-        if True in self.high_sat_check:
-            self.saturated = True
+        self.saturated.set(True in self.high_sat_check)
 
     def check_exposure_low(self, old_value, value, **kwargs):
         if value > self.underexposure_num_pixels:
-            self.under_exposed = True
+            self.under_exposed.set(True)
         else:
-            self.under_exposed = False
+            self.under_exposed.set(False)
 
     
     def sim_mode_on(self):

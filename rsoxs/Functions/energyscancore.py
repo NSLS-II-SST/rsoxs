@@ -737,7 +737,7 @@ def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_an
         for det in detectors:
             if det.under_exposed.get():
                 under_exposed = True
-            if det.over_exposed.get():
+            if det.saturated.get():
                 over_exposed = True
         while(under_exposed or over_exposed):
             old_time = Shutter_open_time.get()
@@ -752,12 +752,15 @@ def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_an
                     warnings.warn('underexposed, but maximum exposure time reached')
                     break
                 warnings.warn(f'underexposed at {old_time}ms, trying again at {new_time}ms')
-            if(over_exposed and not under_exposed):
+            elif(over_exposed and not under_exposed):
                 new_time = old_time / 10
                 if new_time < 2:
                     warnings.warn('over exposed, but minimum exposure time reached')
                     break
                 warnings.warn(f'over exposed at {old_time}ms, trying again at {new_time}ms')
+            else:
+                warnings.warn(f'contradictory saturated and under exposed, no change in exposure will be made')
+                break
             Shutter_open_time.move(new_time)
             for det in detectors:
                 det.cam.acquire_time = new_time/1000
@@ -767,5 +770,5 @@ def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_an
             for det in detectors:
                 if det.under_exposed.get():
                     under_exposed = True
-                if det.over_exposed.get():
+                if det.saturated.get():
                     over_exposed = True
