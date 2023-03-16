@@ -1,7 +1,7 @@
 import time
 from bluesky.run_engine import Msg
 from ophyd import Component as C
-from ophyd import EpicsSignalRO, Device, EpicsSignal
+from ophyd import EpicsSignalRO, Device, EpicsSignal, Signal
 from ophyd.areadetector import (
     GreatEyesDetector,
     GreatEyesDetectorCam,
@@ -24,6 +24,14 @@ from sst_funcs.printing import run_report
 
 run_report(__file__)
 
+
+class StatsWithHist(StatsPluginV33):
+    hist_below = C(EpicsSignalRO,'HistBelow_RBV')
+    hist_above = C(EpicsSignalRO,'HistAbove_RBV')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.total.kind = 'hinted'
+        self.compute_histogram.set(1)
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
     """Add this as a component to detectors that write TIFFs."""
@@ -57,6 +65,17 @@ class GreateyesTransform(TransformPlugin):
 
     type = C(EpicsSignal, "Type")
 
+class check_saturated(Signal):
+    value = False
+    def get(self):
+        self.value = self.parent.stats2.hist_above.get() > 1000
+        return self.value
+    
+class check_under_exposed(Signal):
+    value = False
+    def get(self):
+        self.value = self.parent.stats2.hist_below.get() > 700000
+        return self.value
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
@@ -73,9 +92,11 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         root="/nsls2/data/sst/assets/",
     )
 
-    stats1 = C(StatsPluginV33, "Stats1:")
-    # stats2 = C(StatsPluginv33, 'Stats2:')
-    # stats3 = C(StatsPlugin, 'Stats3:')
+    stats1 = C(StatsWithHist, "Stats1:")
+    stats2 = C(StatsWithHist, 'Stats2:')
+    over_exposed = C(check_saturated)
+    under_exposed = C(check_under_exposed)
+    # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
     trans1 = C(GreateyesTransform, "Trans1:")
@@ -86,6 +107,24 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     # proc1 = C(ProcessPlugin, 'Proc1:')
     binvalue = 4
     useshutter = True
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setup_cam()
+    def setup_cam(self):
+        self.stats1.kind = 'hinted'
+        self.stats1.hist_min.set(500).wait()
+        self.stats2.hist_min.set(2000).wait()
+        self.stats1.hist_max.set(6000).wait()
+        self.stats2.hist_max.set(200000).wait()
+        self.trans1.enable.set(1).wait()
+        self.trans1.type.set(self.transform_type).wait()
+        self.image.nd_array_port.set("TRANS1").wait()
+        self.tiff.nd_array_port.set("TRANS1").wait()
+        self.cam.temperature.set(-80).wait()
+        self.cam.enable_cooling.set(1).wait()
+        self.cam.bin_x.set(self.binvalue).wait()
+        self.cam.bin_y.set(self.binvalue).wait()
 
     def sim_mode_on(self):
         self.useshutter = False
@@ -117,10 +156,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 85,
             )
         # self.cam.num_images.set(self.number_exposures)
-        self.trans1.enable.set(1)
-        self.trans1.type.set(self.transform_type)
-        self.image.nd_array_port.set("TRANS1")
-        self.tiff.nd_array_port.set("TRANS1")
+        
         self.stage_sigs["cam.num_images"] = self.number_exposures
         #self.cam.num_images.set(self.number_exposures)
         return [self].append(super().stage(*args, **kwargs))
@@ -131,10 +167,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         #    self.cam.temperature.set(-80)
         if self.cam.enable_cooling.get() != 1:
             print(f"Warning: It looks like the {self.name} restarted, putting in default values again")
-            self.cam.temperature.set(-80)
-            self.cam.enable_cooling.set(1)
-            self.cam.bin_x.set(self.binvalue)
-            self.cam.bin_y.set(self.binvalue)
+            self.setup_cam()
         return super().trigger(*args, **kwargs)
 
     def skinnystage(self, *args, **kwargs):

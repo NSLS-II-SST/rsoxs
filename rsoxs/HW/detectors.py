@@ -27,14 +27,13 @@ waxs_det = RSOXSGreatEyesDetector(
 
 waxs_det.transform_type = 1
 waxs_det.cam.ensure_nonblocking()
-
+waxs_det.setup_cam()
 
 saxs_det.stats1.name = "SAXS fullframe"
 waxs_det.stats1.name = "WAXS fullframe"
-saxs_det.stats1.kind = 'hinted'
-waxs_det.stats1.kind = "hinted"
-saxs_det.stats1.total.kind = 'hinted'
-waxs_det.stats1.total.kind = "hinted"
+
+
+
 
 # to simulate, use this line, and comment out the relevent detector above
 # saxs_det = SimGreatEyes(name="Simulated SAXS camera")

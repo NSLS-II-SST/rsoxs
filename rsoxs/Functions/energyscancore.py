@@ -13,6 +13,7 @@ from bluesky.plan_stubs import (
     wait,
     create,
     save,
+    unstage,
 )
 from bluesky.preprocessors import rewindable_wrapper, finalize_wrapper
 from bluesky.utils import short_uid, separate_devices, all_safe_rewind
