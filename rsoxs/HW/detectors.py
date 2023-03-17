@@ -15,8 +15,10 @@ run_report(__file__)
 
 
 saxs_det = RSOXSGreatEyesDetector('XF:07ID1-ES:1{GE:1}', name='Small Angle CCD Detector',
-                                  read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed']
+                                  read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam']
                                   )
+
+saxs_det.cam.read_attrs = ['acquire_time']
 saxs_det.transform_type = 3
 saxs_det.cam.ensure_nonblocking()
 saxs_det.setup_cam()
@@ -24,9 +26,9 @@ saxs_det.setup_cam()
 waxs_det = RSOXSGreatEyesDetector(
     "XF:07ID1-ES:1{GE:2}",
     name="Wide Angle CCD Detector",
-    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed'],
+    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam'],
 )
-
+waxs_det.cam.read_attrs = ['acquire_time']
 waxs_det.transform_type = 1
 waxs_det.cam.ensure_nonblocking()
 waxs_det.setup_cam()
@@ -119,17 +121,14 @@ def dark_plan(det):
     yield from det.skinnyunstage()
     yield from det.skinnystage()
     oldmode = det.cam.image_mode.get()
-    yield from bps.mv(det.cam.image_mode,1)
     n_exp = det.cam.num_images.get()
-    yield from bps.mv(det.cam.num_images,1)
-    yield from bps.mv(det.cam.shutter_mode, 0)
+    yield from bps.mv(det.cam.num_images,1,det.cam.shutter_mode, 0, det.cam.image_mode,1)
     yield from bps.trigger(det, group="darkframe-trigger")
     yield from bps.wait("darkframe-trigger")
     snapshot = bluesky_darkframes.SnapshotDevice(det)
     if det.useshutter:
         yield from bps.mv(det.cam.shutter_mode, 2)
-    yield from bps.mv(det.cam.image_mode,oldmode)
-    yield from bps.mv(det.cam.num_images,n_exp)
+    yield from bps.mv(det.cam.image_mode,oldmode, det.cam.num_images,n_exp)
     yield from det.skinnyunstage()
     yield from det.skinnystage()
     return snapshot

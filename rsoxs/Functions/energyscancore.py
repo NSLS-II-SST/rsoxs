@@ -157,6 +157,8 @@ def new_en_scan_core(
         else:
             newdets.append(det)
             detnames.append(det.name)
+        #signals.extend([det.cam.acquire_time])
+    signals.extend([Shutter_open_time])
     if len(newdets) < 1:
         valid = False
         validation += "No detectors are given\n"
@@ -326,11 +328,12 @@ def new_en_scan_core(
 
 
     #print(sigcycler)
+    exps = {}
     yield from finalize_wrapper(
         bp.scan_nd(newdets + signals, 
                    sigcycler, 
                    md=md,
-                   per_step=partial(exp_adjusted_one_nd_step,check_exp)
+                   per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exp))
                    ),
         cleanup()
     )
@@ -698,11 +701,66 @@ def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
 #     yield from adjust_eposure()
 #     reading = yield from trigger_and_read(dets)
 
-def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_and_read, check_exposure=False):
+
+
+def take_exposure_corrected_reading(detectors=None, check_exposure=False):
+    if detectors == None:
+        detectors = []
+    yield from trigger_and_read(list(detectors))
+    if(check_exposure):
+        under_exposed = False
+        over_exposed = False
+        for det in detectors:
+            if not hasattr(det,'under_exposed'):
+                continue
+            if det.under_exposed.get():
+                under_exposed = True
+            if not hasattr(det,'saturated'):
+                continue
+            if det.saturated.get():
+                over_exposed = True
+        while(under_exposed or over_exposed):
+            old_time = Shutter_open_time.get()
+            if(under_exposed and not over_exposed):
+                if old_time<200:
+                    new_time = old_time * 10
+                elif old_time<1000:
+                    new_time = old_time * 4
+                elif old_time<5000:
+                    new_time = old_time * 2
+                else:
+                    print('underexposed, but maximum exposure time reached')
+                    break
+                print(f'underexposed at {old_time}ms, trying again at {new_time}ms')
+            elif(over_exposed and not under_exposed):
+                new_time = round(old_time / 10)
+                if new_time < 2:
+                    print('over exposed, but minimum exposure time reached')
+                    break
+                print(f'over exposed at {old_time}ms, trying again at {new_time}ms')
+            else:
+                print(f'contradictory saturated and under exposed, no change in exposure will be made')
+                break
+            Shutter_open_time.set(round(new_time)).wait()
+            for det in detectors:
+                det.cam.acquire_time.set(new_time/1000).wait()
+            yield from trigger_and_read(list(detectors))
+            under_exposed = False
+            over_exposed = False
+            for det in detectors:
+                if not hasattr(det,'under_exposed'):
+                    continue
+                if det.under_exposed.get():
+                    under_exposed = True
+                if not hasattr(det,'saturated'):
+                    continue
+                if det.saturated.get():
+                    over_exposed = True
+
+
+def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_read,remember=None):
     """
     Inner loop of an N-dimensional step scan
-
-
 
     This is the default function for ``per_step`` param`` in ND plans.
 
@@ -723,52 +781,23 @@ def exp_adjusted_one_nd_step(detectors, step, pos_cache, take_reading=trigger_an
         Callable[List[OphydObj], Optional[str]] -> Generator[Msg], optional
 
         Defaults to `trigger_and_read`
-    check_exposure : Boolean
-        true - check the exposure level of the detectors, change exposure time and retake as necessary
-        false - don't check - normal per step
-
+    remember :  pass a dict to remember the last exposure correction
     """
+    if remember == None:
+        remember = {}
     motors = step.keys()
     yield from move_per_step(step, pos_cache)
+    input_time = Shutter_open_time.get()
+    if 'last_correction' in remember:
+        new_time = input_time
+        if remember['last_correction'] != 1 and 0.0005 < remember['last_correction'] < 50000:
+            new_time = round(input_time * remember['last_correction'])
+        if(2 < new_time < 10000):
+            print(f"last exposure correction was {remember['last_correction']}, so applying that to {input_time}ms gives an exposure time of {new_time}ms")
+            yield from bps.mov(Shutter_open_time,new_time)
+            for detector in detectors:
+                yield from bps.mv(detector.cam.acquire_time, new_time/1000)
+
     yield from take_reading(list(detectors) + list(motors))
-    if(check_exposure):
-        under_exposed = False
-        over_exposed = False
-        for det in detectors:
-            if det.under_exposed.get():
-                under_exposed = True
-            if det.saturated.get():
-                over_exposed = True
-        while(under_exposed or over_exposed):
-            old_time = Shutter_open_time.get()
-            if(under_exposed and not over_exposed):
-                if old_time<200:
-                    new_time = old_time * 10
-                if old_time<1000:
-                    new_time = old_time * 4
-                if old_time<5000:
-                    new_time = old_time * 2
-                else:
-                    warnings.warn('underexposed, but maximum exposure time reached')
-                    break
-                warnings.warn(f'underexposed at {old_time}ms, trying again at {new_time}ms')
-            elif(over_exposed and not under_exposed):
-                new_time = old_time / 10
-                if new_time < 2:
-                    warnings.warn('over exposed, but minimum exposure time reached')
-                    break
-                warnings.warn(f'over exposed at {old_time}ms, trying again at {new_time}ms')
-            else:
-                warnings.warn(f'contradictory saturated and under exposed, no change in exposure will be made')
-                break
-            Shutter_open_time.move(new_time)
-            for det in detectors:
-                det.cam.acquire_time = new_time/1000
-            yield from take_reading(list(detectors) + list(motors))
-            under_exposed = False
-            over_exposed = False
-            for det in detectors:
-                if det.under_exposed.get():
-                    under_exposed = True
-                if det.saturated.get():
-                    over_exposed = True
+    output_time = Shutter_open_time.get()
+    remember['last_correction'] = float(output_time) / float(input_time)

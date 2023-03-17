@@ -48,6 +48,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs["wait_for_plugins"] = "Yes"
+        self.acquire_time.kind='hinted'
 
     def ensure_nonblocking(self):
         self.stage_sigs["wait_for_plugins"] = "Yes"
@@ -69,7 +70,7 @@ class GreateyesTransform(TransformPlugin):
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     image = C(ImagePlugin, "image1:",kind='config')
-    cam = C(GreatEyesDetCamWithVersions, "cam1:",kind='config')
+    cam = C(GreatEyesDetCamWithVersions, "cam1:",kind='normal')
     transform_type = 0
     number_exposures = 1
     tiff = C(

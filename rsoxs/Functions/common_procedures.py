@@ -15,8 +15,8 @@ from ..HW.signals import (
     Slit1_Current_Top,
     Slit1_Current_Bottom,
     Slit1_Current_Inboard,
-    Slit1_Current_Outboard
-    )
+    Slit1_Current_Outboard,
+)
 from ..HW.energy import (
     en,
     mono_en,
@@ -28,7 +28,7 @@ from ..HW.energy import (
     set_polarization,
     epu_gap,
     epu_phase,
-    )
+)
 from ..HW.energy import epu_mode
 from sst_hw.diode import Shutter_control, Shutter_enable
 from ..HW.slits import slits1, slits2
@@ -42,6 +42,7 @@ from ..startup import bec
 from sst_funcs.printing import run_report
 from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
 from .fly_alignment import fly_max
+
 run_report(__file__)
 
 
@@ -65,7 +66,7 @@ def buildeputable(
     Izero_Mesh.kind = "hinted"
     Beamstop_WAXS.kind = "hinted"
     mono_en.kind = "hinted"
-    epu_gap.kind = 'hinted'
+    epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
     # if grat == "1200":
     #     yield from grating_to_1200(2.0,-6.3,0.0)
@@ -80,7 +81,7 @@ def buildeputable(
     plt.close()
     plt.close()
 
-    #yield from bps.mv(sam_Y,30)
+    # yield from bps.mv(sam_Y,30)
     if mode == "C":
         yield from bps.mv(epu_mode, 0)
     elif mode == "CW":
@@ -92,18 +93,20 @@ def buildeputable(
     yield from bps.mv(epu_phase, phase)
 
     count = 0
-    peaklist=[]
+    peaklist = []
     for energy in ens:
         yield from bps.mv(mono_en, energy)
-        yield from bps.mv(en.scanlock,False)
-        yield from bps.mv(en.mir3Pitch,en.m3pitchcalc(energy,False))
+        yield from bps.mv(en.scanlock, False)
+        yield from bps.mv(en.mir3Pitch, en.m3pitchcalc(energy, False))
         yield from bps.mv(epu_gap, max(14000, startinggap - 500 * widfract))
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
         yield from fly_max(
             [Izero_Mesh, Beamstop_WAXS],
-            ["RSoXS Au Mesh Current",
-            "WAXS Beamstop",],
+            [
+                "RSoXS Au Mesh Current",
+                "WAXS Beamstop",
+            ],
             epu_gap,
             min(99500, max(14000, startinggap - 500 * widfract)),
             min(100000, max(15000, startinggap + 2500 * widfract)),
@@ -111,10 +114,10 @@ def buildeputable(
             10,
             True,
             True,
-            peaklist
+            peaklist,
         )
-        startinggap = peaklist[-1]["RSoXS Au Mesh Current"]['en_epugap']
-        gapbs = peaklist[-1]["WAXS Beamstop"]['en_epugap']
+        startinggap = peaklist[-1]["RSoXS Au Mesh Current"]["en_epugap"]
+        gapbs = peaklist[-1]["WAXS Beamstop"]["en_epugap"]
         height = peaklist[-1]["RSoXS Au Mesh Current"]["RSoXS Au Mesh Current"]
         heightbs = peaklist[-1]["WAXS Beamstop"]["WAXS Beamstop"]
         gaps.append(startinggap)
@@ -122,12 +125,13 @@ def buildeputable(
         heights.append(height)
         heightsbs.append(heightbs)
         ensout.append(mono_en.position)
-        data = {"Energies": ensout,
-                "EPUGaps": gaps,
-                "PeakCurrent": heights,
-                "EPUGapsBS": gapsbs,
-                "PeakCurrentBS": heightsbs,
-                }
+        data = {
+            "Energies": ensout,
+            "EPUGaps": gaps,
+            "PeakCurrent": heights,
+            "EPUGapsBS": gapsbs,
+            "PeakCurrentBS": heightsbs,
+        }
         dataframe = pd.DataFrame(data=data)
         dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Feb_" + name + ".csv")
         count += 1
@@ -176,48 +180,49 @@ def do_some_eputables_2023_en():
     #              22983.602525718445,
     #              22874.408275853402,
     #              23677.309482826902]
-    
+
     # for angle,ph,stgp in zip(angles,phases,startgaps):
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
     # for angle,ph,stgp in zip(angles,phases,startgaps):
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
 
-
-    angles = [0,2.94,5,10,20,30,40,50,60,70,80,85,90]
-    phases = [0,
-              2500,
-              4000,
-              6688.9843608114115,
-              10781.54138668513,
-              13440.927684320242,
-              15705.851176691127,
-              17575.669146953864,
-              19598.02761805813,
-              21948.115314738126,
-              24889.02500863509,
-              27000,
-              29500]
-    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'C', 'rsoxs', 'CW_r_H1')
-    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, 'CW', 'rsoxs', 'C_r_H1')
-    startingens = [75,80,100,110,125,155,185,200,200,185,160,160,155]
-    #startingens = [95,125,155,185,200,200,185,160]
-    for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f'linear_{angle}deg_r_H1')
-    for angle,ph,sten in zip(angles,phases,startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f'linear_{180-angle}deg_r_H1')
-
+    angles = [0, 2.94, 5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
+    phases = [
+        0,
+        2500,
+        4000,
+        6688.9843608114115,
+        10781.54138668513,
+        13440.927684320242,
+        15705.851176691127,
+        17575.669146953864,
+        19598.02761805813,
+        21948.115314738126,
+        24889.02500863509,
+        27000,
+        29500,
+    ]
+    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, "C", "rsoxs", "CW_r_H1")
+    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, "CW", "rsoxs", "C_r_H1")
+    startingens = [75, 80, 100, 110, 125, 155, 185, 200, 200, 185, 160, 160, 155]
+    # startingens = [95,125,155,185,200,200,185,160]
+    for angle, ph, sten in zip(angles, phases, startingens):
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f"linear_{angle}deg_r_H1")
+    for angle, ph, sten in zip(angles, phases, startingens):
+        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f"linear_{180-angle}deg_r_H1")
 
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
+
 
 #    yield from buildeputable(200, 1300, 10, 2, 20922, 8000, "L", "1200", "mL8_1200")
 
 #    yield from buildeputable(200, 1300, 10, 2, 23704, 0, "L3", "1200", "m3L0_1200")
 
-    #yield from buildeputable(80, 500, 10, 2, 14000, 0, "L", "250", "mL0_250")
-    #yield from buildeputable(145, 500, 10, 2, 14000, 29500, "L", "250", "mL29p5_250")
+# yield from buildeputable(80, 500, 10, 2, 14000, 0, "L", "250", "mL0_250")
+# yield from buildeputable(145, 500, 10, 2, 14000, 29500, "L", "250", "mL29p5_250")
 
-    #yield from buildeputable(80, 500, 10, 2, 14000, 0, "L3", "250", "m3L0_250")
+# yield from buildeputable(80, 500, 10, 2, 14000, 0, "L3", "250", "m3L0_250")
 
 
 def Scan_izero_peak(startingen, widfract):
@@ -246,9 +251,9 @@ def buildeputablegaps(start, stop, step, widfract, startingen, name, phase, grat
     ens = []
     gapsout = []
     heights = []
-    Beamstop_WAXS.kind= 'hinted'
-    Izero_Mesh.kind= 'hinted'
-    epu_gap.kind = 'hinted'
+    Beamstop_WAXS.kind = "hinted"
+    Izero_Mesh.kind = "hinted"
+    epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
 
     count = 0
@@ -331,40 +336,17 @@ def do_2023_eputables():
     yield from bps.mv(slits2.hsize, 1)
     yield from bps.mv(epu_mode, 3)
 
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_0", 0, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase29500_1200", 29500, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase26000_1200", 26000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase23000_1200", 23000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase21000_1200", 21000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase18000_1200", 18000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase15000_1200", 15000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 30000, 500, 2, 150, "_Feb2023_phase12000_1200", 12000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_Feb2023_phase8000_1200", 8000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200
-    )
-    yield from buildeputablegaps(
-        14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200
-    )
-
+    yield from buildeputablegaps(14000, 35000, 500, 1, 80, "_Feb2023_phase4000_0", 0, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase29500_1200", 29500, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase26000_1200", 26000, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase23000_1200", 23000, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase21000_1200", 21000, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase18000_1200", 18000, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase15000_1200", 15000, 1200)
+    yield from buildeputablegaps(14000, 30000, 500, 2, 150, "_Feb2023_phase12000_1200", 12000, 1200)
+    yield from buildeputablegaps(14000, 35000, 500, 1, 80, "_Feb2023_phase8000_1200", 8000, 1200)
+    yield from buildeputablegaps(14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200)
+    yield from buildeputablegaps(14000, 35000, 500, 1, 80, "_Feb2023_phase4000_1200", 4000, 1200)
 
 
 def tune_max(
@@ -482,8 +464,8 @@ def tune_max(
         max_I = -1e50  # for peak maximum finding (allow for negative values)
         max_xI = 0
         cur_sigI = None
-        max_I_signals={}
-        max_xI_signals={}
+        max_I_signals = {}
+        max_xI_signals = {}
         for sig in signals:
             max_I_signals[sig] = -1e50
         while abs(step) >= min_step and low_limit <= next_pos <= high_limit:
@@ -497,10 +479,10 @@ def tune_max(
                 max_xI = position
                 max_ret = ret
             for sig in signals:
-                cur_sigI=ret[sig]["value"]
-                if(cur_sigI>max_I_signals[sig]):
-                    max_I_signals[sig]=cur_sigI
-                    max_xI_signals[sig]=position
+                cur_sigI = ret[sig]["value"]
+                if cur_sigI > max_I_signals[sig]:
+                    max_I_signals[sig] = cur_sigI
+                    max_xI_signals[sig] = position
 
             next_pos += step
             in_range = min(start, stop) <= next_pos <= max(start, stop)
@@ -511,12 +493,8 @@ def tune_max(
                 peak_position = max_xI  # maxiumum
                 max_xI, max_I = 0, 0  # reset for next pass
                 new_scan_range = (stop - start) / step_factor
-                start = np.clip(
-                    peak_position - new_scan_range / 2, low_limit, high_limit
-                )
-                stop = np.clip(
-                    peak_position + new_scan_range / 2, low_limit, high_limit
-                )
+                start = np.clip(peak_position - new_scan_range / 2, low_limit, high_limit)
+                stop = np.clip(peak_position + new_scan_range / 2, low_limit, high_limit)
                 if snake:
                     start, stop = stop, start
                 step = (stop - start) / (num - 1)
@@ -576,63 +554,67 @@ def vent():
     yield from bps.mv(sam_Y, 349)
 
     print("waiting for you to close the load lock gate valve")
-    print(
-        "Please also close the small manual black valve on the back of the load lock now"
-    )
+    print("Please also close the small manual black valve on the back of the load lock now")
     while gvll.state.get() is 1:
         gvll.read()  # attempt at a fix for problem where macro hangs here.
         bps.sleep(1)
     print("TEM load lock closed - turning off loadlock gauge")
     yield from bps.mv(rsoxs_ll_gpwr, 0)
-    print(
-        "Should be safe to begin vent by pressing right most button of BOTTOM turbo controller once"
-    )
+    print("Should be safe to begin vent by pressing right most button of BOTTOM turbo controller once")
     print("")
 
 
-def tune_pgm(cs = [1.4,1.35,1.35], ms = [1,1,2],energy=291.65,pol=90,k=250,detector = Sample_TEY,signal="RSoXS Sample Current"):
-    #RE(load_sample(sample_by_name(bar, 'HOPG')))
-#RE(tune_pgm(cs=[1.35,1.37,1.385,1.4,1.425,1.45],ms=[1,1,1,1,1],energy=291.65,pol=90,k=250))
-#RE(tune_pgm(cs=[1.55,1.6,1.65,1.7,1.75,1.8],ms=[1,1,1,1,1],energy=291.65,pol=90,k=1200))
+def tune_pgm(
+    cs=[1.4, 1.35, 1.35],
+    ms=[1, 1, 2],
+    energy=291.65,
+    pol=90,
+    k=250,
+    detector=Sample_TEY,
+    signal="RSoXS Sample Current",
+):
+    # RE(load_sample(sample_by_name(bar, 'HOPG')))
+    # RE(tune_pgm(cs=[1.35,1.37,1.385,1.4,1.425,1.45],ms=[1,1,1,1,1],energy=291.65,pol=90,k=250))
+    # RE(tune_pgm(cs=[1.55,1.6,1.65,1.7,1.75,1.8],ms=[1,1,1,1,1],energy=291.65,pol=90,k=1200))
 
     yield from bps.mv(en.polarization, pol)
-    yield from bps.mv(en,energy)
-    detector.kind = 'hinted'
+    yield from bps.mv(en, energy)
+    detector.kind = "hinted"
     mirror_measured = []
     grating_measured = []
     energy_measured = []
     m_measured = []
     bec.enable_plots()
-    for cff,m_order in zip(cs,ms):
+    for cff, m_order in zip(cs, ms):
         m_set, g_set = get_mirror_grating_angles(291.65, cff, k, m_order)
-        yield from bps.mv(grating, g_set, mirror2, m_set, grating.velocity,0.1,mirror2.velocity,0.1)
+        yield from bps.mv(grating, g_set, mirror2, m_set, grating.velocity, 0.1, mirror2.velocity, 0.1)
         yield from bps.sleep(0.2)
         peaklist = []
         yield from fly_max(
-            detectors = [detector],
-            signals = [signal],
-            motor = grating,
-            start = g_set - .2,
-            stop = g_set + .2,
-            velocities=[0.02,0.0005],
-            snake = False,
-            peaklist= peaklist,
+            detectors=[detector],
+            signals=[signal],
+            motor=grating,
+            start=g_set - 0.2,
+            stop=g_set + 0.2,
+            velocities=[0.02, 0.0005],
+            snake=False,
+            peaklist=peaklist,
             range_ratio=30,
             open_shutter=True,
         )
         grating_measured.append(peaklist[0][signal]["Mono Grating"])
-        mirror_measured.append(mirror2.read()['Mono Mirror']['value'])
+        mirror_measured.append(mirror2.read()["Mono Mirror"]["value"])
         energy_measured.append(291.65)
         m_measured.append(m_order)
-    print(f'mirror positions: {mirror_measured}')
-    print(f'grating positions: {grating_measured}')
-    print(f'energy positions: {energy_measured}')
-    print(f'orders: {m_measured}')
-    fit = find_best_offsets(mirror_measured,grating_measured,m_measured,energy_measured,k)
+    print(f"mirror positions: {mirror_measured}")
+    print(f"grating positions: {grating_measured}")
+    print(f"energy positions: {energy_measured}")
+    print(f"orders: {m_measured}")
+    fit = find_best_offsets(mirror_measured, grating_measured, m_measured, energy_measured, k)
     print(fit)
     accept = input("Accept these values and set the offset (y/n)? ")
-    if accept in ['y','Y','yes']:
-        yield from bps.mvr(mirror2.user_offset,-fit.x[0], grating.user_offset,-fit.x[1])
+    if accept in ["y", "Y", "yes"]:
+        yield from bps.mvr(mirror2.user_offset, -fit.x[0], grating.user_offset, -fit.x[1])
     bec.disable_plots()
-    detector.kind = 'normal'
+    detector.kind = "normal"
     return fit
