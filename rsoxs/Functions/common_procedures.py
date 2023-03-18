@@ -109,7 +109,7 @@ def buildeputable(
             ],
             epu_gap,
             min(99500, max(14000, startinggap - 500 * widfract)),
-            min(100000, max(15000, startinggap + 2500 * widfract)),
+            min(100000, max(15000, startinggap + 5000 * widfract)),
             [None],
             10,
             True,
@@ -180,36 +180,50 @@ def do_some_eputables_2023_en():
     #              22983.602525718445,
     #              22874.408275853402,
     #              23677.309482826902]
+            # values for the minimum energy as a function of angle polynomial 10th deg
+        # 80.934 ± 0.0698
+        # -0.91614 ± 0.0446
+        # 0.39635 ± 0.00925
+        # -0.020478 ± 0.000881
+        # 0.00069047 ± 4.54e-05
+        # -1.5413e-05 ± 1.37e-06
+        # 2.1448e-07 ± 2.49e-08
+        # -1.788e-09 ± 2.68e-10
+        # 8.162e-12 ± 1.57e-12
+        # -1.5545e-14 ± 3.88e-15
 
     # for angle,ph,stgp in zip(angles,phases,startgaps):
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
     # for angle,ph,stgp in zip(angles,phases,startgaps):
     #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
+    phase_from_angle_poly= [78.672,870.98,-24.036,0.44117,-0.0042377,1.7304e-05]
+    def phase_from_angle(angle):
+        phase = 0
+        phase += 870.98 * angle**1
+        phase += -24.036 * angle**2
+        phase += 0.44117 * angle**3
+        phase += -0.0042377 * angle**4
+        phase += 1.7304e-05 * angle**5
+        return min(29500,max(0,phase))
+    def starting_energy(angle):
+        energy = 80.934
+        energy += -0.91614 * angle**1
+        energy += 0.39635 * angle**2
+        energy += -0.020478 * angle**3
+        energy += 0.00069047 * angle**4
+        energy += -1.5413e-05 * angle**5
+        energy += 2.1448e-07 * angle**6
+        energy += -1.788e-09 * angle**7
+        energy += 8.162e-12 * angle**8
+        energy += -1.5545e-14 * angle**9
+        return energy+5
 
-    angles = [0, 2.94, 5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
-    phases = [
-        0,
-        2500,
-        4000,
-        6688.9843608114115,
-        10781.54138668513,
-        13440.927684320242,
-        15705.851176691127,
-        17575.669146953864,
-        19598.02761805813,
-        21948.115314738126,
-        24889.02500863509,
-        27000,
-        29500,
-    ]
-    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, "C", "rsoxs", "CW_r_H1")
-    yield from buildeputable(110, 1300, 10, 3, 14000, 15000, "CW", "rsoxs", "C_r_H1")
-    startingens = [75, 80, 100, 110, 125, 155, 185, 200, 200, 185, 160, 160, 155]
-    # startingens = [95,125,155,185,200,200,185,160]
-    for angle, ph, sten in zip(angles, phases, startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L", "rsoxs", f"linear_{angle}deg_r_H1")
-    for angle, ph, sten in zip(angles, phases, startingens):
-        yield from buildeputable(sten, 1300, 10, 3, 14000, ph, "L3", "rsoxs", f"linear_{180-angle}deg_r_H1")
+    angles = np.linspace(0,90,101)
+
+    for angle in angles:
+        yield from buildeputable(starting_energy(angle), 1300, 50, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r2")
+    for angle in angles:
+        yield from buildeputable(starting_energy(angle), 1300, 50, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r2")
 
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
