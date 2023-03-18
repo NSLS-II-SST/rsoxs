@@ -720,6 +720,7 @@ def take_exposure_corrected_reading(detectors=None, check_exposure=False):
             if det.saturated.get():
                 over_exposed = True
         while(under_exposed or over_exposed):
+            yield Msg("checkpoint")
             old_time = Shutter_open_time.get()
             if(under_exposed and not over_exposed):
                 if old_time<200:
@@ -783,6 +784,7 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_
         Defaults to `trigger_and_read`
     remember :  pass a dict to remember the last exposure correction
     """
+    yield Msg("checkpoint")
     if remember == None:
         remember = {}
     motors = step.keys()
