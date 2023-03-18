@@ -86,7 +86,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     stats1 = C(StatsWithHist, "Stats1:",kind='hinted')
     stats2 = C(StatsWithHist, 'Stats2:')
     under_exposed = C(Signal,value=False,kind='hinted',name='under_exposed')
-    saturation_high_threshold = 200000
+    saturation_high_threshold = 100000
     saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
     saturation_low_threshold = 500
     saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
@@ -94,7 +94,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     high_sat_check = [False,False]
 
     underexposure_min_value = 2000
-    underexposure_num_pixels = 700000 # 700000 pixels reading under 2000 counts means underexposed
+    underexposure_num_pixels = 950000 # 700000 pixels reading under 2000 counts means underexposed
     # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
