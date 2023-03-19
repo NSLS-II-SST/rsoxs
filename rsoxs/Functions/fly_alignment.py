@@ -24,7 +24,7 @@ from ..HW.motors import (
     BeamStopS)
 from .alignment import load_configuration
 
-time_offset_defaults = {'en_monoen_readback_monitor':-0.8}
+time_offset_defaults = {'en_monoen_readback_monitor':-0.0}
 
 def fly_max(
     detectors,
@@ -38,6 +38,7 @@ def fly_max(
     snake=False,
     peaklist=[],
     time_offsets = time_offset_defaults,
+    end_on_max = True,
     md=None,
     **kwargs,
 ):
@@ -136,7 +137,8 @@ def fly_max(
         else:
             start = high_side
             stop = low_side
-    yield from bps.mv(motor, signal_dict[signals[0]][motor.name])
+    if end_on_max:
+        yield from bps.mv(motor, signal_dict[signals[0]][motor.name])
 
     peaklist.append(signal_dict)
     for detector in detectors:

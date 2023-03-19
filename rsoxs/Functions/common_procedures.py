@@ -64,7 +64,7 @@ def buildeputable(
     heights = []
     heightsbs = []
     Izero_Mesh.kind = "hinted"
-    Beamstop_WAXS.kind = "hinted"
+    Beamstop_SAXS.kind = "hinted"
     mono_en.kind = "hinted"
     epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
@@ -94,32 +94,41 @@ def buildeputable(
 
     count = 0
     peaklist = []
+    flip=False
     for energy in ens:
-        yield from bps.mv(mono_en, energy)
-        yield from bps.mv(en.scanlock, False)
-        yield from bps.mv(en.mir3Pitch, en.m3pitchcalc(energy, False))
-        yield from bps.mv(epu_gap, max(14000, startinggap - 500 * widfract))
-        yield from bps.mv(Shutter_enable, 0)
-        yield from bps.mv(Shutter_control, 1)
+        #yield from bps.mv(epu_gap, max(14000, startinggap - 500 * widfract))
+        #yield from bps.mv(Shutter_enable, 0)
+        #yield from bps.mv(Shutter_control, 1)
+        if not flip:
+            startgap = min(99500, max(14000, startinggap - 500 * widfract))
+            endgap = min(100000, max(15000, startinggap + 2500 * widfract))
+            flip = True
+        else:
+            endgap = min(99500, max(14000, startinggap - 500 * widfract))
+            startgap = min(100000, max(15000, startinggap + 2500 * widfract))
+            flip = False
+        
+        yield from bps.mv(mono_en, energy,en.scanlock, False,en.mir3Pitch, en.m3pitchcalc(energy, False),epu_gap,startgap)
         yield from fly_max(
-            [Izero_Mesh, Beamstop_WAXS],
+            [Izero_Mesh, Beamstop_SAXS],
             [
                 "RSoXS Au Mesh Current",
-                "WAXS Beamstop",
+                "SAXS Beamstop",
             ],
             epu_gap,
-            min(99500, max(14000, startinggap - 500 * widfract)),
-            min(100000, max(15000, startinggap + 5000 * widfract)),
+            startgap,
+            endgap,
             [None],
             10,
             True,
             True,
             peaklist,
+            end_on_max=False
         )
         startinggap = peaklist[-1]["RSoXS Au Mesh Current"]["en_epugap"]
-        gapbs = peaklist[-1]["WAXS Beamstop"]["en_epugap"]
+        gapbs = peaklist[-1]["SAXS Beamstop"]["en_epugap"]
         height = peaklist[-1]["RSoXS Au Mesh Current"]["RSoXS Au Mesh Current"]
-        heightbs = peaklist[-1]["WAXS Beamstop"]["WAXS Beamstop"]
+        heightbs = peaklist[-1]["SAXS Beamstop"]["SAXS Beamstop"]
         gaps.append(startinggap)
         gapsbs.append(gapbs)
         heights.append(height)
@@ -151,7 +160,7 @@ def buildeputable(
 
 def do_some_eputables_2023_en():
 
-    yield from load_configuration("WAXSNEXAFS")
+    yield from load_configuration("SAXSNEXAFS")
     yield from bps.mv(slits1.hsize, 1)
     yield from bps.mv(slits2.hsize, 1)
     # angles = [0,5,15,25,40,50,60,70,80,90]
@@ -218,7 +227,7 @@ def do_some_eputables_2023_en():
         energy += -1.5545e-14 * angle**9
         return energy+5
 
-    angles = np.linspace(0,90,101)
+    angles = np.linspace(18,10,4)
 
     for angle in angles:
         yield from buildeputable(starting_energy(angle), 1300, 50, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r2")
