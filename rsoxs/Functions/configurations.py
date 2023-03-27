@@ -11,6 +11,7 @@ from ..HW.motors import (
     sam_Z,
     sam_Y,
     sam_X,
+    TEMZ
 )
 from sst_hw.mirrors import mir1, mir3
 from sst_hw.motors import Exit_Slit
@@ -287,6 +288,7 @@ def mirror1_NEXAFSpos():
 def SAXS():
     return [
         [
+            {"motor": TEMZ, "position": 1, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -324,6 +326,7 @@ def SAXS():
 def SAXSNEXAFS():
     return [
         [
+            {"motor": TEMZ, "position": 1, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -360,6 +363,7 @@ def SAXSNEXAFS():
 def WAXSNEXAFS():
     return [
         [
+            {"motor": TEMZ, "position": 1, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -395,6 +399,7 @@ def WAXSNEXAFS():
 def WAXS():
     return [
         [
+            {"motor": TEMZ, "position": 1, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -430,6 +435,7 @@ def WAXS():
 def SAXS_liquid():
     return [
         [
+            {"motor": sam_Y, "position": 345, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -467,6 +473,7 @@ def SAXS_liquid():
 def WAXS_liquid():
     return [
         [
+            {"motor": sam_Y, "position": 345, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -483,6 +490,79 @@ def WAXS_liquid():
             {"motor": Izero_Y, "position": -29, "order": 1},
             {"motor": Det_W, "position": -5, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        ],
+        {
+            "RSoXS_Config": "WAXS",
+            "RSoXS_Main_DET": "WAXS",
+            "RSoXS_WAXS_SDD": 39.19,
+            "RSoXS_WAXS_BCX": 396.341,
+            "RSoXS_WAXS_BCY": 549.99,
+            "WAXS_Mask": [(367, 545), (406, 578), (880, 0), (810, 0)],
+            "RSoXS_SAXS_SDD": None,
+            "RSoXS_SAXS_BCX": None,
+            "RSoXS_SAXS_BCY": None,
+        },
+    ]
+def SAXSNEXAFS_liquid():
+    return [
+        [
+            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": slits1.vsize, "position": 0.025, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+            {"motor": slits1.hsize, "position": 0.1, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
+            {"motor": slits2.vsize, "position": 0.4, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
+            {"motor": slits2.hsize, "position": 0.25, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.65, "order": 0},
+            {"motor": slits3.vsize, "position": 1.4, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.4, "order": 0},
+            {"motor": slits3.hsize, "position": 1.35, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -29, "order": 0},
+            {"motor": Det_W, "position": -94, "order": 0},
+            {"motor": Det_S, "position": -100, "order": 0},
+            {"motor": BeamStopS, "position": 67.7, "order": 0},
+            {"motor": BeamStopW, "position": 3, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        ],
+        {
+            "RSoXS_Config": "SAXS",
+            "RSoXS_Main_DET": "SAXS",
+            "SAXS_Mask": [(473, 472), (510, 471), (515, 1024), (476, 1024)],
+            "RSoXS_WAXS_SDD": None,
+            "RSoXS_WAXS_BCX": None,
+            "RSoXS_WAXS_BCY": None,
+            "RSoXS_SAXS_SDD": 516,
+            "RSoXS_SAXS_BCX": 493.4,
+            "RSoXS_SAXS_BCY": 514.4,
+        },
+    ]
+
+
+def WAXSNEXAFS_liquid():
+    return [
+        [
+            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": slits1.vsize, "position": 0.025, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+            {"motor": slits1.hsize, "position": 0.1, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
+            {"motor": slits2.vsize, "position": 0.4, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
+            {"motor": slits2.hsize, "position": 0.25, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.65, "order": 0},
+            {"motor": slits3.vsize, "position": 1.9, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.4, "order": 0},
+            {"motor": slits3.hsize, "position": 1.35, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -29, "order": 1},
+            {"motor": Det_W, "position": -94, "order": 1},
+            {"motor": Det_S, "position": -100, "order": 1},
+            {"motor": BeamStopW, "position": 71.4, "order": 0},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
@@ -530,6 +610,8 @@ def all_out():
         0,
         Exit_Slit,
         -0.05,
+        TEMZ,
+        1
     )
     print("moving back to 1200 l/mm grating")
     yield from grating_to_1200()
