@@ -49,7 +49,7 @@ from ..HW.motors import (
     sam_Th,
 )
 from sst_hw.mirrors import mir3
-from ..HW.detectors import waxs_det, saxs_det
+from ..HW.detectors import saxs_det#, waxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
@@ -676,6 +676,7 @@ def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):
             print(f"Mono reached {monopos} which appears to be near {end_en}")
             print("Stopping Detector stream")
             for det in dets:
+                
                 yield from abs_set(det.cam.acquire, 0)
             for det in dets:
                 yield from read(det)
@@ -744,7 +745,8 @@ def take_exposure_corrected_reading(detectors=None, check_exposure=False):
                 break
             Shutter_open_time.set(round(new_time)).wait()
             for det in detectors:
-                det.cam.acquire_time.set(new_time/1000).wait()
+                if hasattr(det,'cam'):
+                    det.cam.acquire_time.set(new_time/1000).wait()
             yield from trigger_and_read(list(detectors))
             under_exposed = False
             over_exposed = False
@@ -798,7 +800,8 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_
             print(f"last exposure correction was {remember['last_correction']}, so applying that to {input_time}ms gives an exposure time of {new_time}ms")
             yield from bps.mov(Shutter_open_time,new_time)
             for detector in detectors:
-                yield from bps.mv(detector.cam.acquire_time, new_time/1000)
+                if hasattr(detector,'cam'):
+                    yield from bps.mv(detector.cam.acquire_time, new_time/1000)
 
     yield from take_reading(list(detectors) + list(motors))
     output_time = Shutter_open_time.get()

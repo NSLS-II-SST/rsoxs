@@ -14,7 +14,7 @@ from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
-from ..HW.detectors import saxs_det, waxs_det, set_exposure
+from ..HW.detectors import saxs_det,  set_exposure#, waxs_det
 from sst_hw.shutters import psh10
 from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
 from sst_funcs.printing import run_report
@@ -154,6 +154,8 @@ def move_to_location(locs=get_sample_location()):
         sam_Y: sam_Y,
         sam_Z: sam_Z,
         sam_Th: sam_Th,
+        TEMZ: TEMZ,
+        'TEMZ': TEMZ,
         slits1.vsize: slits1.vsize,
         slits1.hsize: slits1.hsize,
         slits2.vsize: slits2.vsize,
@@ -584,6 +586,7 @@ def spiralsearch(
     grating=None,
     md=None,
     force=False,
+    **kwargs,
 ):
     """conduct a spiral grid pattern of exposures
 
@@ -629,7 +632,7 @@ def spiralsearch(
         _description_
     """
     if md is None:
-        md = {}
+        md = RE.md
     if len(str(md.get('bar_loc',{}).get('spiral_started','')))>0 and not force:
         print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
         yield from bps.null()

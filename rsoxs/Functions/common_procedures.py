@@ -33,7 +33,7 @@ from ..HW.energy import epu_mode
 from sst_hw.diode import Shutter_control, Shutter_enable
 from ..HW.slits import slits1, slits2
 from ..Functions.alignment import load_configuration
-from ..HW.detectors import set_exposure, waxs_det
+from ..HW.detectors import set_exposure#, waxs_det
 from ..HW.motors import sam_Th, sam_Y
 from sst_hw.gatevalves import gv28, gv27a, gvll
 from sst_hw.shutters import psh10
@@ -558,16 +558,16 @@ def stability_scans(num):
 #   'timestamp': 1596294681.080148}}
 
 
-def isvar_scan():
-    polarizations = [0, 90]
-    angles = [10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30]
-    exps = [0.01, 0.01, 0.05, 0.05, 0.1, 1, 1, 1, 1]
-    for angle, exp in zip(angles, exps):
-        set_exposure(exp)
-        yield from bps.mv(sam_Th, 90 - angle)
-        for polarization in polarizations:
-            yield from bps.mv(en.polarization, polarization)
-            yield from bp.scan([waxs_det], en, 270, 670, 5)
+#def isvar_scan():
+#    polarizations = [0, 90]
+#    angles = [10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30]
+#    exps = [0.01, 0.01, 0.05, 0.05, 0.1, 1, 1, 1, 1]
+#    for angle, exp in zip(angles, exps):
+#        set_exposure(exp)
+#        yield from bps.mv(sam_Th, 90 - angle)
+#        for polarization in polarizations:
+#            yield from bps.mv(en.polarization, polarization)
+#            yield from bp.scan([waxs_det], en, 270, 670, 5)
 
 
 def vent():

@@ -13,18 +13,18 @@ from ..Functions.contingencies import (
     temp_bad_notice,
     temp_ok_notice,
 )
-from sst_hw.gatevalves import gvll
+from sst_hw.gatevalves import gvll, gv27a
 from sst_hw.shutters import psh4, FEsh1
 from ..HW.signals import ring_current, sst_control
 from ..HW.motors import sam_X
-from sst_hw.vacuum import rsoxs_pg_main_val
+from sst_hw.vacuum import rsoxs_pg_main_val, rsoxs_ccg_main_val
 from ..HW.detectors import (
     start_det_cooling,
     stop_det_cooling,
     saxs_det,
-    waxs_det,
-    dark_frame_preprocessor_waxs_spirals,
-    dark_frame_preprocessor_waxs,
+    #waxs_det,
+    #preprocessor_waxs_spirals,
+    #dark_frame_preprocessor_waxs,
     dark_frame_preprocessor_saxs,
 )
 from ..startup import RE
@@ -33,10 +33,10 @@ from ..startup import RE
 run_report(__file__)
 
 
-def waxs_back_on():
-    yield from bps.mv(
-        waxs_det.cam.temperature, -80, waxs_det.cam.enable_cooling, 1, waxs_det.cam.bin_x, 4, waxs_det.cam.bin_y, 4
-    )
+#def waxs_back_on():
+#    yield from bps.mv(
+#        waxs_det.cam.temperature, -80, waxs_det.cam.enable_cooling, 1, waxs_det.cam.bin_x, 4, waxs_det.cam.bin_y, 4
+#    )
 
 
 def saxs_back_on():
@@ -67,6 +67,15 @@ suspend_shutter1 = SuspendBoolHigh(
     post_plan=beamup_notice,
 )
 
+suspend_gate_valve = SuspendBoolLow(
+    gv27a.state,
+    sleep=1,
+    tripped_message="Gate valve is closed, pressure is probably bad. waiting for it to open.",
+    pre_plan=beamdown_notice,
+    post_plan=beamup_notice,
+)
+
+
 
 suspend_current = SuspendFloor(
     ring_current,
@@ -79,26 +88,26 @@ suspend_current = SuspendFloor(
 )
 
 
-suspend_waxs_temp_low = SuspendFloor(
-    waxs_det.cam.temperature_actual,
-    resume_thresh=-85,
-    suspend_thresh=-90,
-    sleep=30,
-    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
-    pre_plan=det_down_notice,
-    post_plan=waxs_back_on,
-)
+#suspend_waxs_temp_low = SuspendFloor(
+#    waxs_det.cam.temperature_actual,
+#    resume_thresh=-85,
+#    suspend_thresh=-90,
+#    sleep=30,
+#    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
+#    pre_plan=det_down_notice,
+#    post_plan=waxs_back_on,
+#)
 
 
-suspend_waxs_temp_high = SuspendCeil(
-    waxs_det.cam.temperature_actual,
-    resume_thresh=-78,
-    suspend_thresh=-75,
-    sleep=30,
-    tripped_message="the detector temperature is above -75C, will resume when below -78C",
-    pre_plan=temp_bad_notice,
-    post_plan=temp_ok_notice,
-)
+#suspend_waxs_temp_high = SuspendCeil(
+#    waxs_det.cam.temperature_actual,
+#    resume_thresh=-78,
+#    suspend_thresh=-75,
+#    sleep=30,
+#    tripped_message="the detector temperature is above -75C, will resume when below -78C",
+#    pre_plan=temp_bad_notice,
+#    post_plan=temp_ok_notice,
+#)
 
 
 suspend_saxs_temp_low = SuspendFloor(
@@ -131,6 +140,15 @@ suspend_pressure = SuspendCeil(
     tripped_message="Pressure in the Chamber is above the threshold for having cooling on",
     pre_plan=stop_det_cooling,
     post_plan=start_det_cooling,
+)
+
+
+suspend_pressure2 = SuspendCeil(
+    rsoxs_pg_main_val,
+    resume_thresh=5e-7,
+    suspend_thresh=1e-6,
+    sleep=30,
+    tripped_message="Pressure in the Chamber is too high - beamline has probably tripped",
 )
 
 suspend_control = SuspendWhenChanged(
@@ -173,8 +191,10 @@ def turn_on_checks():
     RE.install_suspender(suspend_shutter1)
     RE.install_suspender(suspend_current)
     RE.install_suspender(suspend_pressure)
-    RE.install_suspender(suspend_waxs_temp_low)
-    RE.install_suspender(suspend_waxs_temp_high)
+    RE.install_suspender(suspend_pressure2)
+    RE.install_suspender(suspend_gate_valve)
+    #RE.install_suspender(suspend_waxs_temp_low)
+    #RE.install_suspender(suspend_waxs_temp_high)
     RE.install_suspender(suspend_saxs_temp_low)
     RE.install_suspender(suspend_saxs_temp_high)
     RE.install_suspender(suspendx)
@@ -185,6 +205,8 @@ def turn_on_checks():
 
 def turn_off_checks():
     RE.remove_suspender(suspend_shutter1)
+    RE.remove_suspender(suspend_gate_valve)
+    RE.remove_suspender(suspend_pressure2)
     RE.remove_suspender(suspend_current)
     RE.remove_suspender(suspendx)
     RE.remove_suspender(suspend_pressure)
@@ -198,32 +220,32 @@ def turn_off_checks():
     logger.removeHandler(mail_handler)
 
 
-def waxs_spiral_mode():
-    try:
-        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
-    except ValueError:
-        pass
-    try:
-        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
-    except ValueError:
-        pass
-    RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
+#def waxs_spiral_mode():
+#    try:
+#        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+#    except ValueError:
+#        pass
+#    try:
+#        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+#    except ValueError:
+#        pass
+#    RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
 
 
-def waxs_normal_mode():
-    try:
-        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
-    except ValueError:
-        pass
-    try:
-        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
-    except ValueError:
-        pass
-    RE.preprocessors.append(dark_frame_preprocessor_waxs)
+#def waxs_normal_mode():
+#    try:
+#        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+#    except ValueError:
+#        pass
+#    try:
+#        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+#    except ValueError:
+#        pass
+#    RE.preprocessors.append(dark_frame_preprocessor_waxs)
 
 
 # install preprocessors
-waxs_normal_mode()
+#waxs_normal_mode()
 RE.preprocessors.append(dark_frame_preprocessor_saxs)
 # install handlers for errors and install suspenders
 turn_on_checks()

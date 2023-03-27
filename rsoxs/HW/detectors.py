@@ -23,18 +23,18 @@ saxs_det.transform_type = 3
 saxs_det.cam.ensure_nonblocking()
 saxs_det.setup_cam()
 #
-waxs_det = RSOXSGreatEyesDetector(
-    "XF:07ID1-ES:1{GE:2}",
-    name="Wide Angle CCD Detector",
-    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam'],
-)
-waxs_det.cam.read_attrs = ['acquire_time']
-waxs_det.transform_type = 1
-waxs_det.cam.ensure_nonblocking()
-waxs_det.setup_cam()
+#waxs_det = RSOXSGreatEyesDetector(
+#    "XF:07ID1-ES:1{GE:2}",
+#    name="Wide Angle CCD Detector",
+#    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam'],
+#)
+#waxs_det.cam.read_attrs = ['acquire_time']
+#waxs_det.transform_type = 1
+#waxs_det.cam.ensure_nonblocking()
+#waxs_det.setup_cam()
 
 saxs_det.stats1.name = "SAXS fullframe"
-waxs_det.stats1.name = "WAXS fullframe"
+#waxs_det.stats1.name = "WAXS fullframe"
 
 
 
@@ -45,24 +45,24 @@ waxs_det.stats1.name = "WAXS fullframe"
 
 def stop_det_cooling():
     yield from saxs_det.cooling_off()
-    yield from waxs_det.cooling_off()
+    #yield from waxs_det.cooling_off()
 
 
 def start_det_cooling():
     yield from saxs_det.set_temp(-80)
-    yield from waxs_det.set_temp(-80)
+    #yield from waxs_det.set_temp(-80)
 
 
 def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
         saxs_det.set_exptime_detonly(exposure)
-        waxs_det.set_exptime(exposure)
+        #waxs_det.set_exptime(exposure)
     else:
         print("Invalid time, exposure time not set")
 
 
 def exposure():
-    return "   " + saxs_det.exposure() + "\n   " + waxs_det.exposure()
+    return "   " + saxs_det.exposure() #+ "\n   " + waxs_det.exposure()
 
 
 def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs",n_exp=1):
@@ -70,7 +70,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="saxs",n_exp=1):
     snap of detectors to clear any charge from light hitting them - needed before starting scans or snapping images
     :return:
     """
-    sw = {"saxs": saxs_det, "waxs": waxs_det}
+    sw = {"saxs": saxs_det}#, "waxs": waxs_det}
     det = sw[detn]
     if count == 1:
         counts = ""
@@ -149,35 +149,35 @@ dark_frame_preprocessor_saxs = bluesky_darkframes.DarkFramePreprocessor(
 )
 
 #
-dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
-    dark_plan=dark_plan,
-    detector=waxs_det,
-    max_age=1200,
-    locked_signals=[
-        waxs_det.cam.acquire_time,
-        Det_W.user_setpoint,
-        waxs_det.cam.bin_x,
-        waxs_det.cam.bin_y,
-        sam_X.user_setpoint,
-        #sam_Th.user_setpoint,
-        sam_Y.user_setpoint,
-    ],
-    limit=100,
-)
+#dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
+#    dark_plan=dark_plan,
+#    detector=waxs_det,
+#    max_age=1200,
+#    locked_signals=[
+#        waxs_det.cam.acquire_time,
+#        Det_W.user_setpoint,
+#        waxs_det.cam.bin_x,
+#        waxs_det.cam.bin_y,
+#        sam_X.user_setpoint,
+#        #sam_Th.user_setpoint,
+#        sam_Y.user_setpoint,
+#    ],
+#    limit=100,
+#)
 
-dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
-    dark_plan=dark_plan,
-    detector=waxs_det,
-    max_age=1200,
-    locked_signals=[
-        waxs_det.cam.acquire_time,
-        Det_W.user_setpoint,
-        waxs_det.cam.bin_x,
-        waxs_det.cam.bin_y,
-    ],
-    limit=20,
-)
+#dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
+#    dark_plan=dark_plan,
+#    detector=waxs_det,
+#    max_age=1200,
+#    locked_signals=[
+#        waxs_det.cam.acquire_time,
+#        Det_W.user_setpoint,
+#        waxs_det.cam.bin_x,
+#        waxs_det.cam.bin_y,
+#    ],
+#    limit=20,
+#)
 
 
-dark_frames_enable_waxs = make_decorator(dark_frame_preprocessor_waxs)()
+#dark_frames_enable_waxs = make_decorator(dark_frame_preprocessor_waxs)()
 dark_frames_enable_saxs = make_decorator(dark_frame_preprocessor_saxs)()
