@@ -59,3 +59,5 @@ TEMY = PrettyMotor(
 TEMZ = PrettyMotor(
     "XF:07ID1-ES:1{Smpl-Ax:Z}Mtr", name="RSoXS TEM Inboard-Outboard", kind="hinted"
 )
+
+

@@ -55,7 +55,7 @@ def start_det_cooling():
 
 def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
-        saxs_det.set_exptime_detonly(exposure)
+        saxs_det.set_exptime(exposure)
         #waxs_det.set_exptime(exposure)
     else:
         print("Invalid time, exposure time not set")

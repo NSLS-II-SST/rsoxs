@@ -144,10 +144,10 @@ suspend_pressure = SuspendCeil(
 
 
 suspend_pressure2 = SuspendCeil(
-    rsoxs_pg_main_val,
+    rsoxs_ccg_main_val,
     resume_thresh=5e-7,
     suspend_thresh=1e-6,
-    sleep=30,
+    sleep=5,
     tripped_message="Pressure in the Chamber is too high - beamline has probably tripped",
 )
 
