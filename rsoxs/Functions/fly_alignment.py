@@ -40,6 +40,7 @@ def fly_max(
     time_offsets = time_offset_defaults,
     end_on_max = True,
     md=None,
+    motor_signal=None,
     **kwargs,
 ):
     r"""
@@ -115,6 +116,8 @@ def fly_max(
         _md["hints"].setdefault("dimensions", dimensions)
     for detector in detectors:
         detector.kind='hinted'
+    if motor_signal == None:
+        motor_signal = motor.name
     motor.kind='hinted'
     bec.enable_plots()
     max_val = max((start,stop))
@@ -125,10 +128,10 @@ def fly_max(
         range = np.abs(start-stop)
         print(f'starting scan from {start} to {stop} at {velocity}')
         yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
-        signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor.name, signal_names=signals, time_offsets = time_offsets)
-        print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor.name]}')
-        low_side = max((min_val,signal_dict[signals[0]][motor.name] - (range/(2*range_ratio))))
-        high_side = min((max_val,signal_dict[signals[0]][motor.name] + (range/(2*range_ratio))))
+        signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor_signal, signal_names=signals, time_offsets = time_offsets)
+        print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor_signal]}')
+        low_side = max((min_val,signal_dict[signals[0]][motor_signal] - (range/(2*range_ratio))))
+        high_side = min((max_val,signal_dict[signals[0]][motor_signal] + (range/(2*range_ratio))))
         if snake:
             direction *=-1
         if(direction>0):
@@ -138,7 +141,7 @@ def fly_max(
             start = high_side
             stop = low_side
     if end_on_max:
-        yield from bps.mv(motor, signal_dict[signals[0]][motor.name])
+        yield from bps.mv(motor, signal_dict[signals[0]][motor_signal])
 
     peaklist.append(signal_dict)
     for detector in detectors:

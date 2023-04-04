@@ -38,6 +38,7 @@ from ..HW.motors import sam_Th, sam_Y
 from sst_hw.gatevalves import gv28, gv27a, gvll
 from sst_hw.shutters import psh10
 from sst_hw.vacuum import rsoxs_ll_gpwr
+from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
 from ..startup import bec
 from sst_funcs.printing import run_report
 from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
@@ -92,6 +93,8 @@ def buildeputable(
         yield from bps.mv(epu_mode, 2)
     yield from bps.mv(epu_phase, phase)
 
+    yield from bps.mv(epu_gap.tolerance,0)
+
     count = 0
     peaklist = []
     flip=False
@@ -108,7 +111,7 @@ def buildeputable(
             startgap = min(100000, max(15000, startinggap + 2500 * widfract))
             flip = False
         
-        yield from bps.mv(mono_en, energy,en.scanlock, False,en.mir3Pitch, en.m3pitchcalc(energy, False),epu_gap,startgap)
+        yield from bps.mv(mono_en, energy,en.scanlock, False,epu_gap,startgap)
         yield from fly_max(
             [Izero_Mesh, Beamstop_SAXS],
             [
@@ -227,12 +230,15 @@ def do_some_eputables_2023_en():
         energy += -1.5545e-14 * angle**9
         return energy+5
 
-    angles = np.linspace(18,10,4)
-
+    #angles = np.linspace(18,10,4)
+    up = list(np.geomspace(0.5,45,12))
+    down = list(90-np.geomspace(0.1,1.5,4))
+    down.reverse()
+    angles = [0] + up + down + [90]
     for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 50, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r2")
-    for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 50, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r2")
+        yield from buildeputable(starting_energy(angle), 1300, 10, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r4")
+    #for angle in angles:
+    #    yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r3")
 
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
@@ -641,3 +647,8 @@ def tune_pgm(
     bec.disable_plots()
     detector.kind = "normal"
     return fit
+
+def reset_amps():
+    yield from bps.mv(MC19_disable, 1, MC20_disable, 1, MC21_disable, 1)
+    yield from bps.sleep(5)
+    yield from bps.mv(MC19_disable, 0, MC20_disable, 0, MC21_disable, 0)
