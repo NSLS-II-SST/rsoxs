@@ -18,15 +18,15 @@ from ..HW.motors import (
     sam_viewer,
 )
 from sst_hw.motors import Exit_Slit
-from .configurations import all_out, WAXSmode, SAXSmode
+from .configurations import all_out
 from ..HW.detectors import (
     set_exposure,
     saxs_det,
-    waxs_det,
+    #waxs_det,
     snapshot,
     exposure,
 )
-from ..Functions.alignment import sample, user
+from ..Functions.alignment import sample
 from ..startup import RE
 from ..HW.energy import en, set_polarization
 from sst_funcs.printing import run_report, boxed_text
@@ -166,24 +166,6 @@ del nmode
 
 
 @register_line_magic
-def wmode(line):
-    RE(WAXSmode())
-
-
-del wmode
-
-
-@register_line_magic
-def smode(line):
-    RE(SAXSmode())
-
-
-del smode
-
-# various
-
-
-@register_line_magic
 def exp(line):
     try:
         secs = float(line)
@@ -204,14 +186,14 @@ def binning(line):
     except:
         boxed_text(
             "Pixel Binning",
-            "   " + saxs_det.binning() + "\n   " + waxs_det.binning(),
+            "   " + saxs_det.binning(), #+ "\n   " + waxs_det.binning(),
             "lightpurple",
             shrink=True,
         )
     else:
         if bins > 0 and bins < 100:
             saxs_det.set_binning(bins, bins)
-            waxs_det.set_binning(bins, bins)
+            #waxs_det.set_binning(bins, bins)
 
 
 del binning
@@ -221,7 +203,7 @@ del binning
 def temp(line):
     boxed_text(
         "Detector cooling",
-        "   " + saxs_det.cooling_state() + "\n   " + waxs_det.cooling_state(),
+        "   " + saxs_det.cooling_state() ,#+ "\n   " + waxs_det.cooling_state(),
         "blue",
         shrink=True,
         width=95,
@@ -234,7 +216,7 @@ del temp
 @register_line_magic
 def cool(line):
     saxs_det.cooling_on()
-    waxs_det.cooling_on()
+    #waxs_det.cooling_on()
 
 
 del cool
@@ -243,7 +225,7 @@ del cool
 @register_line_magic
 def warm(line):
     saxs_det.cooling_off()
-    waxs_det.cooling_off()
+    #waxs_det.cooling_off()
 
 
 del warm
@@ -316,36 +298,16 @@ def md(line):
     sample()
 
 
-@register_line_magic
-def u(line):
-    user()
 
-
-del md, u
+del md
 
 
 class RSoXSPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
-        dt = datetime.datetime.now()
-        formatted_date = dt.strftime("%Y-%m-%d")
-        proposal = f'{RE.md["proposal_id"]}'
-
-        if (
-            len(proposal) > 0
-            and len(RE.md["institution"]) > 0
-            and len(RE.md["project_name"]) > 0
-            and len(RE.md["cycle"]) > 0
-        ):
+        if len(RE.md["analysis_dir"]) > 0:
             RSoXStoken = (
                 Token.Prompt,
-                "RSoXS "
-                + "{}/{}-{}/{}/auto/{}/ ".format(
-                    RE.md["cycle"],
-                    proposal,
-                    RE.md["institution"],
-                    RE.md["project_name"],
-                    formatted_date,
-                ),
+                f"RSoXS {RE.md['analysis_dir']}",
             )
         else:
             RSoXStoken = (Token.OutPrompt, "RSoXS (define metadata before scanning)")
@@ -362,7 +324,6 @@ ip.prompts = RSoXSPrompt(ip)
 
 
 def beamline_status():
-    # user()
     sample()
     boxed_text(
         "Detector status",
@@ -370,14 +331,14 @@ def beamline_status():
         + "\n   "
         + saxs_det.binning()
         + "\n   "
-        + waxs_det.binning()
-        + "\n   "
+        #+ waxs_det.binning()
+        #+ "\n   "
         + saxs_det.cooling_state()
         + "\n   "
-        + waxs_det.cooling_state()
-        + "\n   WAXS "
-        + waxs_det.shutter()
-        + "\n   SAXS "
+        #+ waxs_det.cooling_state()
+        #+ "\n   WAXS "
+        #+ waxs_det.shutter()
+        #+ "\n   SAXS "
         + saxs_det.shutter(),
         "lightblue",
         80,

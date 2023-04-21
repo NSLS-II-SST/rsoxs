@@ -41,7 +41,7 @@ run_report(__file__)
 
 class lakeshore_TEM(PVPositioner):
     setpoint = Cpt(EpicsSignal,'OUT2:SP',kind="normal")
-    readback = Cpt(EpicsSignal,'IN2',kind="hinted")
+    readback = Cpt(EpicsSignal,'IN2',kind="normal")
     done = Cpt(EpicsSignal,'RampSts2',kind="normal")
     done_value = 0
 

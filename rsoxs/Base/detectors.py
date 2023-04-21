@@ -1,7 +1,7 @@
 import time
 from bluesky.run_engine import Msg
 from ophyd import Component as C
-from ophyd import EpicsSignalRO, Device, EpicsSignal
+from ophyd import EpicsSignalRO, Device, EpicsSignal, Signal
 from ophyd.areadetector import (
     GreatEyesDetector,
     GreatEyesDetectorCam,
@@ -25,6 +25,14 @@ from sst_funcs.printing import run_report
 run_report(__file__)
 
 
+class StatsWithHist(StatsPluginV33):
+    hist_below = C(EpicsSignalRO,'HistBelow_RBV')
+    hist_above = C(EpicsSignalRO,'HistAbove_RBV')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.total.kind = 'hinted'
+        self.compute_histogram.set(1)
+
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
     """Add this as a component to detectors that write TIFFs."""
 
@@ -40,6 +48,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs["wait_for_plugins"] = "Yes"
+        self.acquire_time.kind='hinted'
 
     def ensure_nonblocking(self):
         self.stage_sigs["wait_for_plugins"] = "Yes"
@@ -59,8 +68,9 @@ class GreateyesTransform(TransformPlugin):
 
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
-    image = C(ImagePlugin, "image1:")
-    cam = C(GreatEyesDetCamWithVersions, "cam1:")
+
+    image = C(ImagePlugin, "image1:",kind='config')
+    cam = C(GreatEyesDetCamWithVersions, "cam1:",kind='normal')
     transform_type = 0
     number_exposures = 1
     tiff = C(
@@ -70,22 +80,76 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         read_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
         read_attrs=[],
         root="/nsls2/data/sst/assets/",
+        kind='hinted'
     )
 
-    stats1 = C(StatsPluginV33, "Stats1:")
-    # stats2 = C(StatsPluginv33, 'Stats2:')
-    # stats3 = C(StatsPlugin, 'Stats3:')
+    stats1 = C(StatsWithHist, "Stats1:",kind='hinted')
+    stats2 = C(StatsWithHist, 'Stats2:')
+    under_exposed = C(Signal,value=False,kind='hinted',name='under_exposed')
+    saturation_high_threshold = 100000
+    saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
+    saturation_low_threshold = 500
+    saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
+    saturated = C(Signal,value=False,kind='hinted',name='saturated')
+    high_sat_check = [False,False]
+
+    underexposure_min_value = 2000
+    underexposure_num_pixels = 950000 # 700000 pixels reading under 2000 counts means underexposed
+    # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
-    trans1 = C(GreateyesTransform, "Trans1:")
-    roi1 = C(ROIPlugin, "ROI1:")
+    trans1 = C(GreateyesTransform, "Trans1:",kind='config')
+    roi1 = C(ROIPlugin, "ROI1:",kind='config')
     # roi2 = C(ROIPlugin, 'ROI2:')
     # roi3 = C(ROIPlugin, 'ROI3:')
     # roi4 = C(ROIPlugin, 'ROI4:')
     # proc1 = C(ProcessPlugin, 'Proc1:')
     binvalue = 4
     useshutter = True
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setup_cam()
+        self.stats1.hist_below.subscribe(self.check_saturation_low)
+        self.stats2.hist_below.subscribe(self.check_exposure_low)
+        self.stats1.hist_above.subscribe(self.check_saturation_high)
 
+    def setup_cam(self):
+        self.stats1.kind = 'hinted'
+        self.stats1.hist_min.set(self.saturation_low_pixel_count).wait()
+        self.stats2.hist_min.set(self.underexposure_min_value).wait()
+        self.stats1.hist_max.set(self.saturation_high_threshold).wait()
+        self.stats2.hist_max.set(self.saturation_high_threshold).wait()
+        self.trans1.enable.set(1).wait()
+        self.trans1.type.set(self.transform_type).wait()
+        self.image.nd_array_port.set("TRANS1").wait()
+        self.tiff.nd_array_port.set("TRANS1").wait()
+        self.cam.temperature.set(-80).wait()
+        self.cam.enable_cooling.set(1).wait()
+        self.cam.bin_x.set(self.binvalue).wait()
+        self.cam.bin_y.set(self.binvalue).wait()
+
+    def check_saturation_high(self, old_value, value, **kwargs):
+        if value > self.saturation_high_pixel_count:
+            self.high_sat_check[0] = True
+        else:
+            self.high_sat_check[0] = False
+        self.saturated.set(True in self.high_sat_check)
+
+    def check_saturation_low(self, old_value, value, **kwargs):
+        if value > self.saturation_low_pixel_count:
+            self.high_sat_check[1] = True
+        else:
+            self.high_sat_check[1] = False
+        self.saturated.set(True in self.high_sat_check)
+
+    def check_exposure_low(self, old_value, value, **kwargs):
+        if value > self.underexposure_num_pixels:
+            self.under_exposed.set(True)
+        else:
+            self.under_exposed.set(False)
+
+    
     def sim_mode_on(self):
         self.useshutter = False
         self.cam.sync.set(0)
@@ -115,13 +179,10 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 "yellow",
                 85,
             )
+        # self.cam.num_images.set(self.number_exposures)
+        
+        self.stage_sigs["cam.num_images"] = self.number_exposures
         #self.cam.num_images.set(self.number_exposures)
-        self.trans1.enable.set(1)
-        self.trans1.type.set(self.transform_type)
-        self.image.nd_array_port.set("TRANS1")
-        self.tiff.nd_array_port.set("TRANS1")
-        self.stage_sigs['cam.num_images'] = self.number_exposures
-
         return [self].append(super().stage(*args, **kwargs))
 
     def trigger(self, *args, **kwargs):
@@ -129,13 +190,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         #    print(f'Warning: It looks like the {self.name} restarted, putting in default values again')
         #    self.cam.temperature.set(-80)
         if self.cam.enable_cooling.get() != 1:
-            print(
-                f"Warning: It looks like the {self.name} restarted, putting in default values again"
-            )
-            self.cam.temperature.set(-80)
-            self.cam.enable_cooling.set(1)
-            self.cam.bin_x.set(self.binvalue)
-            self.cam.bin_y.set(self.binvalue)
+            print(f"Warning: It looks like the {self.name} restarted, putting in default values again")
+            self.setup_cam()
         return super().trigger(*args, **kwargs)
 
     def skinnystage(self, *args, **kwargs):
@@ -143,14 +199,14 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def shutter(self):
         switch = {0: "disabled", 1: "enabled", 3: "unknown", 4: "unknown", 2: "enabled"}
-        #return "Shutter is {}".format(switch[self.cam.sync.get()])
+        # return "Shutter is {}".format(switch[self.cam.sync.get()])
         return "Shutter is {}".format(switch[self.cam.shutter_mode.get()])
         # return ('Shutter is {}'.format(switch[self.cam.shutter_mode.get()]))
 
     def shutter_on(self):
         # self.cam.sync.set(1)
         if self.useshutter:
-            #self.cam.sync.set(1)
+            # self.cam.sync.set(1)
             self.cam.shutter_mode.det(2)
         else:
             print("not turning on shutter because detector is in simulation mode")

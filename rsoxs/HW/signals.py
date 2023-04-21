@@ -262,3 +262,4 @@ DiodeRange = EpicsSignal("XF:07ID-ES1{DMR:I400-1}:RANGE_BP")
 DM4_PD = EpicsSignalRO(
     "XF:07ID-BI{DM5:F4}Cur:I3-I", name="DM4 Photodiode", kind="normal"
 )
+
