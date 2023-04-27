@@ -28,9 +28,11 @@ BeamStopW = PrettyMotorFMBO(
 BeamStopS = PrettyMotorFMBO(
     "XF:07ID2-ES1{BS-Ax:2}Mtr", name="Beam Stop SAXS", kind="hinted"
 )
-Det_W = PrettyMotorFMBO(
-    "XF:07ID2-ES1{Det-Ax:2}Mtr", name="Detector WAXS Translation", kind="hinted"
-)
+# Det_W = PrettyMotorFMBO(
+#     "XF:07ID2-ES1{Det-Ax:2}Mtr", name="Detector WAXS Translation", kind="hinted"
+# )
+Det_W = motor1
+Det_W.user_setpoint = Det_W.setpoint
 Det_S = PrettyMotorFMBO(
     "XF:07ID2-ES1{Det-Ax:1}Mtr", name='Detector SAXS Translation',kind='hinted'
 )
