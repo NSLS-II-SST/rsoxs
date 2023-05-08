@@ -192,3 +192,8 @@ bec.disable_table()
 bec.disable_plots()
 
 RE.md['scan_id'] = int(RE.md['scan_id'])
+
+rsoxs_config = RunEngineRedisDict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1)
+
+rsoxs_config.setdefault('bar',[])
+bar = rsoxs_config('bar')

@@ -3,14 +3,14 @@ import datetime
 from copy import deepcopy
 from sst_funcs.printing import run_report, boxed_text
 from rsoxs_scans.acquisition import dryrun_bar, time_sec
-from rsoxs_scans.spreadsheets import save_samplesxlsx
+from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core
-from ..startup import RE
+from ..startup import RE, bar
 from ..HW.slackbot import rsoxs_bot
 
 run_report(__file__)
@@ -33,12 +33,11 @@ motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
 def run_bar(
-    bar,
+    bar=bar,
     sort_by=["apriority"],
     rev=[False],
     verbose=False,
     dry_run=False,
-    save_each_step="",
     group="all",
     repeat_previous_runs = False
 ):
@@ -56,10 +55,6 @@ def run_bar(
         _description_, by default False
     dry_run : bool, optional
         _description_, by default False
-    delete_as_complete : bool, optional
-        _description_, by default True
-    save_each_step : str, optional
-        _description_, by default ''
     group : str, optional
         _description_, by default 'all'
 
@@ -82,7 +77,7 @@ def run_bar(
     queue_start_time = datetime.datetime.now()
     message = ""
     acq_uids = []
-    for i, queue_step in enumerate(queue):
+    for queue_step in queue:
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
         message += f"which should take {time_sec(queue_step['acq_time'])} plus overhead\n"
         boxed_text("queue status", message, "red", width=120, shrink=True)
@@ -105,17 +100,15 @@ def run_bar(
 
         
         for samp in bar:
-            for i, acq in enumerate(samp["acquisitions"]):
+            for acq in samp["acquisitions"]:
                 if acq["uid"] == queue_step["uid"]:
                     print(f'Acquisition uids adding {acq_uids}')
-                    acq.setdefault('runs',[]).append(acq_uids)
+                    acq.setdefault('runs',[])
+                    acq['runs'].append(acq_uids)
                     print(f'Acquisition runs is now {acq["runs"]}')
-                    acq_uids = []
+                    acq_uids.clear()
                     if verbose:
                         print("marked acquisition as run")
-        if len(save_each_step) > 0:
-            save_samplesxlsx(bar, save_each_step)
-            print(f"saved xslx file to {save_each_step}")
 
         message = f"Finished.  Took {time_sec(actual_acq_time)} \n"
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
@@ -224,3 +217,11 @@ def do_nexafs(md=None, **kwargs):
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
     print("End of NEXAFS plan")
+
+def load_sheet(path):
+    newbar = load_samplesxlsx(path)
+    if isinstance(newbar, list):
+        bar.clear()
+        bar.extend(newbar)
+        print(f'replaced persistent bar with bar loaded from {path}')
+        return
