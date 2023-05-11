@@ -5,11 +5,11 @@ from sst_funcs.printing import run_report, boxed_text
 from rsoxs_scans.acquisition import dryrun_bar, time_sec
 from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
-from rsoxs_scans.nexafs import dryrun_nexafs_plan
+from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
-from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core
+from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
 from ..startup import RE, bar
 from ..HW.slackbot import rsoxs_bot
 
@@ -27,6 +27,7 @@ actions = {
     "diode_low",  # set diodes range setting to low
     "diode_high",  # set diode range setting to high
     "nexafs_scan_core",  # high level run a single NEXAFS scan
+    "nexafs_step_scan_core",  # high level run a single step-based NEXAFS scan
     "error",  # raise an error - should never get here.
 }
 motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
@@ -152,6 +153,8 @@ def run_queue_step(step):
         return (yield from spiralsearch(**step["kwargs"]))
     if step["action"] == "nexafs_scan_core":
         return (yield from NEXAFS_fly_scan_core(**step["kwargs"]))
+    if step["action"] == "nexafs_step_scan_core":
+        return (yield from NEXAFS_step_scan_core(**step["kwargs"]))
     if step["action"] == "rsoxs_scan_core":
         return (yield from new_en_scan_core(**step["kwargs"]))
     if step["acq_index"] < 1:
@@ -168,7 +171,7 @@ def do_rsoxs(md=None, **kwargs):
         exposure_time = 1,
         frames='full',
         ratios=None,
-        epeats =1,
+        repeats =1,
         polarizations = [0],
         angles = None,
         grating='rsoxs',
@@ -217,6 +220,35 @@ def do_nexafs(md=None, **kwargs):
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
     print("End of NEXAFS plan")
+
+
+def do_nexafs_step(md=None, **kwargs):
+    """
+    inputs:
+        edge,
+        exposure_time = 1,
+        frames='full',
+        ratios=None,
+        repeats =1,
+        polarizations = [0],
+        angles = None,
+        grating='rsoxs',
+        diode_range='high',
+        temperatures=None,
+        temp_ramp_speed=10,
+        temp_wait=True,
+        md=None,
+    """
+    if md == None:
+        md = deepcopy(dict(RE.md))
+    outputs = dryrun_nexafs_step_plan(md=md, **kwargs)
+    for i, out in enumerate(outputs):
+        out["acq_index"] = i
+        out["queue_step"] = 0
+    print("Starting NEXAFS step plan")
+    for queue_step in outputs:
+        yield from run_queue_step(queue_step)
+    print("End of NEXAFS step plan")
 
 def load_sheet(path):
     newbar = load_samplesxlsx(path)

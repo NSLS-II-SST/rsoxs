@@ -50,7 +50,7 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import saxs_det#, waxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY
+from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -76,6 +76,245 @@ def cleanup():
     yield from bps.mv(en.scanlock, 0)
     yield from bps.mv(Shutter_control, 0)
     
+
+
+def NEXAFS_step_scan_core(
+    dets=None,    # a list of detectors to run at each step - must be scalar type detectors wtih set_exp functions
+    energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
+    lockscan = True, # whether to lock the harmonic and other energy components during a scan
+    grating="no change", # what grating to use for this scan
+
+    energies=None,# a list of energies to run through in the inner loop
+    times=None,   # exposure times for each energy (same length as energies) (cycler add to energies)
+
+    polarizations=None, # polarizations to run as an outer loop (cycler multiply with previous)
+    
+    locations=None,       # locations to run together as an outer loop  (cycler multiply with previous) list of location dicts
+    temperatures=None,       # locations to run as an outer loop  (cycler multiply with previous generally, but optionally add to locations - see next)
+    temp_wait = True,
+
+    temps_with_locations = False, # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
+
+    enscan_type=None,     # optional extra string name to describe this type of scan - will make timing
+    master_plan=None,   # if this is lying within an outer plan, that name can be stored here
+    sim_mode=False,  # if true, check all inputs but do not actually run anything
+    md=None,  # md to pass to the scan
+    signals = None,
+    check_exp = False,
+    **kwargs #extraneous settings from higher level plans are ignored
+):
+    # grab locals
+    if dets is None:
+        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int]
+    if energies is None:
+        energies = []
+    if times is None:
+        times = []
+    if polarizations is None:
+        polarizations = []
+    if md is None:
+        md = {}
+    if energy is None:
+        energy = en.energy
+    arguments = dict(locals())
+    del arguments["md"]  # no recursion here!
+    arguments["signals"] = [signal.name for signal in arguments["signals"]]
+    arguments["energy"] = arguments["energy"].name
+    if md is None:
+        md = {}
+    md.setdefault("acq_history", [])
+
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
+    md["acq_history"].append({"plan_name": "NEXAFS_step_scan_core", "arguments": arguments})
+    md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
+    # print the current sample information
+    # sample()  # print the sample information  Removing this because RE will no longer be loaded with sample data
+    # set the exposure times to be hinted for the detector which will be used
+
+    # validate inputs
+    valid = True
+    validation = ""
+    newdets = []
+    detnames = []
+    for det in dets:
+        if not isinstance(det, Device):
+            try:
+                det_dev = globals()[det]
+                newdets.append(det_dev)
+                detnames.append(det_dev.name)
+            except Exception:
+                valid = False
+                validation += f"detector {det} is not an ophyd device\n"
+        else:
+            newdets.append(det)
+            detnames.append(det.name)
+    if len(newdets) < 1:
+        valid = False
+        validation += "No detectors are given\n"
+    if min(energies) < 70 or max(energies) > 2200:
+        valid = False
+        validation += "energy input is out of range for SST 1\n"
+    if grating == "1200":
+        if min(energies) < 150:
+            valid = False
+            validation += "energy is to low for the 1200 l/mm grating\n"
+    elif grating == "250":
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    else:
+        valid = False
+        validation += "invalid grating was chosen"
+    if max(times) > 60:
+        valid = False
+        validation += "exposure times greater than 60 seconds are not valid\n"
+    if min(polarizations) < -1 or max(polarizations) > 180:
+        valid = False
+        validation += f"a provided polarization is not valid\n"
+    if isinstance(temperatures,list):
+        if len(temperatures)==0:
+            temperatures = None
+        if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
+            valid = False
+            validation += f"temperature out of range\n"
+    else:
+        temperatures = None
+        temps_with_locations=False
+    if not isinstance(energy, Device):
+        valid = False
+        validation += f"energy object {energy} is not a valid ophyd device\n"
+    motor_positions=[]
+    if isinstance(locations,list):
+        if len(locations)>0:
+            motor_positions = [{d['motor']: d['position'] for d in location} for location in locations]
+            angles = {d.get('angle', None) for d in motor_positions}
+            angles.discard(None)
+            xs = {d.get('x', None) for d in motor_positions}
+            xs.discard(None)
+            if min(xs,default=0) < -13 or max(xs,default=0) > 13:
+                valid = False
+                validation += f"X motor is out of vaild range\n"
+            ys = {d.get('y', None) for d in motor_positions}
+            ys.discard(None)
+            if min(ys,default=0) < -190 or max(ys,default=0) > 355:
+                valid = False
+                validation += f"Y motor is out of vaild range\n"
+            zs = {d.get('z', None) for d in motor_positions}
+            zs.discard(None)
+            if min(zs,default=0) < -13 or max(zs,default=0) > 13:
+                valid = False
+                validation += f"Z motor is out of vaild range\n"
+            temzs = {d.get('temz', None) for d in motor_positions}
+            temzs.discard(None)
+            if min(temzs,default=0) < 0 or max(temzs,default=0) > 150:
+                valid = False
+                validation += f"TEMz motor is out of vaild range\n"
+            if max(temzs,default=0) > 100 and min(ys,default=50) < 20:
+                valid = False
+                validation += f"potential clash between TEY and sample bar\n"
+    else:
+        locations = None
+        temps_with_locations = False
+    if(temps_with_locations):
+        if len(temperatures)!= len(locations):
+            valid = False
+            validation += f"temperatures and locations are different lengths, cannot be simultaneously changed\n"
+    if sim_mode:
+        if valid:
+            retstr = f"scanning {detnames} from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
+            retstr += f"    in {len(times)} steps with exposure times from {min(times)} to {max(times)} seconds\n"
+            return retstr
+        else:
+            return validation
+
+    if not valid:
+        raise ValueError(validation)
+    for det in newdets:
+        det.exposure_time.kind = "hinted"
+    # set the grating
+    if 'hopg_loc' in md.keys():
+        print('hopg location found')
+        hopgx = md['hopg_loc']['x']
+        hopgy = md['hopg_loc']['y']
+        hopgth = md['hopg_loc']['th']
+    else:
+        print('no hopg location found')
+        hopgx = None
+        hopgy = None
+        hopgth = None
+    print(f'checking grating is {grating}')
+    if grating == "1200":
+        yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "250":
+        yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    # set up the scan cycler
+    sigcycler = cycler(energy, energies)
+    yield from bps.mv(en.scanlock, 0)
+    yield from bps.sleep(0.5)
+    yield from bps.mv(energy, energies[0])  # move to the initial energy (unlocked)
+    if lockscan:
+        yield from bps.mv(en.scanlock, 1)  # lock the harmonic, grating, m3_pitch everything based on the first energy
+    old_n_exp = {}
+    for det in newdets:
+        sigcycler += cycler(det.exposure_time, times.copy()) # cycler for changing each detector exposure time
+    if isinstance(polarizations,list):
+        sigcycler = cycler(en.polarization, polarizations)*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
+
+    #print(f'locations {locations}')
+    #print(f'temperatures {temperatures}')
+    
+    if(temps_with_locations):
+        angles = [d.get('th', None) for d in motor_positions]
+        xs = [d.get('x', None) for d in motor_positions]
+        ys = [d.get('y', None) for d in motor_positions]
+        zs = [d.get('z', None) for d in motor_positions]
+        loc_temp_cycler = cycler(sam_X,xs)
+        loc_temp_cycler += cycler(sam_Y,ys) # adding means we run the cyclers simultaenously, 
+        loc_temp_cycler += cycler(sam_Z,zs)
+        loc_temp_cycler += cycler(sam_Th,angles)
+        if(temp_wait):
+            loc_temp_cycler += cycler(tem_tempstage,temperatures) 
+        else:
+            loc_temp_cycler += cycler(tem_tempstage.setpoint,temperatures)
+        sigcycler = loc_temp_cycler*sigcycler # add cyclers for temperature and location changes (if they are linked) one of everything above (energies, polarizations) for each temp/location
+    else:
+        if isinstance(locations,list):
+            angles = [d.get('th', None) for d in motor_positions]
+            xs = [d.get('x', None) for d in motor_positions]
+            ys = [d.get('y', None) for d in motor_positions]
+            zs = [d.get('z', None) for d in motor_positions]
+            loc_cycler = cycler(sam_X,xs)
+            loc_cycler += cycler(sam_Y,ys)
+            loc_cycler += cycler(sam_Z,zs)
+            loc_cycler += cycler(sam_Th,angles)
+            sigcycler = loc_cycler*sigcycler # run every energy for every polarization and every polarization for every location
+        if isinstance(temperatures,list):
+            if(temp_wait):
+                sigcycler = cycler(tem_tempstage,temperatures)*sigcycler # run every location for each temperature step
+            else:
+                sigcycler = cycler(tem_tempstage.setpoint,temperatures)*sigcycler # run every location for each temperature step
+
+
+    #print(sigcycler)
+    exps = {}
+    
+    yield from bps.mv(Shutter_control, 1) # open the shutter for the run
+    yield from finalize_wrapper(
+        bp.scan_nd(newdets + signals, 
+                   sigcycler, 
+                   md=md,
+                   ),
+        cleanup()
+    )
+
 
 
 def new_en_scan_core(
