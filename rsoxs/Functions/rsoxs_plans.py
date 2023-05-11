@@ -225,3 +225,7 @@ def load_sheet(path):
         bar.extend(newbar)
         print(f'replaced persistent bar with bar loaded from {path}')
         return
+
+def save_sheet(path,name):
+    save_samplesxlsx(bar,path,name)
+    return
