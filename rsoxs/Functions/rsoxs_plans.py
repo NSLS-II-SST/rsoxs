@@ -10,7 +10,7 @@ from .alignment import load_sample, load_configuration, move_to_location, spiral
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
-from ..startup import RE, bar
+from ..startup import RE, bar, rsoxs_config
 from ..HW.slackbot import rsoxs_bot
 
 run_report(__file__)
@@ -34,7 +34,7 @@ motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
 def run_bar(
-    bar=bar,
+    bar=None,
     sort_by=["apriority"],
     rev=[False],
     verbose=False,
@@ -69,6 +69,8 @@ def run_bar(
     _type_
         _description_
     """
+    if bar == None:
+        bar = rsoxs_config['bar']
     if dry_run:
         verbose = True
     queue = dryrun_bar(bar, sort_by=sort_by, rev=rev, print_dry_run=verbose, group=group, repeat_previous_runs = repeat_previous_runs)
@@ -253,11 +255,10 @@ def do_nexafs_step(md=None, **kwargs):
 def load_sheet(path):
     newbar = load_samplesxlsx(path)
     if isinstance(newbar, list):
-        bar.clear()
-        bar.extend(newbar)
+        rsoxs_config['bar'] = newbar
         print(f'replaced persistent bar with bar loaded from {path}')
         return
 
 def save_sheet(path,name):
-    save_samplesxlsx(bar,path,name)
+    save_samplesxlsx(bar=rsoxs_config['bar'],path=path,name=name)
     return

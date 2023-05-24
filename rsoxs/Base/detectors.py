@@ -20,7 +20,7 @@ from sst_hw.diode import (
     Shutter_delay,
 )
 from sst_funcs.printing import run_report
-
+import warnings
 
 run_report(__file__)
 

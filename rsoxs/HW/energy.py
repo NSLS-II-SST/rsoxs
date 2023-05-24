@@ -15,6 +15,7 @@ from sst_hw.diode import Shutter_control
 from .signals import Sample_TEY
 from ..startup import bec
 
+from sst_base.detectors.scalar import I400SingleCh
 
 run_report(__file__)
 
@@ -23,6 +24,16 @@ en = EnPos("", rotation_motor=sam_Th, name="en")
 # en.energy.kind = "hinted"
 # en.monoen.kind = "normal"
 mono_en = en.monoen
+
+
+mono_en_int = I400SingleCh(
+    "XF:07ID1-OP{Mono:PGM1-Ax::ENERGY_MON",# PV for mono readback
+    name="RSoXS Sample Current",
+    kind="normal",
+)
+mono_en_int.exposure_time.set(0.2)
+
+
 #mono_en.tolerance.set(0.02)
 epu_gap = en.epugap
 #epu_gap.tolerance.set(2)

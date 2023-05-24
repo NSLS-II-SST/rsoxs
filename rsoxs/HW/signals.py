@@ -1,7 +1,7 @@
 from ophyd import EpicsSignalRO, EpicsSignal
 from ophyd.status import StatusTimeoutError
 from sst_funcs.printing import run_report
-from sst_funcs.detectors.scalar import I400SingleCh
+from sst_base.detectors.scalar import I400SingleCh
 from bluesky import plan_stubs as bps
 from bluesky import FailedStatus
 from datetime import datetime as datet

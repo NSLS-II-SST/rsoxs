@@ -3,7 +3,7 @@ from sst_funcs.printing import run_report
 from ..HW.motors import (
     Shutter_Y,
     Izero_Y,
-    Det_W,
+    #Det_W,
     Det_S,
     BeamStopS,
     BeamStopW,
@@ -62,16 +62,16 @@ def DetS_out():
     yield from bps.mv(Det_S, -100)
 
 
-def DetW_edge():
-    yield from bps.mv(Det_W, -50)
+#def DetW_edge():
+#    yield from bps.mv(Det_W, -50)
 
 
-def DetW_in():
-    yield from bps.mv(Det_W, -5)
+#def DetW_in():
+#    yield from bps.mv(Det_W, -5)
 
 
-def DetW_out():
-    yield from bps.mv(Det_W, -94)
+#def DetW_out():
+#    yield from bps.mv(Det_W, -94)
 
 
 def BSw_in():
@@ -90,12 +90,12 @@ def BSs_out():
     yield from bps.mv(BeamStopS, 3)
 
 
-def Detectors_out():
-    yield from bps.mv(Det_S, -94, Det_W, -100)
+#def Detectors_out():
+#    yield from bps.mv(Det_S, -94, Det_W, -100)
 
 
-def Detectors_edge():
-    yield from bps.mv(Det_S, -50, Det_W, -50)
+#def Detectors_edge():
+#    yield from bps.mv(Det_S, -50, Det_W, -50)
 
 
 def BS_out():
@@ -303,7 +303,7 @@ def SAXS():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
+            #{"motor": Det_W, "position": -94, "order": 0},
             {"motor": Det_S, "position": -15, "order": 0},
             {"motor": BeamStopS, "position": 68, "order": 0},
             {"motor": BeamStopW, "position": 3, "order": 1},
@@ -341,7 +341,7 @@ def SAXSNEXAFS():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
+            #{"motor": Det_W, "position": -94, "order": 0},
             {"motor": Det_S, "position": -100, "order": 0},
             {"motor": BeamStopS, "position": 68, "order": 0},
             {"motor": BeamStopW, "position": 3, "order": 1},
@@ -378,7 +378,7 @@ def WAXSNEXAFS():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 1},
+            #{"motor": Det_W, "position": -94, "order": 1},
             {"motor": Det_S, "position": -100, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
@@ -414,7 +414,7 @@ def WAXS():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -5, "order": 1},
+            #{"motor": Det_W, "position": -5, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
@@ -450,7 +450,7 @@ def SAXS_liquid():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
+            #{"motor": Det_W, "position": -94, "order": 0},
             {"motor": Det_S, "position": -15, "order": 0},
             {"motor": BeamStopS, "position": 68, "order": 0},
             {"motor": BeamStopW, "position": 3, "order": 1},
@@ -488,7 +488,7 @@ def WAXS_liquid():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -5, "order": 1},
+            #{"motor": Det_W, "position": -5, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
@@ -522,7 +522,7 @@ def SAXSNEXAFS_liquid():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 0},
-            {"motor": Det_W, "position": -94, "order": 0},
+            #{"motor": Det_W, "position": -94, "order": 0},
             {"motor": Det_S, "position": -100, "order": 0},
             {"motor": BeamStopS, "position": 68, "order": 0},
             {"motor": BeamStopW, "position": 3, "order": 1},
@@ -560,7 +560,7 @@ def WAXSNEXAFS_liquid():
             {"motor": slits3.hcenter, "position": 0.9, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -29, "order": 1},
-            {"motor": Det_W, "position": -94, "order": 1},
+            #{"motor": Det_W, "position": -94, "order": 1},
             {"motor": Det_S, "position": -100, "order": 1},
             {"motor": BeamStopW, "position": 71.4, "order": 0},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
@@ -590,8 +590,8 @@ def all_out():
         44,
         Izero_Y,
         144,
-        Det_W,
-        -94,
+        #Det_W,
+        #-94,
         Det_S,
         -100,
         BeamStopW,

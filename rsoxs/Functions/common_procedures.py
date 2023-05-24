@@ -623,12 +623,12 @@ def tune_pgm(
             detectors=[detector],
             signals=[signal],
             motor=grating,
-            start=g_set - 0.2,
-            stop=g_set + 0.2,
-            velocities=[0.02, 0.0005],
+            start=g_set - 0.15,
+            stop=g_set + 0.15,
+            velocities=[0.015, 0.001],
             snake=False,
             peaklist=peaklist,
-            range_ratio=30,
+            range_ratio=20,
             open_shutter=True,
         )
         grating_measured.append(peaklist[0][signal]["Mono Grating"])

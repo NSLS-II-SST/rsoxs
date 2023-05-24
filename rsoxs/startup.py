@@ -69,8 +69,8 @@ from nslsii.md_dict import RunEngineRedisDict
 RE.md = RunEngineRedisDict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
 rsoxs_config = RunEngineRedisDict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1)
 
-rsoxs_config.setdefault('bar',[])
-bar = rsoxs_config['bar']
+
+bar = rsoxs_config.setdefault('bar',[])
 
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")

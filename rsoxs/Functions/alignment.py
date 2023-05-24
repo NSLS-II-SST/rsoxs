@@ -9,7 +9,7 @@ import numpy as np
 import datetime
 import bluesky.plan_stubs as bps
 from ophyd import Device
-from ..startup import RE, db, bec, db0, bar
+from ..startup import RE, db, bec, db0, rsoxs_config
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_hw.diode import Shutter_enable, Shutter_control
@@ -420,7 +420,9 @@ def newsample():
         return get_sample_dict(acq=[])  # uses current location by default
 
 
-def list_samples(bar=bar):
+def list_samples(bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
         text += "\n {} {}".format(index, sample["sample_name"])
@@ -503,7 +505,9 @@ def sanatize_angle(samp, force=False):
         samp["bar_loc"]["th"] = -155.0
 
 
-def sample_by_value_match(key, string, bar=bar):
+def sample_by_value_match(key, string, bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     results = [d for (index, d) in enumerate(bar) if d[key].find(string) >= 0]
     if len(results) == 1:
         return results[0]
@@ -515,15 +519,19 @@ def sample_by_value_match(key, string, bar=bar):
         return results
 
 
-def sample_by_name( name, bar=bar):
-    return sample_by_value_match(bar, "sample_name", name)
+def sample_by_name( name, bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
+    return sample_by_value_match("sample_name", name, bar=bar)
 
 
 def alignment_rel_scan(det, motor, start_rel, end_rel, steps):
     savemd = RE.md.deepcopy()
 
 
-def offset_bar(xoff, yoff, zoff, thoff, bar=bar):
+def offset_bar(xoff, yoff, zoff, thoff, bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     for samp in bar:
         for mot in samp["location"]:
             if mot["motor"] == "x":
@@ -709,7 +717,9 @@ def spiralsearch(
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 
-def spiralsearch_all(barin=bar, diameter=0.5, stepsize=0.2):
+def spiralsearch_all(barin=None, diameter=0.5, stepsize=0.2):
+    if barin == None:
+        barin = rsoxs_config['bar']
     for samp in barin:
         yield from load_sample(samp)
         RE.md["project_name"] = "spiral_searches"
@@ -718,14 +728,16 @@ def spiralsearch_all(barin=bar, diameter=0.5, stepsize=0.2):
         yield from spiralsearch(diameter, stepsize, master_plan="spiralsearch_all")
 
 
-def spiralsearchwaxs_all(barin=bar, diameter=0.5, stepsize=0.2):
+def spiralsearchwaxs_all(barin=None, diameter=0.5, stepsize=0.2):
+    if barin == None:
+        barin = rsoxs_config['bar']
     for samp in barin:
         yield from load_sample(samp)
         RE.md["project_name"] = "spiral_searches"
         yield from spiralsearchwaxs(diameter, stepsize, master_plan="spiralsearchwaxs_all")
 
 
-def map_bar_from_spirals(bar=bar, num_previous_scans=150):
+def map_bar_from_spirals(bar=None, num_previous_scans=150):
     """
     Interactively ask users to pick best location from spiral scans.
     will go through all samples on bar and try to find a matching spiral scan taken within the last
@@ -735,6 +747,8 @@ def map_bar_from_spirals(bar=bar, num_previous_scans=150):
     @param num_previous_scans: number of previous scans to search backward
     @return: alters the locations of samples in bar if requested
     """
+    if bar == None:
+        bar = rsoxs_config['bar']
     samps = []
     scans = db0(plan_name="spiral_square")
     for i, sc in enumerate(scans):
@@ -783,7 +797,9 @@ def map_bar_from_spirals(bar=bar, num_previous_scans=150):
 # correct_bar(bar,af1x,af1y,af2x,af2y)
 
 
-def image_bar( path=None, front=True, bar=bar):
+def image_bar( path=None, front=True, bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     global loc_Q
     loc_Q = queue.Queue(1)
     ypos = np.arange(-100, 110, 25)
@@ -796,10 +812,12 @@ def image_bar( path=None, front=True, bar=bar):
     if isinstance(path, str):
         im = Image.fromarray(image)
         im.save(path)
-    update_bar(bar, loc_Q, front)
+    update_bar(loc_Q, front,inbar=bar)
 
 
-def locate_samples_from_image( impath, front=True, bar=bar):
+def locate_samples_from_image( impath, front=True, bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     # if the image was just taken itself, before a bar was compiled, then this can be run to just load that image
     # and then interactively place the elements of bar
     global loc_Q
@@ -812,13 +830,16 @@ def locate_samples_from_image( impath, front=True, bar=bar):
     else:
         image = stitch_sample(False, False, False, from_image=impath, flip_file=False)
     # stitch samples will be sending signals, update bar will catch those signals and assign the positions to the bar
-    update_bar(bar, loc_Q, front)
+    update_bar(loc_Q, front,inbar=bar)
 
 
-def update_bar( loc_Q, front, inbar=bar):
+def update_bar(loc_Q, front, inbar=None):
+    
     """
     updated with whether we are pointing at the front or the back of the bar
     """
+    if inbar == None:
+        inbar = rsoxs_config['bar']
     from threading import Thread
 
     global gbar
@@ -837,32 +858,32 @@ def update_bar( loc_Q, front, inbar=bar):
             # add / replace the front fiducial bar entries (bar[0], bar[-1])
             AF1 = default_sample("AF1_front")
             AF2 = default_sample("AF2_front")
-            if sample_by_name(bar, "AF1_front") is not None:
-                gbar.remove(sample_by_name(bar, "AF1_front"))
-            if sample_by_name(bar, "AF2_front") is not None:
-                gbar.remove(sample_by_name(bar, "AF2_front"))
+            if sample_by_name( "AF1_front") is not None:
+                gbar.remove(sample_by_name("AF1_front"))
+            if sample_by_name("AF2_front") is not None:
+                gbar.remove(sample_by_name( "AF2_front"))
             gbar.insert(0, AF1)
             gbar.append(AF2)
             # add in a diode position as well
             diode = default_sample("diode")
-            if sample_by_name(bar, "diode") is not None:
+            if sample_by_name( "diode") is not None:
                 gbar.insert(-1, diode)
 
         else:
             # if front fiducials don't exist,add dummy ones (so thge AF2 ones are in the correct position)
-            if sample_by_name(bar, "AF1_front") is None:
+            if sample_by_name("AF1_front") is None:
                 AF1 = default_sample("AF1_front")
                 gbar.insert(0, AF1)
-            if sample_by_name(bar, "AF2_front") is None:
+            if sample_by_name("AF2_front") is None:
                 AF2 = default_sample("AF2_front")
                 gbar.append(AF2)
 
             # add / replace the back fiducial bar entries (bar[1], bar[-2])
 
-            if sample_by_name(bar, "AF1_back") is not None:
-                gbar.remove(sample_by_name(bar, "AF1_back"))
-            if sample_by_name(bar, "AF2_back") is not None:
-                gbar.remove(sample_by_name(bar, "AF2_back"))
+            if sample_by_name("AF1_back") is not None:
+                gbar.remove(sample_by_name("AF1_back"))
+            if sample_by_name("AF2_back") is not None:
+                gbar.remove(sample_by_name("AF2_back"))
             AF1 = default_sample("AF1_back")
             AF2 = default_sample("AF2_back")
             AF1["front"] = False
@@ -918,7 +939,7 @@ def update_bar( loc_Q, front, inbar=bar):
             elif item == "p":
                 print("Previous sample")
                 samplenum = lastclicked
-            if samplenum >= len(bar):
+            if samplenum >= len(gbar):
                 print("done")
                 break
 
@@ -1011,7 +1032,7 @@ def plot_key_press(event):
         loc_Q.put(event.key, block=False)
 
 
-def offset_bar( xoff, yoff, zoff, thoff, bar = bar):
+def offset_bar( xoff, yoff, zoff, thoff, bar = rsoxs_config['bar']):
     for samp in bar:
         for mot in samp["location"]:
             if mot["motor"] == "x":
@@ -1024,7 +1045,7 @@ def offset_bar( xoff, yoff, zoff, thoff, bar = bar):
                 mot["position"] += thoff
 
 
-def correct_bar(fiduciallist, include_back, training_wheels=True, bar = bar):
+def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
     """
     originally this function adjusted the x, y, positions of samples on a bar
     to align with the x-y locations found by fiducials
@@ -1035,6 +1056,8 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = bar):
 
     fiducial list is the list output by find_fiducials()
     """
+    if bar == None:
+        bar = rsoxs_config['bar']
     af2y = fiduciallist[0]
     af2xm90 = fiduciallist[1]
     af2x0 = fiduciallist[2]
@@ -1045,10 +1068,10 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = bar):
     af1x0 = fiduciallist[7]
     af1x90 = fiduciallist[8]
     af1x180 = fiduciallist[9]
-    af1_front = sample_by_name(bar, "AF1_front")
-    af2_front = sample_by_name(bar, "AF2_front")
-    af1_back = sample_by_name(bar, "AF1_back")
-    af2_back = sample_by_name(bar, "AF2_back")
+    af1_front = sample_by_name("AF1_front")
+    af2_front = sample_by_name("AF2_front")
+    af1_back = sample_by_name("AF1_back")
+    af2_back = sample_by_name("AF2_back")
     if af1_back is None:
         back = False
     else:
@@ -1318,14 +1341,18 @@ def sample_recenter_sample(samp):
     samp["angle"] = newangle
 
 
-def read_positions(bar=bar):
+def read_positions(bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     # for when the positions are altered by hand in the excel sheet, (i.e. after spiral scans)
     # this reads those positions and sets the default positions (x0 and y0) to match
     for samp in bar:
         sample_recenter_sample(samp)
 
 
-def resolve_spirals(bar=bar):
+def resolve_spirals(bar=None):
+    if bar == None:
+        bar = rsoxs_config['bar']
     for samp in bar:
         if len(str(samp['bar_loc'].get('spiral_started',''))) > 0 and len(samp['bar_loc'].get('spiral_done','')) == 0:
             h = db[samp['bar_loc']['spiral_started']]

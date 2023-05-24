@@ -118,7 +118,6 @@ def NEXAFS_step_scan_core(
         energy = en.energy
     arguments = dict(locals())
     del arguments["md"]  # no recursion here!
-    arguments["signals"] = [signal.name for signal in arguments["signals"]]
     arguments["energy"] = arguments["energy"].name
     if md is None:
         md = {}
@@ -308,7 +307,7 @@ def NEXAFS_step_scan_core(
     
     yield from bps.mv(Shutter_control, 1) # open the shutter for the run
     yield from finalize_wrapper(
-        bp.scan_nd(newdets + signals, 
+        bp.scan_nd(newdets, 
                    sigcycler, 
                    md=md,
                    ),
@@ -632,11 +631,11 @@ def NEXAFS_fly_scan_core(
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating == "250":
-        if max(energies) > 1000:
+        if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if max(energies) > 1000:
+        if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:
