@@ -14,7 +14,7 @@ from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
-from ..HW.detectors import saxs_det,  set_exposure#, waxs_det
+from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
 from sst_hw.shutters import psh10
 from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
 from sst_funcs.printing import run_report

@@ -49,7 +49,7 @@ from ..HW.motors import (
     sam_Th,
 )
 from sst_hw.mirrors import mir3
-from ..HW.detectors import saxs_det#, waxs_det
+from ..HW.detectors import waxs_det#, saxs_det
 from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now

@@ -21,8 +21,8 @@ from sst_hw.motors import Exit_Slit
 from .configurations import all_out
 from ..HW.detectors import (
     set_exposure,
-    saxs_det,
-    #waxs_det,
+    # saxs_det,
+    waxs_det,
     snapshot,
     exposure,
 )
@@ -186,14 +186,14 @@ def binning(line):
     except:
         boxed_text(
             "Pixel Binning",
-            "   " + saxs_det.binning(), #+ "\n   " + waxs_det.binning(),
+            "   " + waxs_det.binning(), #+ "\n   " + saxs_det.binning(),
             "lightpurple",
             shrink=True,
         )
     else:
         if bins > 0 and bins < 100:
-            saxs_det.set_binning(bins, bins)
-            #waxs_det.set_binning(bins, bins)
+            # saxs_det.set_binning(bins, bins)
+            waxs_det.set_binning(bins, bins)
 
 
 del binning
@@ -203,7 +203,7 @@ del binning
 def temp(line):
     boxed_text(
         "Detector cooling",
-        "   " + saxs_det.cooling_state() ,#+ "\n   " + waxs_det.cooling_state(),
+        "   " + waxs_det.cooling_state() ,#+ "\n   " + saxs_det.cooling_state(),
         "blue",
         shrink=True,
         width=95,
@@ -215,8 +215,8 @@ del temp
 
 @register_line_magic
 def cool(line):
-    saxs_det.cooling_on()
-    #waxs_det.cooling_on()
+    # saxs_det.cooling_on()
+    waxs_det.cooling_on()
 
 
 del cool
@@ -224,8 +224,8 @@ del cool
 
 @register_line_magic
 def warm(line):
-    saxs_det.cooling_off()
-    #waxs_det.cooling_off()
+    # saxs_det.cooling_off()
+    waxs_det.cooling_off()
 
 
 del warm
@@ -329,17 +329,17 @@ def beamline_status():
         "Detector status",
         exposure()
         + "\n   "
-        + saxs_det.binning()
+        # + saxs_det.binning()
+        # + "\n   "
+        + waxs_det.binning()
         + "\n   "
-        #+ waxs_det.binning()
-        #+ "\n   "
-        + saxs_det.cooling_state()
-        + "\n   "
-        #+ waxs_det.cooling_state()
-        #+ "\n   WAXS "
-        #+ waxs_det.shutter()
-        #+ "\n   SAXS "
-        + saxs_det.shutter(),
+        # + saxs_det.cooling_state()
+        # + "\n   "
+        + waxs_det.cooling_state()
+        + "\n   WAXS "
+        + waxs_det.shutter(),
+        # + "\n   SAXS "
+        # + saxs_det.shutter(),
         "lightblue",
         80,
         shrink=False,
