@@ -123,10 +123,10 @@ def get_location(motor_list):
 
 def sample_set_location(sample_dict):
     sample_dict["location"] = get_sample_location()  # set the location metadata
-    sample_recenter_sample(
-        sample_dict
-    )  # change the x0, y0, theta to result in this new position (including angle)
-    return sample_dict
+    # sample_recenter_sample(
+    #     sample_dict
+    # )  # change the x0, y0, theta to result in this new position (including angle)
+    # return sample_dict
 
 
 def get_sample_location():
@@ -270,6 +270,20 @@ def load_sample(sam_dict, sim_mode=False):
     :return:
     """
 
+    if sim_mode:
+        return f"move to {sam_dict['sample_name']}"
+    RE.md.update(sam_dict)
+    yield from move_to_location(locs=sam_dict["location"])
+    yield from bps.sleep(0)
+
+def load_samp(num, sim_mode=False):
+    """
+    move to a sample location and load the metadata with the sample information from persistant sample list by index
+
+    :param sam_dict: sample dictionary containing all metadata and sample location
+    :return:
+    """
+    samp = rsoxs_config['bar'][num]
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
@@ -520,8 +534,6 @@ def sample_by_value_match(key, string, bar=None):
 
 
 def sample_by_name( name, bar=None):
-    if bar == None:
-        bar = rsoxs_config['bar']
     return sample_by_value_match("sample_name", name, bar=bar)
 
 
@@ -1200,7 +1212,7 @@ def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
 
     # offset the line by the front/back offset + height
     if front:
-        return z0 - 2.5 - height
+        return z0 - 2.5 - height # TODO: fix this 2.5 offset number - seems to be wrong perhaps needs to be on back?
     else:
         return z0 + height
     # return the offset intersect

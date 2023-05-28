@@ -239,17 +239,17 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
 
 
 
-def fly_find_fiducials(f2=[7.5,5,-2.5,0]):
+def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
     thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
-    startxss = [f2, [4.6, 3.5, 1, 1.1]]
+    startxss = [f2, f1]
     yield from bps.mv(Shutter_enable, 0)
     yield from bps.mv(Shutter_control, 0)
     yield from load_configuration("SAXSNEXAFS")
     Beamstop_SAXS.kind = "hinted"
     bec.enable_plots()
-    startys = [2.5, -188]  # af2 first because it is a safer location
+    startys = [y2, y1]  # af2 first because it is a safer location
     maxlocs = []
     for startxs, starty in zip(startxss, startys):
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
