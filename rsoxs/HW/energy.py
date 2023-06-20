@@ -195,3 +195,11 @@ def calibrate_energy(x,y,th):
     yield from bps.mv(en, ensave)
     bec.disable_plots()
     Sample_TEY.kind='normal'
+
+speed_offset_factor = 30
+
+def get_gap_offset(start,stop,speed):
+    if stop>start:
+        return speed * speed_offset_factor
+    else:
+        return -speed * speed_offset_factor

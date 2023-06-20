@@ -1,5 +1,6 @@
 import time
 from bluesky.run_engine import Msg
+import bluesky.plan_stubs as bps
 from ophyd import Component as C
 from ophyd import EpicsSignalRO, Device, EpicsSignal, Signal
 from ophyd.areadetector import (
@@ -248,7 +249,14 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def cooling_off(self):
         self.cam.enable_cooling.set(0)
+    #    def setROI(self,):
+    #        self.cam.
 
+    def set_temp_plan(self, degc):
+        yield from bps.mv(self.cam.temperature,degc,self.cam.enable_cooling,1)
+
+    def cooling_off_plan(self):
+        yield from bps.mv(self.cam.enable_cooling,0)
     #    def setROI(self,):
     #        self.cam.
 

@@ -41,6 +41,7 @@ from ..HW.energy import (
     Mono_Scan_Start_ev,
     Mono_Scan_Stop,
     Mono_Scan_Stop_ev,
+    get_gap_offset,
 )
 from ..HW.motors import (
     sam_X,
@@ -340,7 +341,7 @@ def new_en_scan_core(
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
     signals = None,
-    check_exp = False,
+    check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
     # grab locals
@@ -571,7 +572,7 @@ def new_en_scan_core(
         bp.scan_nd(newdets + signals, 
                    sigcycler, 
                    md=md,
-                   per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exp))
+                   per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                    ),
         cleanup()
     )
@@ -741,6 +742,12 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
     _md.update(md or {})
     devices = [mono_en]+sigs
 
+    def check_end(start,end,current):
+        if start>end:
+            return end - current > 0
+        else:
+            return current - end < 0
+
     @bpp.monitor_during_decorator([mono_en])
     @bpp.stage_decorator(list(devices))
     @bpp.run_decorator(md=_md)
@@ -763,6 +770,8 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
                 Mono_Scan_Stop_ev,end_en,
                 Mono_Scan_Speed_ev,speed_en,
             )
+            gap_offset = get_gap_offset(start_en,end_en,speed_en)
+            yield from bps.mv(en.offset_gap,gap_offset)
             # move to the initial position
             #if step > 0:
             #    yield from wait(group="EPU")
@@ -788,7 +797,8 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
             yield from bps.sleep(.5)
             yield from bps.mv(Mono_Scan_Start, 1)
             monopos = mono_en.readback.get()
-            while np.abs(monopos - end_en) > 0.1:
+            
+            while check_end(start_en,end_en,monopos) :
                 monopos = mono_en.readback.get()
                 yield from bps.abs_set(
                     epu_gap,

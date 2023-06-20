@@ -45,12 +45,12 @@ waxs_det.stats1.name = "WAXS fullframe"
 
 def stop_det_cooling():
     # yield from saxs_det.cooling_off()
-    yield from waxs_det.cooling_off()
+    yield from waxs_det.cooling_off_plan()
 
 
 def start_det_cooling():
     # yield from saxs_det.set_temp(-80)
-    yield from waxs_det.set_temp(-80)
+    yield from waxs_det.set_temp_plan(-80)
 
 
 def set_exposure(exposure):
@@ -168,14 +168,14 @@ dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
 dark_frame_preprocessor_waxs_spirals = bluesky_darkframes.DarkFramePreprocessor(
    dark_plan=dark_plan,
    detector=waxs_det,
-   max_age=15,
+   max_age=30,
    locked_signals=[
        waxs_det.cam.acquire_time,
        Det_W.user_setpoint,
        waxs_det.cam.bin_x,
        waxs_det.cam.bin_y,
    ],
-   limit=20,
+   limit=5,
 )
 
 

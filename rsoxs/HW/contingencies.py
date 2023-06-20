@@ -134,8 +134,8 @@ suspend_waxs_temp_high = SuspendCeil(
 
 suspend_pressure = SuspendCeil(
     rsoxs_pg_main_val,
-    resume_thresh=0.003,
-    suspend_thresh=0.01,
+    resume_thresh=0.1,
+    suspend_thresh=2,
     sleep=30,
     tripped_message="Pressure in the Chamber is above the threshold for having cooling on",
     pre_plan=stop_det_cooling,
@@ -190,7 +190,7 @@ safe_handler.setLevel("ERROR")  # is this correct?
 def turn_on_checks():
     RE.install_suspender(suspend_shutter1)
     RE.install_suspender(suspend_current)
-    RE.install_suspender(suspend_pressure)
+    #RE.install_suspender(suspend_pressure)
     RE.install_suspender(suspend_pressure2)
     RE.install_suspender(suspend_gate_valve)
     RE.install_suspender(suspend_waxs_temp_low)
@@ -209,7 +209,7 @@ def turn_off_checks():
     RE.remove_suspender(suspend_pressure2)
     RE.remove_suspender(suspend_current)
     RE.remove_suspender(suspendx)
-    RE.remove_suspender(suspend_pressure)
+    #RE.remove_suspender(suspend_pressure)
     RE.remove_suspender(suspend_waxs_temp_low)
     RE.remove_suspender(suspend_waxs_temp_high)
     # RE.remove_suspender(suspend_saxs_temp_low)
