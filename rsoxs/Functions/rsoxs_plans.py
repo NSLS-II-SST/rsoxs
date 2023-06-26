@@ -10,7 +10,7 @@ from .alignment import load_sample, load_configuration, move_to_location, spiral
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
-from ..startup import RE, bar, rsoxs_config
+from ..startup import RE, rsoxs_config
 from ..HW.slackbot import rsoxs_bot
 
 run_report(__file__)
@@ -70,6 +70,7 @@ def run_bar(
         _description_
     """
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     if dry_run:
         verbose = True
@@ -117,6 +118,7 @@ def run_bar(
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
         message += f'expected time remaining {time_sec(queue_step["time_after"])} plus overhead\n'
 
+    rsoxs_config.write() # bar may have changed - added annotations etc
     message = message[:message.rfind('expected')]
     message += f"End of Queue"
     rsoxs_bot.send_message(message)
@@ -256,6 +258,7 @@ def load_sheet(path):
     newbar = load_samplesxlsx(path)
     if isinstance(newbar, list):
         rsoxs_config['bar'] = newbar
+        #rsoxs_config.write()
         print(f'replaced persistent bar with bar loaded from {path}')
         return
 

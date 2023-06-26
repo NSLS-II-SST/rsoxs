@@ -66,11 +66,18 @@ else:
 
 # new code, using redis
 from nslsii.md_dict import RunEngineRedisDict
-RE.md = RunEngineRedisDict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
-rsoxs_config = RunEngineRedisDict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1)
+
+class Sync_Dict(RunEngineRedisDict):
+
+    def write(self):
+        self._set_local_metadata_on_server()
+
+    def read(self):
+        self.update(self._get_local_metadata_from_server())
 
 
-bar = rsoxs_config.setdefault('bar',[])
+RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
+rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
 
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")

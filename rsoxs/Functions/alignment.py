@@ -437,6 +437,7 @@ def newsample():
 
 def list_samples(bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
@@ -518,10 +519,12 @@ def sanatize_angle(samp, force=False):
         samp["bar_loc"]["th"] = 195.0
     if samp["bar_loc"]["th"] <= -155:
         samp["bar_loc"]["th"] = -155.0
+    rsoxs_config.write()
 
 
 def sample_by_value_match(key, string, bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     results = [d for (index, d) in enumerate(bar) if d[key].find(string) >= 0]
     if len(results) == 1:
@@ -544,6 +547,7 @@ def alignment_rel_scan(det, motor, start_rel, end_rel, steps):
 
 def offset_bar(xoff, yoff, zoff, thoff, bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     for samp in bar:
         for mot in samp["location"]:
@@ -556,18 +560,20 @@ def offset_bar(xoff, yoff, zoff, thoff, bar=None):
             if mot["motor"] == "th":
                 mot["position"] += thoff
         sample_recenter_sample(samp)
+    
+    rsoxs_config.write()
 
 
-def default_sample(name):
+def default_sample(name,proposal_id,institution='NIST',grazing=False,front=True):
     return {
-        "institution": "NIST",
+        "institution": institution,
         "acquisitions": [],
         "components": "",
         "composition": "",
         "bar_loc": {"spot": "0A"},
         "bar_spot": "0A",
-        "front": True,
-        "grazing": False,
+        "front": front,
+        "grazing": grazing,
         "height": 0.0,
         "angle": 0,
         "density": "",
@@ -575,12 +581,12 @@ def default_sample(name):
         "project_desc": "Calibration",
         "sample_id": name,
         "sample_name": name,
-        "sample_desc": name,
+        "sample_desc": '',
         "project_name": "Calibration",
         "notes": "",
         "sample_set": "",
         "sample_state": "",
-        "proposal_id" : 310704,
+        "proposal_id" : proposal_id,
     }
 
 
@@ -728,68 +734,9 @@ def spiralsearch(
         md=md,
     )
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
+    
+    rsoxs_config.write()
 
-
-def spiralsearch_all(barin=None, diameter=0.5, stepsize=0.2):
-    if barin == None:
-        barin = rsoxs_config['bar']
-    for samp in barin:
-        yield from load_sample(samp)
-        RE.md["project_name"] = "spiral_searches"
-        sample()
-        rsoxs_bot.send_message(f'running spiral scan on {samp["proposal_id"]} {samp["sample_name"]}')
-        yield from spiralsearch(diameter, stepsize, master_plan="spiralsearch_all")
-
-
-def spiralsearchwaxs_all(barin=None, diameter=0.5, stepsize=0.2):
-    if barin == None:
-        barin = rsoxs_config['bar']
-    for samp in barin:
-        yield from load_sample(samp)
-        RE.md["project_name"] = "spiral_searches"
-        yield from spiralsearchwaxs(diameter, stepsize, master_plan="spiralsearchwaxs_all")
-
-
-def map_bar_from_spirals(bar=None, num_previous_scans=150):
-    """
-    Interactively ask users to pick best location from spiral scans.
-    will go through all samples on bar and try to find a matching spiral scan taken within the last
-    hours defined by time_limit.
-    Asking for the number of the best location
-    @param bar: list of sample dictionaries
-    @param num_previous_scans: number of previous scans to search backward
-    @return: alters the locations of samples in bar if requested
-    """
-    if bar == None:
-        bar = rsoxs_config['bar']
-    samps = []
-    scans = db0(plan_name="spiral_square")
-    for i, sc in enumerate(scans):
-        if "exit_status" in sc.stop.keys():
-            if sc.stop["exit_status"] == "success":
-                samps.append((sc.start["uid"], sc.start["sample_id"]))
-            if i > num_previous_scans:
-                break
-    for samp in bar:
-        uid = next(uid for (uid, sample_id) in samps if sample_id is samp["sample_id"])
-        scan = db[uid]
-        data = scan.table()
-        print("Sample: " + samp["sample_name"])
-        print(
-            "Scan date: " + datetime.datetime.fromtimestamp(scan.start["time"]).strftime("%A, %B %d, %Y %I:%M:%S")
-        )
-        print("Enter good point number from spiral scan or anything non-numeric to skip:")
-        good_point = input()
-        if good_point.isnumeric():
-            sam_x = data[good_point]["RSoXS Sample Outboard-Inboard"]
-            sam_y = data[good_point]["RSoXS Sample Up-Down"]
-            for mot in samp["location"]:
-                if mot["motor"] == "x":
-                    mot["position"] = sam_x
-                if mot["motor"] == "y":
-                    mot["position"] = sam_y
-        else:
-            print("Non-numeric, not touching this sample")
 
 
 # Bar imaging utilities:
@@ -812,6 +759,7 @@ def map_bar_from_spirals(bar=None, num_previous_scans=150):
 
 def image_bar( path=None, front=True, bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     global loc_Q
     loc_Q = queue.Queue(1)
@@ -830,6 +778,7 @@ def image_bar( path=None, front=True, bar=None):
 
 def locate_samples_from_image( impath, front=True, bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     # if the image was just taken itself, before a bar was compiled, then this can be run to just load that image
     # and then interactively place the elements of bar
@@ -852,6 +801,7 @@ def update_bar(loc_Q, front, inbar=None):
     updated with whether we are pointing at the front or the back of the bar
     """
     if inbar == None:
+        rsoxs_config.read()
         inbar = rsoxs_config['bar']
     from threading import Thread
 
@@ -869,26 +819,26 @@ def update_bar(loc_Q, front, inbar=None):
         lastclicked = 0
         if front:
             # add / replace the front fiducial bar entries (bar[0], bar[-1])
-            AF1 = default_sample("AF1_front")
-            AF2 = default_sample("AF2_front")
-            if sample_by_name( "AF1_front") is not None:
+            AF1 = default_sample("AF1_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
+            AF2 = default_sample("AF2_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
+            if sample_by_name("AF1_front") is not None:
                 gbar.remove(sample_by_name("AF1_front"))
             if sample_by_name("AF2_front") is not None:
                 gbar.remove(sample_by_name( "AF2_front"))
             gbar.insert(0, AF1)
             gbar.append(AF2)
             # add in a diode position as well
-            diode = default_sample("diode")
+            diode = default_sample("diode",proposal_id=gbar[1]['proposal_id'],institution=gbar[0]['institution'],front=True)
             if sample_by_name( "diode") is not None:
                 gbar.insert(-1, diode)
 
         else:
             # if front fiducials don't exist,add dummy ones (so thge AF2 ones are in the correct position)
             if sample_by_name("AF1_front") is None:
-                AF1 = default_sample("AF1_front")
+                AF1 = default_sample("AF1_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
                 gbar.insert(0, AF1)
             if sample_by_name("AF2_front") is None:
-                AF2 = default_sample("AF2_front")
+                AF2 = default_sample("AF2_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
                 gbar.append(AF2)
 
             # add / replace the back fiducial bar entries (bar[1], bar[-2])
@@ -897,12 +847,11 @@ def update_bar(loc_Q, front, inbar=None):
                 gbar.remove(sample_by_name("AF1_back"))
             if sample_by_name("AF2_back") is not None:
                 gbar.remove(sample_by_name("AF2_back"))
-            AF1 = default_sample("AF1_back")
-            AF2 = default_sample("AF2_back")
-            AF1["front"] = False
-            AF2["front"] = False
+            AF1 = default_sample("AF1_back",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=False)
+            AF2 = default_sample("AF2_back",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=False)
             gbar.insert(1, AF1)  # inserts in the second position
             gbar.insert(-1, AF2)  # inserts in the second to last position
+        rsoxs_config.write()
         while True:
             #        for sample in bar:
             sample = gbar[samplenum]
@@ -940,6 +889,8 @@ def update_bar(loc_Q, front, inbar=None):
                     sample["bar_loc"]["th0"] = float(180)
                 annotateImage(sample_image_axes, item, sample["sample_name"])
                 # advance sample and loop
+                rsoxs_config['bar'] = gbar
+                rsoxs_config.write()
                 lastclicked = samplenum
                 samplenum += 1
             elif item == "escape":
@@ -954,6 +905,8 @@ def update_bar(loc_Q, front, inbar=None):
                 samplenum = lastclicked
             if samplenum >= len(gbar):
                 print("done")
+                rsoxs_config['bar'] = gbar
+                rsoxs_config.write()
                 break
 
     t = Thread(target=worker)
@@ -1045,7 +998,11 @@ def plot_key_press(event):
         loc_Q.put(event.key, block=False)
 
 
-def offset_bar( xoff, yoff, zoff, thoff, bar = rsoxs_config['bar']):
+def offset_bar( xoff, yoff, zoff, thoff, bar = None):
+    
+    if bar == None:
+        rsoxs_config.read()
+        bar = rsoxs_config['bar']
     for samp in bar:
         for mot in samp["location"]:
             if mot["motor"] == "x":
@@ -1056,6 +1013,7 @@ def offset_bar( xoff, yoff, zoff, thoff, bar = rsoxs_config['bar']):
                 mot["position"] += zoff
             if mot["motor"] == "th":
                 mot["position"] += thoff
+    rsoxs_config.write()
 
 
 def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
@@ -1070,7 +1028,8 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
     fiducial list is the list output by find_fiducials()
     """
     if bar == None:
-        bar = rsoxs_config['bar']
+        rsoxs_config.read()
+        bar = deepcopy(rsoxs_config['bar'])
     af2y = fiduciallist[0]
     af2xm90 = fiduciallist[1]
     af2x0 = fiduciallist[2]
@@ -1199,7 +1158,8 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
         # moving z is dangerous = best to keep it at 0 by default
         rotate_sample(samp)  # this will take the positions found above and the desired incident angle and
         # rotate the location of the sample accordingly
-
+    rsoxs_config['bar'] = bar
+    rsoxs_config.write()
 
 def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
     """
@@ -1295,6 +1255,14 @@ def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
             yield from bps.sleep(3)
             maxlocs.append(bec.peaks.max["SAXS Beamstop"][0])
     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
+    accept = input(f"Do you want to apply this correction (y,n)?")
+    if accept in ['y','Y','yes']:
+        back = False
+        rsoxs_config.read()
+        for samp in rsoxs_config['bar']:
+            if samp['front'] ==False:
+                back = True
+        correct_bar(maxlocs,include_back=back)
     bec.disable_plots()
 
 
@@ -1303,6 +1271,7 @@ def rotate_now(theta, force=False):
         samp = get_sample_dict()
         samp["angle"] = theta
         rotate_sample(samp, force)
+        rsoxs_config.write()
         yield from load_sample(samp)
 
 
@@ -1326,7 +1295,7 @@ def rotate_sample(samp, force=False):
             motor["position"] = theta_new
         if motor["motor"] == "y":
             motor["position"] = y0
-
+    # rsoxs_config.write()
     # in future, updating y (if the rotation axis is not perfectly along y
     # and z (to keep the sample-detector distance constant) as needed would be good as well
     # newz = rotatedz(newx, th, zoff, af1xoff)
@@ -1353,10 +1322,12 @@ def sample_recenter_sample(samp):
     samp["bar_loc"]["x0"] = newx0
     samp["bar_loc"]["y0"] = newy  # y and y0 are the same, so we can just copy this
     samp["angle"] = newangle
+    # rsoxs_config.write()
 
 
 def read_positions(bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     # for when the positions are altered by hand in the excel sheet, (i.e. after spiral scans)
     # this reads those positions and sets the default positions (x0 and y0) to match
@@ -1366,6 +1337,7 @@ def read_positions(bar=None):
 
 def resolve_spirals(bar=None):
     if bar == None:
+        rsoxs_config.read()
         bar = rsoxs_config['bar']
     for samp in bar:
         if len(str(samp['bar_loc'].get('spiral_started',''))) > 0 and len(samp['bar_loc'].get('spiral_done','')) == 0:
@@ -1384,3 +1356,4 @@ def resolve_spirals(bar=None):
                                         {'motor':'z','position':z}]
                     samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
                                          'best_num':im_num}
+    rsoxs_config.write()
