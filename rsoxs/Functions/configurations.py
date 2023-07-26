@@ -438,7 +438,7 @@ def WAXS():
 def SAXS_liquid():
     return [
         [
-            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": sam_Y, "position": 350, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -476,7 +476,7 @@ def SAXS_liquid():
 def WAXS_liquid():
     return [
         [
-            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": sam_Y, "position": 350, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -510,7 +510,7 @@ def WAXS_liquid():
 def SAXSNEXAFS_liquid():
     return [
         [
-            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": sam_Y, "position": 350, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
@@ -548,7 +548,7 @@ def SAXSNEXAFS_liquid():
 def WAXSNEXAFS_liquid():
     return [
         [
-            {"motor": sam_Y, "position": 345, "order": 0},
+            {"motor": sam_Y, "position": 350, "order": 0},
             {"motor": slits1.vsize, "position": 0.025, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},

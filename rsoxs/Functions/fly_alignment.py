@@ -7,10 +7,10 @@ import pandas as pd
 import numpy as np
 
 from sst_hw.diode import Shutter_control, Shutter_enable
-from ..startup import db, bec, sd
+from ..startup import db, bec, sd, db0
 from ..HW.energy import en
 
-from ..HW.signals import Beamstop_SAXS
+from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS
 from ..HW.motors import (
     sam_X,
     sam_Y,
@@ -22,7 +22,7 @@ from ..HW.motors import (
     Det_W,
     BeamStopW,
     BeamStopS)
-from .alignment import load_configuration
+from .alignment import load_configuration, rsoxs_config,correct_bar
 
 time_offset_defaults = {'en_monoen_readback_monitor':-0.0}
 
@@ -41,6 +41,7 @@ def fly_max(
     end_on_max = True,
     md=None,
     motor_signal=None,
+    rb_offset = 0,
     **kwargs,
 ):
     r"""
@@ -126,6 +127,8 @@ def fly_max(
 
     for velocity in velocities:
         range = np.abs(start-stop)
+        start -= rb_offset
+        stop -= rb_offset
         print(f'starting scan from {start} to {stop} at {velocity}')
         yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
         signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor_signal, signal_names=signals, time_offsets = time_offsets)
@@ -141,7 +144,7 @@ def fly_max(
             start = high_side
             stop = low_side
     if end_on_max:
-        yield from bps.mv(motor, signal_dict[signals[0]][motor_signal])
+        yield from bps.mv(motor, signal_dict[signals[0]][motor_signal]- rb_offset)
 
     peaklist.append(signal_dict)
     for detector in detectors:
@@ -206,7 +209,7 @@ def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
 def process_monitor_scan(db, uid, time_offsets=None):
     if time_offsets == None:
         time_offsets = {}
-    hdr = db[uid]
+    hdr = db0[uid]
     df = {}
     for stream_name in hdr.stream_names:
         if 'monitor' not in stream_name:
@@ -233,7 +236,6 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
         max_signal_dict[monitor]['time'] =  idx 
         max_signal_dict[monitor][motor_name] = df[motor_name][idx]
         max_signal_dict[monitor][monitor] = df[monitor][idx]
-    
     return max_signal_dict
 
 
@@ -246,36 +248,44 @@ def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
     startxss = [f2, f1]
     yield from bps.mv(Shutter_enable, 0)
     yield from bps.mv(Shutter_control, 0)
-    yield from load_configuration("SAXSNEXAFS")
-    Beamstop_SAXS.kind = "hinted"
+    yield from load_configuration("WAXSNEXAFS")
+    Beamstop_WAXS.kind = "hinted"
     bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
     maxlocs = []
     for startxs, starty in zip(startxss, startys):
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
         peaklist = []
-        yield from fly_max([Beamstop_SAXS],
-                           ['SAXS Beamstop'],
+        yield from fly_max([Beamstop_WAXS],
+                           ['WAXS Beamstop'],
                            sam_Y,
                            starty-1,
                            starty+1,
                            velocities=[.2],
                            open_shutter=True,
                            peaklist=peaklist)
-        maxlocs.append(peaklist[-1]['SAXS Beamstop']["RSoXS Sample Up-Down"])
-        yield from bps.mv(sam_Y, peaklist[-1]['SAXS Beamstop']["RSoXS Sample Up-Down"])
+        maxlocs.append(peaklist[-1]['WAXS Beamstop']["RSoXS Sample Up-Down"])
+        yield from bps.mv(sam_Y, peaklist[-1]['WAXS Beamstop']["RSoXS Sample Up-Down"])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
             yield from bps.mv(Shutter_control, 1)
             peaklist = []
-            yield from fly_max([Beamstop_SAXS],
-                                ['SAXS Beamstop'],
+            yield from fly_max([Beamstop_WAXS],
+                                ['WAXS Beamstop'],
                                 sam_X,
                                 startx - 0.5 * xrange,
                                 startx + 0.5 * xrange,
                                 velocities=[.2],
                                 open_shutter=True,
                                 peaklist=peaklist)
-            maxlocs.append(peaklist[-1]['SAXS Beamstop']["RSoXS Sample Outboard-Inboard"])
+            maxlocs.append(peaklist[-1]['WAXS Beamstop']["RSoXS Sample Outboard-Inboard"])
     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
+    accept = input(f"Do you want to apply this correction (y,n)?")
+    if accept in ['y','Y','yes']:
+        back = False
+        rsoxs_config.read()
+        for samp in rsoxs_config['bar']:
+            if samp['front'] ==False:
+                back = True
+        correct_bar(maxlocs,include_back=back)
     bec.disable_plots()

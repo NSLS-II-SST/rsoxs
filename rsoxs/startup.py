@@ -18,6 +18,8 @@ import time
 import appdirs
 import httpx
 
+from bluesky.preprocessors import finalize_wrapper
+
 from sst_funcs.printing import run_report
 
 run_report(__file__)
@@ -74,11 +76,16 @@ class Sync_Dict(RunEngineRedisDict):
 
     def read(self):
         self.update(self._get_local_metadata_from_server())
+    
+    def write_plan(self):
+        yield from bps.null
+        self.write()
 
 
 RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
 rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
 
+RE.preprocessors.append(finalize_wrapper(rsoxs_config.write_plan()))
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
 
@@ -180,10 +187,10 @@ import logging
 logging.getLogger("caproto").setLevel("ERROR")
 bec.disable_baseline()
 
-from bluesky.callbacks.zmq import Publisher
+#from bluesky.callbacks.zmq import Publisher
 
-publisher = Publisher("localhost:5577")
-RE.subscribe(publisher)
+#publisher = Publisher("localhost:5577")
+#RE.subscribe(publisher)
 
 import logging
 import bluesky.log

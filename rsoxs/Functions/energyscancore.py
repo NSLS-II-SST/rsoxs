@@ -22,7 +22,7 @@ from bluesky import preprocessors as bpp
 from bluesky import FailedStatus
 import numpy as np
 from functools import partial
-from ophyd import Device
+from ophyd import Device, Signal
 from ophyd.status import StatusTimeoutError
 import warnings
 from copy import deepcopy
@@ -51,7 +51,7 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det#, saxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
+from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int, ring_current
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -340,7 +340,7 @@ def new_en_scan_core(
     master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
-    signals = None,
+    signals = [Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY,mono_en,epu_gap,ring_current],
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
@@ -352,6 +352,7 @@ def new_en_scan_core(
             dets = ['waxs_det']
         else:
             dets = ['saxs_det']
+
     if energies is None:
         energies = []
     if times is None:
@@ -396,19 +397,34 @@ def new_en_scan_core(
         else:
             newdets.append(det)
             detnames.append(det.name)
+    
+    goodsignals = []
+    signames = []
+    for signal in signals:
+        if not isinstance(signal, (Device,Signal)):
+            try:
+                signal_dev = globals()[signal]
+                goodsignals.append(signal_dev)
+                signames.append(signal_dev.name)
+            except Exception:
+                valid = False
+                validation += f"signal {signal} is not an ophyd signal\n"
+        else:
+            goodsignals.append(signal)
+            signames.append(signal.name)
         #signals.extend([det.cam.acquire_time])
-    signals.extend([Shutter_open_time])
+    goodsignals.extend([Shutter_open_time])
     if len(newdets) < 1:
         valid = False
         validation += "No detectors are given\n"
     if min(energies) < 70 or max(energies) > 2200:
         valid = False
         validation += "energy input is out of range for SST 1\n"
-    if grating == "1200":
+    if grating in ["1200",1200]:
         if min(energies) < 150:
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
-    elif grating == "250":
+    elif grating in ["250",250]:
         if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
@@ -568,15 +584,22 @@ def new_en_scan_core(
 
     #print(sigcycler)
     exps = {}
-    yield from finalize_wrapper(
-        bp.scan_nd(newdets + signals, 
-                   sigcycler, 
-                   md=md,
-                   per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
-                   ),
-        cleanup()
-    )
-    
+    if check_exposure:
+        yield from finalize_wrapper(
+            bp.scan_nd(newdets + goodsignals, 
+                    sigcycler, 
+                    md=md,
+                    per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
+                    ),
+            cleanup()
+        )
+    else:
+        yield from finalize_wrapper(
+            bp.scan_nd(newdets + goodsignals, 
+                    sigcycler, 
+                    md=md),
+            cleanup()
+        )
     for det in newdets:
         det.number_exposures = old_n_exp[det.name]
 
@@ -627,11 +650,11 @@ def NEXAFS_fly_scan_core(
     if min(energies) < 70 or max(energies) > 2200:
         valid = False
         validation += "energy input is out of range for SST 1\n"
-    if grating == "1200":
+    if grating in ["1200",1200]:
         if min(energies) < 150:
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
-    elif grating == "250":
+    elif grating in ["250",250]:
         if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
@@ -744,7 +767,7 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
 
     def check_end(start,end,current):
         if start>end:
-            return end - current > 0
+            return end - current < 0
         else:
             return current - end < 0
 

@@ -119,17 +119,19 @@ count = bp.count
 
 def dark_plan(det):
     yield from det.skinnyunstage()
+    yield from bps.mv(det.cam.shutter_mode, 0)
     yield from det.skinnystage()
-    oldmode = det.cam.image_mode.get()
-    n_exp = det.cam.num_images.get()
-    yield from bps.mv(det.cam.num_images,1,det.cam.shutter_mode, 0, det.cam.image_mode,1)
+    #n_exp = det.cam.num_images.get()
+    #yield from bps.mv(det.cam.num_images,1,det.cam.shutter_mode, 0, det.cam.image_mode,1)
+   
     yield from bps.trigger(det, group="darkframe-trigger")
     yield from bps.wait("darkframe-trigger")
     snapshot = bluesky_darkframes.SnapshotDevice(det)
+
+    yield from det.skinnyunstage()
     if det.useshutter:
         yield from bps.mv(det.cam.shutter_mode, 2)
-    yield from bps.mv(det.cam.image_mode,oldmode, det.cam.num_images,n_exp)
-    yield from det.skinnyunstage()
+    #yield from bps.mv(det.cam.image_mode,oldmode, det.cam.num_images,n_exp)
     yield from det.skinnystage()
     return snapshot
 

@@ -32,7 +32,7 @@ mono_en_int = I400SingleCh(
     kind="normal",
 )
 mono_en_int.exposure_time.set(0.2)
-
+mono_en.read_attrs = ['readback']
 
 #mono_en.tolerance.set(0.02)
 epu_gap = en.epugap

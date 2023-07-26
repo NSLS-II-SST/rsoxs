@@ -270,21 +270,36 @@ def load_sample(sam_dict, sim_mode=False):
     :param sam_dict: sample dictionary containing all metadata and sample location
     :return:
     """
-
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
     yield from move_to_location(locs=sam_dict["location"])
     yield from bps.sleep(0)
 
-def load_samp(num, sim_mode=False):
+
+def samp_dict_from_id_or_num(num_or_id):
+    if isinstance(num_or_id,str):
+        sam_dict = [d for (index, d) in enumerate(rsoxs_config['bar']) if d['sample_id'].find(num_or_id) >= 0]
+        if len(sam_dict) > 0:
+            sam_dict =  sam_dict[0]
+        else:
+            raise ValueError(f'sample named {num_or_id} not found')
+    else:
+        try:
+            sam_dict = rsoxs_config['bar'][num_or_id]
+        except:
+            raise ValueError(f'sample number {num_or_id} not able to be loaded')
+    return sam_dict
+
+
+def load_samp(num_or_id, sim_mode=False):
     """
-    move to a sample location and load the metadata with the sample information from persistant sample list by index
+    move to a sample location and load the metadata with the sample information from persistant sample list by index or sample_id
 
     :param sam_dict: sample dictionary containing all metadata and sample location
     :return:
     """
-    sam_dict = rsoxs_config['bar'][num]
+    sam_dict = samp_dict_from_name_or_num(num_or_id)
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
@@ -1357,3 +1372,21 @@ def resolve_spirals(bar=None):
                     samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
                                          'best_num':im_num}
     rsoxs_config.write()
+
+def jog_samp_zoff(id_or_num,jog_val,write_default=True,move=True):
+    # jogs the zoffset of a sample by some mm and optionally moves to the new position
+    samp = samp_dict_from_id_or_num(id_or_num)
+    if jog_val < -5 or jog_value > 5:
+        raise ValueError('invalid jog value with magnitude > 5 was entered, start with something small')
+    if 'bar_loc' in samp:
+        if 'zoff' in samp['bar_loc']:
+            samp['bar_loc']['zoff'] += jog_val
+            if write_default:
+                rotate_sample(samp) # this will write the new rotated positions into the position (without moving anything)
+            rsoxs_config.write() # this saves the zoff and the new rotated position to the persistent sample list
+            if(move):
+                RE(load_samp(id_or_num))
+        else:
+            raise ValueError(f'the sample {samp['sample_name']} does not appear to have a zoff yet, have you corrected positions?')
+    else:
+        raise ValueError(f'the sample {samp['sample_name']} does not appear to have a bar_loc field yet, have you imaged the sample positions?')
