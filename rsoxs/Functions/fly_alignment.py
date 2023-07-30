@@ -1,13 +1,13 @@
 from ophyd.sim import NullStatus
 
-from bluesky.preprocessors import monitor_during_wrapper,  finalize_wrapper
+from bluesky.preprocessors import monitor_during_wrapper,  finalize_wrapper, finalize_decorator
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 import pandas as pd
 import numpy as np
 
 from sst_hw.diode import Shutter_control, Shutter_enable
-from ..startup import db, bec, sd, db0
+from ..startup import RE, db, bec, db0, sd, rsoxs_config
 from ..HW.energy import en
 
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS
@@ -241,6 +241,7 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
 
 
 
+@finalize_decorator(rsoxs_config.write_plan)
 def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
     thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]

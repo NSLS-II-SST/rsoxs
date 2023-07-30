@@ -18,7 +18,9 @@ import time
 import appdirs
 import httpx
 
-from bluesky.preprocessors import finalize_wrapper
+from bluesky.preprocessors import finalize_decorator
+from bluesky.run_engine import Msg
+import bluesky.plan_stubs as bps
 
 from sst_funcs.printing import run_report
 
@@ -73,19 +75,20 @@ class Sync_Dict(RunEngineRedisDict):
 
     def write(self):
         self._set_local_metadata_on_server()
+        print('RSoXS configuration saved to redis')
 
     def read(self):
         self.update(self._get_local_metadata_from_server())
     
     def write_plan(self):
-        yield from bps.null
+        yield from bps.null()
         self.write()
+        yield from bps.null()
 
 
 RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
 rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
 
-RE.preprocessors.append(finalize_wrapper(rsoxs_config.write_plan()))
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
 

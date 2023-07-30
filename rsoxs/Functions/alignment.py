@@ -9,6 +9,7 @@ import numpy as np
 import datetime
 import bluesky.plan_stubs as bps
 from ophyd import Device
+from bluesky.preprocessors import finalize_decorator
 from ..startup import RE, db, bec, db0, rsoxs_config
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
@@ -299,7 +300,7 @@ def load_samp(num_or_id, sim_mode=False):
     :param sam_dict: sample dictionary containing all metadata and sample location
     :return:
     """
-    sam_dict = samp_dict_from_name_or_num(num_or_id)
+    sam_dict = samp_dict_from_id_or_num(num_or_id)
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
@@ -614,6 +615,8 @@ def samxscan():
     yield from psh10.close()
 
 
+
+@finalize_decorator(rsoxs_config.write_plan)
 def spiralsearch(
     diameter=0.6,
     stepsize=0.2,
@@ -749,8 +752,7 @@ def spiralsearch(
         md=md,
     )
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
-    
-    rsoxs_config.write()
+
 
 
 
@@ -1387,6 +1389,6 @@ def jog_samp_zoff(id_or_num,jog_val,write_default=True,move=True):
             if(move):
                 RE(load_samp(id_or_num))
         else:
-            raise ValueError(f'the sample {samp['sample_name']} does not appear to have a zoff yet, have you corrected positions?')
+            raise ValueError(f'the sample {samp["sample_name"]} does not appear to have a zoff yet, have you corrected positions?')
     else:
-        raise ValueError(f'the sample {samp['sample_name']} does not appear to have a bar_loc field yet, have you imaged the sample positions?')
+        raise ValueError(f'the sample {samp["sample_name"]} does not appear to have a bar_loc field yet, have you imaged the sample positions?')

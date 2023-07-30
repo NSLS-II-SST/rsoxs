@@ -1,4 +1,5 @@
 import bluesky.plan_stubs as bps
+from bluesky.preprocessors import finalize_decorator
 import datetime
 from copy import deepcopy
 from sst_funcs.printing import run_report, boxed_text
@@ -33,6 +34,7 @@ actions = {
 motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
+@finalize_decorator(rsoxs_config.write_plan)
 def run_bar(
     bar=None,
     sort_by=["apriority"],

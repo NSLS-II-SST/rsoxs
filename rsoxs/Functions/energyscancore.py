@@ -15,6 +15,7 @@ from bluesky.plan_stubs import (
     save,
     unstage,
 )
+from bluesky.preprocessors import finalize_decorator
 from bluesky.preprocessors import rewindable_wrapper, finalize_wrapper
 from bluesky.utils import short_uid, separate_devices, all_safe_rewind
 from collections import defaultdict
@@ -65,6 +66,7 @@ from sst_hw.diode import (
 )
 from sst_funcs.printing import run_report
 
+from ..startup import rsoxs_config
 
 run_report(__file__)
 
@@ -79,6 +81,8 @@ def cleanup():
     
 
 
+
+@finalize_decorator(rsoxs_config.write_plan)
 def NEXAFS_step_scan_core(
     dets=None,    # a list of detectors to run at each step - must be scalar type detectors wtih set_exp functions
     energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
@@ -317,6 +321,7 @@ def NEXAFS_step_scan_core(
 
 
 
+@finalize_decorator(rsoxs_config.write_plan)
 def new_en_scan_core(
     dets=None,    # a list of detectors to run at each step - get from md by default
     energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
@@ -344,7 +349,11 @@ def new_en_scan_core(
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
-    # grab locals
+    # warning about all kwargs that are being ignored
+    for kwarg,value in kwargs.items():
+        if kwarg not in ['uid','sample_id','priority','group','configuration','type']:
+            warnings.warn(f"argument {kwarg} with value {value} is being ignored because new_en_scan_core does not understand how to use it",stacklevel=2)
+    # grab localsfil
     if signals is None:
         signals = []
     if dets is None:
@@ -604,6 +613,7 @@ def new_en_scan_core(
         det.number_exposures = old_n_exp[det.name]
 
 
+@finalize_decorator(rsoxs_config.write_plan)
 def NEXAFS_fly_scan_core(
     scan_params,
     openshutter=True,
@@ -710,8 +720,9 @@ def NEXAFS_fly_scan_core(
         yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
     yield from bps.mv(en.energy, en_start-0.10 )  # move to the initial energy
     print(f"Effective sample polarization is {samplepol}")
-    if len(kwargs)>0:
-        print(f'{kwargs} were entered as options, but are being ignored')
+    for kwarg,value in kwargs.items():
+        if kwarg not in ['uid','sample_id','priority','group','configuration','type']:
+            warnings.warn(f"argument {kwarg} with value {value} is being ignored because NEXAFS_fly_scan_core does not understand how to use it",stacklevel=2)
     if cycles>0:
         rev_scan_params = []
         for (start, stop, speed) in scan_params:

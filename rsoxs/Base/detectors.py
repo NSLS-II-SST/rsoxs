@@ -146,7 +146,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.cam.bin_y.set(self.binvalue).wait()
         # TODO: turn on automonitor on the cam.arraysize
         warnings.warn('Camera settings were reset and camera cooling was turned on'
-                      '\nif you did not intend to turn on the cooling, turn it off now')
+                      '\nif you did not intend to turn on the cooling, turn it off now',stacklevel=2)
 
     def check_saturation_high(self, old_value, value, **kwargs):
         if value > self.saturation_high_pixel_count:
