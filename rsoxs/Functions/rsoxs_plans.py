@@ -256,14 +256,3 @@ def do_nexafs_step(md=None, **kwargs):
         yield from run_queue_step(queue_step)
     print("End of NEXAFS step plan")
 
-def load_sheet(path):
-    newbar = load_samplesxlsx(path)
-    if isinstance(newbar, list):
-        rsoxs_config['bar'] = newbar
-        #rsoxs_config.write()
-        print(f'replaced persistent bar with bar loaded from {path}')
-        return
-
-def save_sheet(path,name):
-    save_samplesxlsx(bar=rsoxs_config['bar'],path=path,name=name)
-    return

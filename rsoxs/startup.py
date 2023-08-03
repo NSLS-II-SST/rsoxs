@@ -84,6 +84,10 @@ class Sync_Dict(RunEngineRedisDict):
         yield from bps.null()
         self.write()
         yield from bps.null()
+    
+    def clear_bar():
+        self['bar'] = []
+        self.write()
 
 
 RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine

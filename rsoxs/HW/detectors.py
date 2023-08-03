@@ -154,7 +154,7 @@ def dark_plan(det):
 dark_frame_preprocessor_waxs = bluesky_darkframes.DarkFramePreprocessor(
    dark_plan=dark_plan,
    detector=waxs_det,
-   max_age=1200,
+   max_age=180,
    locked_signals=[
        waxs_det.cam.acquire_time,
        Det_W.user_setpoint,
