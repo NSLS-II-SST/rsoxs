@@ -18,6 +18,10 @@ import time
 import appdirs
 import httpx
 
+from bluesky.preprocessors import finalize_decorator
+from bluesky.run_engine import Msg
+import bluesky.plan_stubs as bps
+
 from sst_funcs.printing import run_report
 
 run_report(__file__)
@@ -66,7 +70,28 @@ else:
 
 # new code, using redis
 from nslsii.md_dict import RunEngineRedisDict
-RE.md = RunEngineRedisDict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
+
+class Sync_Dict(RunEngineRedisDict):
+
+    def write(self):
+        self._set_local_metadata_on_server()
+        print('RSoXS configuration saved to redis')
+
+    def read(self):
+        self.update(self._get_local_metadata_from_server())
+    
+    def write_plan(self):
+        yield from bps.null()
+        self.write()
+        yield from bps.null()
+    
+    def clear_bar():
+        self['bar'] = []
+        self.write()
+
+
+RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
+rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
 
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
@@ -169,10 +194,10 @@ import logging
 logging.getLogger("caproto").setLevel("ERROR")
 bec.disable_baseline()
 
-from bluesky.callbacks.zmq import Publisher
+#from bluesky.callbacks.zmq import Publisher
 
-publisher = Publisher("localhost:5577")
-RE.subscribe(publisher)
+#publisher = Publisher("localhost:5577")
+#RE.subscribe(publisher)
 
 import logging
 import bluesky.log
@@ -192,3 +217,4 @@ bec.disable_table()
 bec.disable_plots()
 
 RE.md['scan_id'] = int(RE.md['scan_id'])
+

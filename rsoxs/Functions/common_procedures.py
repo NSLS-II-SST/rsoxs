@@ -145,7 +145,7 @@ def buildeputable(
             "PeakCurrentBS": heightsbs,
         }
         dataframe = pd.DataFrame(data=data)
-        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Feb_" + name + ".csv")
+        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Jul_" + name + ".csv")
         count += 1
         if count > 20:
             count = 0
@@ -236,10 +236,12 @@ def do_some_eputables_2023_en():
     down.reverse()
     angles = [0] + up + down + [90]
     for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 10, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r4")
-    #for angle in angles:
-    #    yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r3")
+        yield from buildeputable(starting_energy(angle), 1300, 10, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r5")
 
+    yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "C", "rsoxs", f"Circ_r5")
+    yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "CW", "rsoxs", f"CWCirc_r5")
+    for angle in angles:
+        yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r6")
     # 1200l/pp from 400 to 1400 eV
     # then third harmonic from 1000 to 2200 eV
 
@@ -601,6 +603,11 @@ def tune_pgm(
     k=250,
     detector=Sample_TEY,
     signal="RSoXS Sample Current",
+    grat_off_search = 0.08,
+    grating_rb_off = 0,
+    mirror_rb_off = 0,
+    search_ratio = 30,
+    scan_time = 30,
 ):
     # RE(load_sample(sample_by_name(bar, 'HOPG')))
     # RE(tune_pgm(cs=[1.35,1.37,1.385,1.4,1.425,1.45],ms=[1,1,1,1,1],energy=291.65,pol=90,k=250))
@@ -615,24 +622,30 @@ def tune_pgm(
     m_measured = []
     bec.enable_plots()
     for cff, m_order in zip(cs, ms):
-        m_set, g_set = get_mirror_grating_angles(291.65, cff, k, m_order)
-        yield from bps.mv(grating, g_set, mirror2, m_set, grating.velocity, 0.1, mirror2.velocity, 0.1)
-        yield from bps.sleep(0.2)
+        m_set, g_set = get_mirror_grating_angles(energy, cff, k, m_order)
+        print(f'setting cff to {cff} for a mirror with k={k} at {m_order} order')
+        m_set += mirror_rb_off
+        g_set += grating_rb_off
+        yield from bps.mv(grating.velocity, 0.1, mirror2.velocity, 0.1)
+        yield from bps.sleep(1)
+        yield from bps.mv(grating, g_set, mirror2, m_set)
+        yield from bps.sleep(1)
         peaklist = []
         yield from fly_max(
             detectors=[detector],
             signals=[signal],
             motor=grating,
-            start=g_set - 0.2,
-            stop=g_set + 0.2,
-            velocities=[0.02, 0.0005],
+            start=g_set - grat_off_search,
+            stop=g_set + grat_off_search,
+            velocities=[grat_off_search*2/scan_time, grat_off_search*2/(search_ratio * scan_time)],
             snake=False,
             peaklist=peaklist,
-            range_ratio=30,
+            range_ratio=search_ratio,
             open_shutter=True,
+            rb_offset=grating_rb_off
         )
-        grating_measured.append(peaklist[0][signal]["Mono Grating"])
-        mirror_measured.append(mirror2.read()["Mono Mirror"]["value"])
+        grating_measured.append(peaklist[0][signal]["Mono Grating"] - grating_rb_off )
+        mirror_measured.append(mirror2.read()["Mono Mirror"]["value"] - mirror_rb_off)
         energy_measured.append(291.65)
         m_measured.append(m_order)
     print(f"mirror positions: {mirror_measured}")

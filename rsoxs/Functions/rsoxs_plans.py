@@ -1,16 +1,17 @@
 import bluesky.plan_stubs as bps
+from bluesky.preprocessors import finalize_decorator
 import datetime
 from copy import deepcopy
 from sst_funcs.printing import run_report, boxed_text
 from rsoxs_scans.acquisition import dryrun_bar, time_sec
-from rsoxs_scans.spreadsheets import save_samplesxlsx
+from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
-from rsoxs_scans.nexafs import dryrun_nexafs_plan
+from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
-from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core
-from ..startup import RE
+from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
+from ..startup import RE, rsoxs_config
 from ..HW.slackbot import rsoxs_bot
 
 run_report(__file__)
@@ -27,18 +28,19 @@ actions = {
     "diode_low",  # set diodes range setting to low
     "diode_high",  # set diode range setting to high
     "nexafs_scan_core",  # high level run a single NEXAFS scan
+    "nexafs_step_scan_core",  # high level run a single step-based NEXAFS scan
     "error",  # raise an error - should never get here.
 }
 motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
+@finalize_decorator(rsoxs_config.write_plan)
 def run_bar(
-    bar,
+    bar=None,
     sort_by=["apriority"],
     rev=[False],
     verbose=False,
     dry_run=False,
-    save_each_step="",
     group="all",
     repeat_previous_runs = False
 ):
@@ -56,10 +58,6 @@ def run_bar(
         _description_, by default False
     dry_run : bool, optional
         _description_, by default False
-    delete_as_complete : bool, optional
-        _description_, by default True
-    save_each_step : str, optional
-        _description_, by default ''
     group : str, optional
         _description_, by default 'all'
 
@@ -73,6 +71,9 @@ def run_bar(
     _type_
         _description_
     """
+    if bar == None:
+        rsoxs_config.read()
+        bar = rsoxs_config['bar']
     if dry_run:
         verbose = True
     queue = dryrun_bar(bar, sort_by=sort_by, rev=rev, print_dry_run=verbose, group=group, repeat_previous_runs = repeat_previous_runs)
@@ -82,7 +83,7 @@ def run_bar(
     queue_start_time = datetime.datetime.now()
     message = ""
     acq_uids = []
-    for i, queue_step in enumerate(queue):
+    for queue_step in queue:
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
         message += f"which should take {time_sec(queue_step['acq_time'])} plus overhead\n"
         boxed_text("queue status", message, "red", width=120, shrink=True)
@@ -105,22 +106,21 @@ def run_bar(
 
         
         for samp in bar:
-            for i, acq in enumerate(samp["acquisitions"]):
+            for acq in samp["acquisitions"]:
                 if acq["uid"] == queue_step["uid"]:
                     print(f'Acquisition uids adding {acq_uids}')
-                    acq.setdefault('runs',[]).append(acq_uids)
+                    acq.setdefault('runs',[])
+                    acq['runs'].append(acq_uids)
                     print(f'Acquisition runs is now {acq["runs"]}')
-                    acq_uids = []
+                    acq_uids.clear()
                     if verbose:
                         print("marked acquisition as run")
-        if len(save_each_step) > 0:
-            save_samplesxlsx(bar, save_each_step)
-            print(f"saved xslx file to {save_each_step}")
 
         message = f"Finished.  Took {time_sec(actual_acq_time)} \n"
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
         message += f'expected time remaining {time_sec(queue_step["time_after"])} plus overhead\n'
 
+    rsoxs_config.write() # bar may have changed - added annotations etc
     message = message[:message.rfind('expected')]
     message += f"End of Queue"
     rsoxs_bot.send_message(message)
@@ -159,6 +159,8 @@ def run_queue_step(step):
         return (yield from spiralsearch(**step["kwargs"]))
     if step["action"] == "nexafs_scan_core":
         return (yield from NEXAFS_fly_scan_core(**step["kwargs"]))
+    if step["action"] == "nexafs_step_scan_core":
+        return (yield from NEXAFS_step_scan_core(**step["kwargs"]))
     if step["action"] == "rsoxs_scan_core":
         return (yield from new_en_scan_core(**step["kwargs"]))
     if step["acq_index"] < 1:
@@ -175,7 +177,7 @@ def do_rsoxs(md=None, **kwargs):
         exposure_time = 1,
         frames='full',
         ratios=None,
-        epeats =1,
+        repeats =1,
         polarizations = [0],
         angles = None,
         grating='rsoxs',
@@ -224,3 +226,33 @@ def do_nexafs(md=None, **kwargs):
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
     print("End of NEXAFS plan")
+
+
+def do_nexafs_step(md=None, **kwargs):
+    """
+    inputs:
+        edge,
+        exposure_time = 1,
+        frames='full',
+        ratios=None,
+        repeats =1,
+        polarizations = [0],
+        angles = None,
+        grating='rsoxs',
+        diode_range='high',
+        temperatures=None,
+        temp_ramp_speed=10,
+        temp_wait=True,
+        md=None,
+    """
+    if md == None:
+        md = deepcopy(dict(RE.md))
+    outputs = dryrun_nexafs_step_plan(md=md, **kwargs)
+    for i, out in enumerate(outputs):
+        out["acq_index"] = i
+        out["queue_step"] = 0
+    print("Starting NEXAFS step plan")
+    for queue_step in outputs:
+        yield from run_queue_step(queue_step)
+    print("End of NEXAFS step plan")
+

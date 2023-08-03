@@ -21,11 +21,11 @@ from sst_hw.vacuum import rsoxs_pg_main_val, rsoxs_ccg_main_val
 from ..HW.detectors import (
     start_det_cooling,
     stop_det_cooling,
-    saxs_det,
-    #waxs_det,
-    #preprocessor_waxs_spirals,
-    #dark_frame_preprocessor_waxs,
-    dark_frame_preprocessor_saxs,
+    # saxs_det,
+    waxs_det,
+    dark_frame_preprocessor_waxs_spirals,
+    dark_frame_preprocessor_waxs,
+    # dark_frame_preprocessor_saxs,
 )
 from ..startup import RE
 
@@ -33,16 +33,16 @@ from ..startup import RE
 run_report(__file__)
 
 
-#def waxs_back_on():
-#    yield from bps.mv(
-#        waxs_det.cam.temperature, -80, waxs_det.cam.enable_cooling, 1, waxs_det.cam.bin_x, 4, waxs_det.cam.bin_y, 4
-#    )
+def waxs_back_on():
+   yield from bps.mv(
+       waxs_det.cam.temperature, -80, waxs_det.cam.enable_cooling, 1, waxs_det.cam.bin_x, 4, waxs_det.cam.bin_y, 4
+   )
 
 
-def saxs_back_on():
-    yield from bps.mv(
-        saxs_det.cam.temperature, -80, saxs_det.cam.enable_cooling, 1, saxs_det.cam.bin_x, 4, saxs_det.cam.bin_y, 4
-    )
+# def saxs_back_on():
+    # yield from bps.mv(
+        # saxs_det.cam.temperature, -80, saxs_det.cam.enable_cooling, 1, saxs_det.cam.bin_x, 4, saxs_det.cam.bin_y, 4
+    # )
 
 
 suspend_gvll = SuspendBoolLow(
@@ -88,54 +88,54 @@ suspend_current = SuspendFloor(
 )
 
 
-#suspend_waxs_temp_low = SuspendFloor(
-#    waxs_det.cam.temperature_actual,
-#    resume_thresh=-85,
-#    suspend_thresh=-90,
-#    sleep=30,
-#    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
-#    pre_plan=det_down_notice,
-#    post_plan=waxs_back_on,
-#)
-
-
-#suspend_waxs_temp_high = SuspendCeil(
-#    waxs_det.cam.temperature_actual,
-#    resume_thresh=-78,
-#    suspend_thresh=-75,
-#    sleep=30,
-#    tripped_message="the detector temperature is above -75C, will resume when below -78C",
-#    pre_plan=temp_bad_notice,
-#    post_plan=temp_ok_notice,
-#)
-
-
-suspend_saxs_temp_low = SuspendFloor(
-    saxs_det.cam.temperature_actual,
-    resume_thresh=-85,
-    suspend_thresh=-90,
-    sleep=30,
-    tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
-    pre_plan=det_down_notice,
-    post_plan=saxs_back_on,
+suspend_waxs_temp_low = SuspendFloor(
+   waxs_det.cam.temperature_actual,
+   resume_thresh=-85,
+   suspend_thresh=-90,
+   sleep=30,
+   tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
+   pre_plan=det_down_notice,
+   post_plan=waxs_back_on,
 )
 
 
-suspend_saxs_temp_high = SuspendCeil(
-    saxs_det.cam.temperature_actual,
-    resume_thresh=-78,
-    suspend_thresh=-75,
-    sleep=30,
-    tripped_message="the detector temperature is above -75C, will resume when below -78C",
-    pre_plan=det_down_notice,
-    post_plan=temp_ok_notice,
+suspend_waxs_temp_high = SuspendCeil(
+   waxs_det.cam.temperature_actual,
+   resume_thresh=-78,
+   suspend_thresh=-75,
+   sleep=30,
+   tripped_message="the detector temperature is above -75C, will resume when below -78C",
+   pre_plan=temp_bad_notice,
+   post_plan=temp_ok_notice,
 )
+
+
+# suspend_saxs_temp_low = SuspendFloor(
+    # saxs_det.cam.temperature_actual,
+    # resume_thresh=-85,
+    # suspend_thresh=-90,
+    # sleep=30,
+    # tripped_message="the detector temperature is below -90C, will resume when above -85C\n this likely means the detector has died and needs to be restarted",
+    # pre_plan=det_down_notice,
+    # post_plan=saxs_back_on,
+# )
+
+
+# suspend_saxs_temp_high = SuspendCeil(
+    # saxs_det.cam.temperature_actual,
+    # resume_thresh=-78,
+    # suspend_thresh=-75,
+    # sleep=30,
+    # tripped_message="the detector temperature is above -75C, will resume when below -78C",
+    # pre_plan=det_down_notice,
+    # post_plan=temp_ok_notice,
+# )
 
 
 suspend_pressure = SuspendCeil(
     rsoxs_pg_main_val,
-    resume_thresh=0.003,
-    suspend_thresh=0.01,
+    resume_thresh=0.1,
+    suspend_thresh=2,
     sleep=30,
     tripped_message="Pressure in the Chamber is above the threshold for having cooling on",
     pre_plan=stop_det_cooling,
@@ -190,13 +190,13 @@ safe_handler.setLevel("ERROR")  # is this correct?
 def turn_on_checks():
     RE.install_suspender(suspend_shutter1)
     RE.install_suspender(suspend_current)
-    RE.install_suspender(suspend_pressure)
+    #RE.install_suspender(suspend_pressure)
     RE.install_suspender(suspend_pressure2)
     RE.install_suspender(suspend_gate_valve)
-    #RE.install_suspender(suspend_waxs_temp_low)
-    #RE.install_suspender(suspend_waxs_temp_high)
-    RE.install_suspender(suspend_saxs_temp_low)
-    RE.install_suspender(suspend_saxs_temp_high)
+    RE.install_suspender(suspend_waxs_temp_low)
+    RE.install_suspender(suspend_waxs_temp_high)
+    # RE.install_suspender(suspend_saxs_temp_low)
+    # RE.install_suspender(suspend_saxs_temp_high)
     RE.install_suspender(suspendx)
     RE.install_suspender(suspend_control)
     logger.addHandler(safe_handler)
@@ -209,43 +209,43 @@ def turn_off_checks():
     RE.remove_suspender(suspend_pressure2)
     RE.remove_suspender(suspend_current)
     RE.remove_suspender(suspendx)
-    RE.remove_suspender(suspend_pressure)
+    #RE.remove_suspender(suspend_pressure)
     RE.remove_suspender(suspend_waxs_temp_low)
     RE.remove_suspender(suspend_waxs_temp_high)
-    RE.remove_suspender(suspend_saxs_temp_low)
-    RE.remove_suspender(suspend_saxs_temp_high)
+    # RE.remove_suspender(suspend_saxs_temp_low)
+    # RE.remove_suspender(suspend_saxs_temp_high)
     RE.remove_suspender(suspendx)
     RE.remove_suspender(suspend_control)
     logger.removeHandler(safe_handler)
     logger.removeHandler(mail_handler)
 
 
-#def waxs_spiral_mode():
-#    try:
-#        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
-#    except ValueError:
-#        pass
-#    try:
-#        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
-#    except ValueError:
-#        pass
-#    RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
+def waxs_spiral_mode():
+   try:
+       RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+   except ValueError:
+       pass
+   try:
+       RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+   except ValueError:
+       pass
+   RE.preprocessors.append(dark_frame_preprocessor_waxs_spirals)
 
 
-#def waxs_normal_mode():
-#    try:
-#        RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
-#    except ValueError:
-#        pass
-#    try:
-#        RE.preprocessors.remove(dark_frame_preprocessor_waxs)
-#    except ValueError:
-#        pass
-#    RE.preprocessors.append(dark_frame_preprocessor_waxs)
+def waxs_normal_mode():
+   try:
+       RE.preprocessors.remove(dark_frame_preprocessor_waxs_spirals)
+   except ValueError:
+       pass
+   try:
+       RE.preprocessors.remove(dark_frame_preprocessor_waxs)
+   except ValueError:
+       pass
+   RE.preprocessors.append(dark_frame_preprocessor_waxs)
 
 
 # install preprocessors
-#waxs_normal_mode()
-RE.preprocessors.append(dark_frame_preprocessor_saxs)
+waxs_normal_mode()
+# RE.preprocessors.append(dark_frame_preprocessor_saxs)
 # install handlers for errors and install suspenders
 turn_on_checks()

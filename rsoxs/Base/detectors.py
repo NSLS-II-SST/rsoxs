@@ -1,6 +1,8 @@
 import time
 from bluesky.run_engine import Msg
+import bluesky.plan_stubs as bps
 from ophyd import Component as C
+from ophyd.device import DynamicDeviceComponent as DDC
 from ophyd import EpicsSignalRO, Device, EpicsSignal, Signal
 from ophyd.areadetector import (
     GreatEyesDetector,
@@ -10,6 +12,7 @@ from ophyd.areadetector import (
     ROIPlugin,
     TransformPlugin,
 )
+from ophyd.areadetector.base import ad_group
 from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
 from sst_funcs.printing import boxed_text, colored
@@ -20,7 +23,7 @@ from sst_hw.diode import (
     Shutter_delay,
 )
 from sst_funcs.printing import run_report
-
+import warnings
 
 run_report(__file__)
 
@@ -44,6 +47,18 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
     adcore_version = C(EpicsSignalRO, "ADCoreVersion_RBV")
     driver_version = C(EpicsSignalRO, "DriverVersion_RBV")
     wait_for_plugins = C(EpicsSignal, "WaitForPlugins", string=True, kind="config")
+    array_size = DDC(
+        ad_group(
+            EpicsSignalRO,
+            (
+                ("array_size_z", "ArraySizeZ_RBV"),
+                ("array_size_y", "ArraySizeY_RBV"),
+                ("array_size_x", "ArraySizeX_RBV"),
+            ),
+            auto_monitor=True
+        ),
+        doc="Size of the array in the XYZ dimensions",
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,6 +73,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
                 continue
             if hasattr(cpt, "ensure_nonblocking"):
                 cpt.ensure_nonblocking()
+
 
 
 class GreateyesTransform(TransformPlugin):
@@ -128,6 +144,9 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.cam.enable_cooling.set(1).wait()
         self.cam.bin_x.set(self.binvalue).wait()
         self.cam.bin_y.set(self.binvalue).wait()
+        # TODO: turn on automonitor on the cam.arraysize
+        warnings.warn('Camera settings were reset and camera cooling was turned on'
+                      '\nif you did not intend to turn on the cooling, turn it off now',stacklevel=2)
 
     def check_saturation_high(self, old_value, value, **kwargs):
         if value > self.saturation_high_pixel_count:
@@ -181,8 +200,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
             )
         # self.cam.num_images.set(self.number_exposures)
         
-        self.stage_sigs["cam.num_images"] = self.number_exposures
-        #self.cam.num_images.set(self.number_exposures)
+        #self.stage_sigs["cam.num_images"] = self.number_exposures
+        self.cam.num_images.set(self.number_exposures)
         return [self].append(super().stage(*args, **kwargs))
 
     def trigger(self, *args, **kwargs):
@@ -246,7 +265,14 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def cooling_off(self):
         self.cam.enable_cooling.set(0)
+    #    def setROI(self,):
+    #        self.cam.
 
+    def set_temp_plan(self, degc):
+        yield from bps.mv(self.cam.temperature,degc,self.cam.enable_cooling,1)
+
+    def cooling_off_plan(self):
+        yield from bps.mv(self.cam.enable_cooling,0)
     #    def setROI(self,):
     #        self.cam.
 
