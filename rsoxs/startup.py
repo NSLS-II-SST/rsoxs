@@ -85,7 +85,7 @@ class Sync_Dict(RunEngineRedisDict):
         self.write()
         yield from bps.null()
     
-    def clear_bar():
+    def clear_bar(self):
         self['bar'] = []
         self.write()
 
