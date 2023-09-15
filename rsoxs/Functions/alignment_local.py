@@ -20,7 +20,23 @@ from ..HW.slackbot import rsoxs_bot
 from sst_funcs.printing import boxed_text, colored
 from .common_functions import args_to_string
 
+def sample_by_value_match(key, string, bar=None):
+    if bar == None:
+        rsoxs_config.read()
+        bar = rsoxs_config['bar']
+    results = [d for (index, d) in enumerate(bar) if d[key].find(string) >= 0]
+    if len(results) == 1:
+        return results[0]
+    elif len(results) < 1:
+        print("No Match")
+        return None
+    elif len(results) > 1:
+        print("More than one result found, returning them all")
+        return results
 
+
+def sample_by_name( name, bar=None):
+    return sample_by_value_match("sample_name", name, bar=bar)
 
 def list_samples(bar=None):
     if bar == None:
@@ -305,18 +321,16 @@ def update_bar(loc_Q, front, inbar=None):
                 # advance sample and loop
                 rsoxs_config['bar'] = gbar
                 rsoxs_config.write()
-                lastclicked = samplenum
                 samplenum += 1
             elif item == "escape":
                 print("aborting")
                 break
             elif item == "enter" or item == "n":
                 print(f'leaving this {sample["sample_name"]} unchanged')
-                lastclicked = samplenum
                 samplenum += 1
             elif item == "p":
                 print("Previous sample")
-                samplenum = lastclicked
+                samplenum -= 1
             if samplenum >= len(gbar):
                 print("done")
                 rsoxs_config['bar'] = gbar
@@ -707,15 +721,30 @@ def resolve_spirals(bar=None):
             th = np.array(list(h.data('RSoXS Sample Rotation','baseline')))[0]
             z = np.array(list(h.data('RSoXS Sample Downstream-Upstream','baseline')))[0]
             if len(ys) == len(xs) and len(ys > 0):
-                im_num = int(input(f"sample {samp['sample_name']} scan {h['start']['scan_id']} which image is best?  "))
-                accept = input(f"image {im_num} at ({xs[im_num],ys[im_num]}) is correct (y,n)?")
-                if accept in ['y','Y','yes']:
-                    samp['location'] = [{'motor':'x','position':xs[im_num]},
-                                        {'motor':'y','position':ys[im_num]},
-                                        {'motor':'th','position':th},
-                                        {'motor':'z','position':z}]
-                    samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
-                                         'best_num':im_num}
+                im_num = input(f"sample {samp['sample_name']} scan {h['start']['scan_id']} which image number (or numbers, seperated by commas) is/are best?  ")
+                for i,im in enumerate(im_num.split(",")):
+                    if i>1:
+                        accept = input(f"duplicate {samp['sample_name']} to a new sample with position {im_num} at ({xs[im_num],ys[im_num]}) (y,n)?")
+                        if accept in ['y','Y','yes']:
+                            newsamp =deepcopy(samp)
+                            newsamp['location'] = [{'motor':'x','position':xs[im_num]},
+                                                {'motor':'y','position':ys[im_num]},
+                                                {'motor':'th','position':th},
+                                                {'motor':'z','position':z}]
+                            newsamp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
+                                                'best_num':im_num}
+                            newsamp['sample_name']+=f'_{i}'
+                            newsamp['sample_id']+=f'_{i}'
+                            bar.append(newsamp)
+                    else:
+                        accept = input(f"image {im_num} at ({xs[im_num],ys[im_num]}) is correct (y,n)?")
+                        if accept in ['y','Y','yes']:
+                            samp['location'] = [{'motor':'x','position':xs[im_num]},
+                                                {'motor':'y','position':ys[im_num]},
+                                                {'motor':'th','position':th},
+                                                {'motor':'z','position':z}]
+                            samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
+                                                'best_num':im_num}
     rsoxs_config.write()
 
 

@@ -438,25 +438,6 @@ def newsample():
 
 
 
-def sample_by_value_match(key, string, bar=None):
-    if bar == None:
-        rsoxs_config.read()
-        bar = rsoxs_config['bar']
-    results = [d for (index, d) in enumerate(bar) if d[key].find(string) >= 0]
-    if len(results) == 1:
-        return results[0]
-    elif len(results) < 1:
-        print("No Match")
-        return None
-    elif len(results) > 1:
-        print("More than one result found, returning them all")
-        return results
-
-
-def sample_by_name( name, bar=None):
-    return sample_by_value_match("sample_name", name, bar=bar)
-
-
 def alignment_rel_scan(det, motor, start_rel, end_rel, steps):
     savemd = RE.md.deepcopy()
 
