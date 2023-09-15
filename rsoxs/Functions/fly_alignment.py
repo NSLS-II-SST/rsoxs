@@ -5,6 +5,7 @@ import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 
 from sst_hw.diode import Shutter_control, Shutter_enable
 from ..startup import RE, db, bec, db0, sd, rsoxs_config
@@ -209,22 +210,19 @@ def ramp_plan_with_multiple_monitors(go_plan, monitor_list, inner_plan_func,
 def process_monitor_scan(db, uid, time_offsets=None):
     if time_offsets == None:
         time_offsets = {}
-    hdr = db0[uid]
-    df = {}
-    for stream_name in hdr.stream_names:
+    hdr = db.v2[uid]
+    df = pd.DataFrame()
+    for stream_name in hdr:
         if 'monitor' not in stream_name:
             print(stream_name)
             continue
-        t = hdr.table(stream_name=stream_name)
-        this_time = t['time'].astype(dtype=int).values * 1e-9 + time_offsets.get(stream_name,0.0)
-        if not 'time' in df.keys():
-            df['time'] = this_time
-
         column_name = stream_name.replace('_monitor', '')
-        this_data = t[column_name].values
-        df[column_name] = np.interp(df['time'], this_time, this_data)
+        newdf = pd.DataFrame({'time':hdr[stream_name]['timestamps'][column_name].read(),column_name:hdr[stream_name]['data'][column_name].read()}).set_index('time')
+        newdf.index += time_offsets.get(stream_name,0.0)
+        df = pd.concat((df, newdf))
+    df = df[~df.index.duplicated(keep='first')].sort_index().interpolate(method='index').ffill().bfill()
 
-    return pd.DataFrame(df)
+    return df
 
 
 def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_names=['RSoXS Au Mesh Current','SAXS Beamstop'], time_offsets = None):
@@ -242,7 +240,9 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
 
 
 @finalize_decorator(rsoxs_config.write_plan)
-def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
+#RE(fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=2)) # new encoders
+#def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
+def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=2):
     thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
