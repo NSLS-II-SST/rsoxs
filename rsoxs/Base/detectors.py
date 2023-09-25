@@ -34,7 +34,7 @@ class StatsWithHist(StatsPluginV33):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.total.kind = 'hinted'
-        self.compute_histogram.set(1)
+        self.compute_histogram.set(1).wait()
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
     """Add this as a component to detectors that write TIFFs."""
@@ -153,31 +153,31 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
             self.high_sat_check[0] = True
         else:
             self.high_sat_check[0] = False
-        self.saturated.set(True in self.high_sat_check)
+        self.saturated.set(True in self.high_sat_check).wait()
 
     def check_saturation_low(self, old_value, value, **kwargs):
         if value > self.saturation_low_pixel_count:
             self.high_sat_check[1] = True
         else:
             self.high_sat_check[1] = False
-        self.saturated.set(True in self.high_sat_check)
+        self.saturated.set(True in self.high_sat_check).wait()
 
     def check_exposure_low(self, old_value, value, **kwargs):
         if value > self.underexposure_num_pixels:
-            self.under_exposed.set(True)
+            self.under_exposed.set(True).wait()
         else:
-            self.under_exposed.set(False)
+            self.under_exposed.set(False).wait()
 
     
     def sim_mode_on(self):
         self.useshutter = False
-        self.cam.sync.set(0)
-        self.cam.shutter_mode.set(0)
+        self.cam.sync.set(0).wait()
+        self.cam.shutter_mode.set(0).wait()
 
     def sim_mode_off(self):
         self.useshutter = True
-        self.cam.sync.set(1)
-        self.cam.shutter_mode.set(2)
+        self.cam.sync.set(1).wait()
+        self.cam.shutter_mode.set(2).wait()
 
     def stage(self, *args, **kwargs):
         self.cam.temperature_actual.read()
@@ -187,8 +187,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # self.cam.enable_cooling.set(1)
         # print('staging the detector')
         if self.useshutter:
-            Shutter_enable.set(1)
-            Shutter_delay.set(0)
+            Shutter_enable.set(1).wait()
+            Shutter_delay.set(0).wait()
         if abs(self.cam.temperature_actual.get() - self.cam.temperature.get()) > 2.0:
 
             boxed_text(
@@ -201,7 +201,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # self.cam.num_images.set(self.number_exposures)
         
         #self.stage_sigs["cam.num_images"] = self.number_exposures
-        self.cam.num_images.set(self.number_exposures)
+        self.cam.num_images.set(self.number_exposures).wait()
         return [self].append(super().stage(*args, **kwargs))
 
     def trigger(self, *args, **kwargs):
@@ -236,22 +236,22 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def unstage(self, *args, **kwargs):
         if self.useshutter:
-            Shutter_enable.set(0)
+            Shutter_enable.set(0).wait()
         else:
             print("not turning on shutter because detector is in simulation mode")
-        self.cam.num_images.set(1)
+        self.cam.num_images.set(1).wait()
         return [self].append(super().unstage(*args, **kwargs))
 
     def skinnyunstage(self, *args, **kwargs):
         yield Msg("unstage", super())
 
     def set_exptime(self, secs):
-        self.cam.acquire_time.set(secs)
+        self.cam.acquire_time.set(secs).wait()
         if self.useshutter:
-            Shutter_open_time.set(secs * 1000)
+            Shutter_open_time.set(secs * 1000).wait()
 
     def set_exptime_detonly(self, secs):
-        self.cam.acquire_time.set(secs)
+        self.cam.acquire_time.set(secs).wait()
 
     def exptime(self):
         return "{} has an exposure time of {} seconds".format(
@@ -260,11 +260,11 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         )
 
     def set_temp(self, degc):
-        self.cam.temperature.set(degc)
-        self.cam.enable_cooling.set(1)
+        self.cam.temperature.set(degc).wait()
+        self.cam.enable_cooling.set(1).wait()
 
     def cooling_off(self):
-        self.cam.enable_cooling.set(0)
+        self.cam.enable_cooling.set(0).wait()
     #    def setROI(self,):
     #        self.cam.
 
@@ -307,8 +307,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def set_binning(self, binx, biny):
         self.binvalue = binx
-        self.cam.bin_x.set(binx)
-        self.cam.bin_y.set(biny)
+        self.cam.bin_x.set(binx).wait()
+        self.cam.bin_y.set(biny).wait()
 
     def binning(self):
         return "Binning of {} is set to ({},{}) pixels".format(
@@ -354,7 +354,7 @@ class SyncedDetectors(Device):
     def set_exposure(self, seconds):
         self.waxs.set_exptime_detonly(seconds)
         self.saxs.set_exptime_detonly(seconds)
-        Shutter_open_time.set(seconds * 1000)
+        Shutter_open_time.set(seconds * 1000).wait()
         self.waxs.trans1.type.put(1)
         self.saxs.trans1.type.put(3)
 
@@ -393,10 +393,10 @@ class SyncedDetectors(Device):
         self.cooling_state()
 
     def open_shutter(self):
-        Shutter_control.set(1)
+        Shutter_control.set(1).wait()
 
     def close_shutter(self):
-        Shutter_control.set(0)
+        Shutter_control.set(0).wait()
 
     def shutter(self):
         Shutter_control.get()
@@ -483,11 +483,11 @@ class SimGreatEyes(Device):
 
     def shutter_on(self):
         # self.cam.sync.set(1)
-        self.cam.shutter_mode.set(2)
+        self.cam.shutter_mode.set(2).wait()
 
     def shutter_off(self):
         # self.cam.sync.set(0)
-        self.cam.shutter_mode.set(0)
+        self.cam.shutter_mode.set(0).wait()
 
     def set_exptime(self, secs):
         self.image.exposure_time = secs
@@ -502,11 +502,11 @@ class SimGreatEyes(Device):
         )
 
     def set_temp(self, degc):
-        self.cam.temperature.set(degc)
-        self.cam.enable_cooling.set(1)
+        self.cam.temperature.set(degc).wait()
+        self.cam.enable_cooling.set(1).wait()
 
     def cooling_off(self):
-        self.cam.enable_cooling.set(0)
+        self.cam.enable_cooling.set(0).wait()
 
     #    def setROI(self,):
     #        self.cam.
@@ -541,8 +541,8 @@ class SimGreatEyes(Device):
                 )
 
     def set_binning(self, binx, biny):
-        self.cam.bin_x.set(binx)
-        self.cam.bin_y.set(biny)
+        self.cam.bin_x.set(binx).wait()
+        self.cam.bin_y.set(biny).wait()
 
     def binning(self):
         return "Binning of {} is set to ({},{}) pixels".format(
