@@ -1,7 +1,7 @@
 from ophyd import EpicsSignalRO, EpicsSignal
 from ophyd.status import StatusTimeoutError
 from sst_funcs.printing import run_report
-from sst_base.detectors.scalar import I400SingleCh
+from sst_base.detectors.scalar import I400SingleCh, ophScalar
 from bluesky import plan_stubs as bps
 from bluesky import FailedStatus
 from datetime import datetime as datet
@@ -266,19 +266,20 @@ DM4_PD = EpicsSignalRO(
 
 # scalars (integrating detectors)
 
-Beamstop_WAXS_int = I400SingleCh(
+Beamstop_WAXS_int = ophScalar(
     "XF:07ID-ES1{DMR:I400-1}:IC1_MON", name="WAXS Beamstop", kind="normal"
 )
-Beamstop_SAXS_int = I400SingleCh(
+Beamstop_SAXS_int = ophScalar(
     "XF:07ID-ES1{DMR:I400-1}:IC2_MON", name="SAXS Beamstop", kind="normal"
 )
-Izero_Mesh_int = I400SingleCh(
+Izero_Mesh_int = ophScalar(
     "XF:07ID1-BI{EM:1}EM180:Current2:MeanValue_RBV",
     name="RSoXS Au Mesh Current",
     kind="normal",
 )
-Sample_TEY_int = I400SingleCh(
+Sample_TEY_int = ophScalar(
     "XF:07ID1-BI{EM:1}EM180:Current1:MeanValue_RBV",
     name="RSoXS Sample Current",
     kind="normal",
 )
+
