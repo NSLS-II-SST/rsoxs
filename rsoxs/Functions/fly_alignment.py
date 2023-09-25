@@ -132,6 +132,7 @@ def fly_max(
         stop -= rb_offset
         print(f'starting scan from {start} to {stop} at {velocity}')
         yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
+        yield from bps.sleep(5)
         signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor_signal, signal_names=signals, time_offsets = time_offsets)
         print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor_signal]}')
         low_side = max((min_val,signal_dict[signals[0]][motor_signal] - (range/(2*range_ratio))))
@@ -220,7 +221,9 @@ def process_monitor_scan(db, uid, time_offsets=None):
         newdf = pd.DataFrame({'time':hdr[stream_name]['timestamps'][column_name].read(),column_name:hdr[stream_name]['data'][column_name].read()}).set_index('time')
         newdf.index += time_offsets.get(stream_name,0.0)
         df = pd.concat((df, newdf))
-    df = df[~df.index.duplicated(keep='first')].sort_index().interpolate(method='index').ffill().bfill()
+    #df = df[~df.index.duplicated(keep='first')].sort_index().interpolate(method='index').ffill().bfill()
+
+    df = df.groupby('time').mean().sort_index().interpolate(method='index').ffill().bfill()
 
     return df
 

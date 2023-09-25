@@ -637,7 +637,7 @@ def tune_pgm(
             motor=grating,
             start=g_set - grat_off_search,
             stop=g_set + grat_off_search,
-            velocities=[grat_off_search*2/scan_time, grat_off_search*2/(search_ratio * scan_time)],
+            velocities=[grat_off_search*2/scan_time, grat_off_search*2/(search_ratio * scan_time), grat_off_search*2/(search_ratio**2 * scan_time)],
             snake=False,
             peaklist=peaklist,
             range_ratio=search_ratio,

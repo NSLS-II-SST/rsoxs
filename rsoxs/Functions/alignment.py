@@ -7,7 +7,9 @@ from copy import deepcopy
 import collections
 import numpy as np
 import datetime
+import warnings
 import bluesky.plan_stubs as bps
+from bluesky.utils import FailedStatus
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
 from ..startup import RE, db, bec, db0, rsoxs_config
@@ -276,7 +278,21 @@ def load_sample(sam_dict, sim_mode=False):
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
-    yield from move_to_location(locs=sam_dict["location"])
+    not_in_position = True
+    failed_count = 0
+    while not_in_position:
+        try:
+            yield from move_to_location(locs=sam_dict["location"])
+        except FailedStatus:
+            failed_count +=1
+            if failed_count < 4:
+                warnings.warn(f'Motor failed to get to position, trying again (try {failed_count})',stacklevel=2)
+                pass
+            else:
+                raise FailedStatus("Failed to move to position after 3 tries")
+        else:
+            not_in_position = False
+
     yield from bps.sleep(0)
 
 def load_samp(num_or_id, sim_mode=False):
