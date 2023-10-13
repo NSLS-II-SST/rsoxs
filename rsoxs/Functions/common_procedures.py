@@ -9,8 +9,11 @@ from bluesky import preprocessors as bpp
 from bluesky.run_engine import Msg
 from ..HW.signals import (
     Izero_Mesh,
+    Izero_Mesh_int,
     Beamstop_WAXS,
+    Beamstop_WAXS_int,
     Sample_TEY,
+    Sample_TEY_int,
     Beamstop_SAXS,
     Slit1_Current_Top,
     Slit1_Current_Bottom,
@@ -113,10 +116,10 @@ def buildeputable(
         
         yield from bps.mv(mono_en, energy,en.scanlock, False,epu_gap,startgap)
         yield from fly_max(
-            [Izero_Mesh, Beamstop_SAXS],
+            [Izero_Mesh_int, Beamstop_WAXS_int],
             [
                 "RSoXS Au Mesh Current",
-                "SAXS Beamstop",
+                "WAXS Beamstop",
             ],
             epu_gap,
             startgap,
@@ -129,9 +132,9 @@ def buildeputable(
             end_on_max=False
         )
         startinggap = peaklist[-1]["RSoXS Au Mesh Current"]["en_epugap"]
-        gapbs = peaklist[-1]["SAXS Beamstop"]["en_epugap"]
+        gapbs = peaklist[-1]["WAXS Beamstop"]["en_epugap"]
         height = peaklist[-1]["RSoXS Au Mesh Current"]["RSoXS Au Mesh Current"]
-        heightbs = peaklist[-1]["SAXS Beamstop"]["SAXS Beamstop"]
+        heightbs = peaklist[-1]["WAXS Beamstop"]["WAXS Beamstop"]
         gaps.append(startinggap)
         gapsbs.append(gapbs)
         heights.append(height)
@@ -145,7 +148,7 @@ def buildeputable(
             "PeakCurrentBS": heightsbs,
         }
         dataframe = pd.DataFrame(data=data)
-        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Jul_" + name + ".csv")
+        dataframe.to_csv("/nsls2/data/sst/legacy/RSoXS/EPUdata_2023Nov_" + name + ".csv")
         count += 1
         if count > 20:
             count = 0
@@ -163,51 +166,10 @@ def buildeputable(
 
 def do_some_eputables_2023_en():
 
-    yield from load_configuration("SAXSNEXAFS")
+    yield from load_configuration("WAXSNEXAFS")
     yield from bps.mv(slits1.hsize, 1)
     yield from bps.mv(slits2.hsize, 1)
-    # angles = [0,5,15,25,40,50,60,70,80,90]
-    # phases = [0,
-    #           6688.9843608114115,
-    #           10781.54138668513,
-    #           13440.927684320242,
-    #           15705.851176691127,
-    #           17575.669146953864,
-    #           19598.02761805813,
-    #           21948.115314738126,
-    #           24889.02500863509,
-    #           29500]
-
-    # startingens = [95,125,155,185,200,200,185,160]
-    # for angle,ph,sten in zip(angles[5:],phases[5:],startingens[5:]):
-    #     yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L", "250", f'linear{angle}deg_250')
-    # for angle,ph,sten in zip(angles,phases,startingens):
-    #     yield from buildeputable(sten, 500, 10, 2, 14000, ph, "L3", "250", f'linear{180-angle}deg_250')
-
-    # startgaps = [33271.94497611413,
-    #             29889.652490430373,
-    #             27174.560460333993,
-    #              24965.844827621615,
-    #              23564.225919905086,
-    #              22983.602525718445,
-    #              22874.408275853402,
-    #              23677.309482826902]
-            # values for the minimum energy as a function of angle polynomial 10th deg
-        # 80.934 ± 0.0698
-        # -0.91614 ± 0.0446
-        # 0.39635 ± 0.00925
-        # -0.020478 ± 0.000881
-        # 0.00069047 ± 4.54e-05
-        # -1.5413e-05 ± 1.37e-06
-        # 2.1448e-07 ± 2.49e-08
-        # -1.788e-09 ± 2.68e-10
-        # 8.162e-12 ± 1.57e-12
-        # -1.5545e-14 ± 3.88e-15
-
-    # for angle,ph,stgp in zip(angles,phases,startgaps):
-    #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L", "1200", f'linear{angle}deg_1200')
-    # for angle,ph,stgp in zip(angles,phases,startgaps):
-    #     yield from buildeputable(400, 1400, 20, 4, stgp, ph, "L3", "1200", f'linear{180-angle}deg_1200')
+    
     phase_from_angle_poly= [78.672,870.98,-24.036,0.44117,-0.0042377,1.7304e-05]
     def phase_from_angle(angle):
         phase = 0
@@ -231,19 +193,40 @@ def do_some_eputables_2023_en():
         return energy+5
 
     #angles = np.linspace(18,10,4)
-    up = list(np.geomspace(0.5,45,12))
-    down = list(90-np.geomspace(0.1,1.5,4))
+    up = list(np.geomspace(0.5,45,6))
+    down = list(90-np.geomspace(0.5,40,6))
     down.reverse()
-    angles = [0] + up + down + [90]
+    angles = [0,90] + up + down
+    # linear polarizations 0-90
     for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 10, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r5")
-
+        yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r5")
+    # circular polarizations
     yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "C", "rsoxs", f"Circ_r5")
     yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "CW", "rsoxs", f"CWCirc_r5")
+    
+    angles = up + down
+
+    # linear polarizations 90-180
     for angle in angles:
         yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r6")
+
+
+    #third harmonics
+
+
+    # # linear polarizations 0-90
+    # for angle in angles:
+    #     yield from buildeputable(starting_energy(angle)*3, 2200, 30, 5, 14000, phase_from_angle(angle), "L", "1200", f"linear3_{angle}deg_r5")
+
+    
+    # angles = up + down
+
+    # # linear polarizations 90-180
+    # for angle in angles:
+    #     yield from buildeputable(starting_energy(angle)*3, 2200, 30, 5, 14000, phase_from_angle(angle), "L3", "1200", f"linear3_{180-angle}deg_r6")
+
     # 1200l/pp from 400 to 1400 eV
-    # then third harmonic from 1000 to 2200 eV
+
 
 
 #    yield from buildeputable(200, 1300, 10, 2, 20922, 8000, "L", "1200", "mL8_1200")
@@ -601,7 +584,7 @@ def tune_pgm(
     energy=291.65,
     pol=90,
     k=250,
-    detector=Sample_TEY,
+    detector=Sample_TEY_int,
     signal="RSoXS Sample Current",
     grat_off_search = 0.08,
     grating_rb_off = 0,
