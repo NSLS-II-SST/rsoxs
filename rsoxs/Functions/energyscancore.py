@@ -1,5 +1,7 @@
 from cycler import cycler
+from itertools import chain
 from bluesky.utils import Msg, short_uid as _short_uid
+from bluesky.protocols import Readable, Flyable
 import bluesky.utils as utils
 from bluesky.plan_stubs import trigger_and_read, move_per_step, stage, unstage
 import bluesky.plans as bp
@@ -56,7 +58,7 @@ from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sampl
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
-from ..Functions.fly_alignment import find_optimum_motor_pos,bec,db, return_NullStatus_decorator, ramp_plan_with_multiple_monitors
+from ..Functions.fly_alignment import find_optimum_motor_pos, bec, db, return_NullStatus_decorator, flystream_during_wrapper
 from sst_hw.diode import (
     Shutter_open_time,
     Shutter_control,
@@ -66,9 +68,19 @@ from sst_hw.diode import (
 )
 from sst_funcs.printing import run_report
 
+
 from ..startup import rsoxs_config
 
+from bluesky.utils import ensure_generator, short_uid as _short_uid, single_gen
+from bluesky.preprocessors import plan_mutator
+
+
+
 run_report(__file__)
+
+
+
+
 
 
 SLEEP_FOR_SHUTTER = 1
@@ -79,8 +91,6 @@ def cleanup():
     yield from bps.mv(en.scanlock, 0)
     yield from bps.mv(Shutter_control, 0)
     
-
-
 
 @finalize_decorator(rsoxs_config.write_plan)
 def NEXAFS_step_scan_core(
@@ -345,7 +355,7 @@ def new_en_scan_core(
     master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
-    signals = [Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY,mono_en,epu_gap,ring_current],
+    signals = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,mono_en,epu_gap,ring_current],
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
@@ -594,19 +604,21 @@ def new_en_scan_core(
     #print(sigcycler)
     exps = {}
     if check_exposure:
-        yield from finalize_wrapper(
+        yield from finalize_wrapper(flystream_during_wrapper(
             bp.scan_nd(newdets + goodsignals, 
                     sigcycler, 
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
+                    [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,en]),
             cleanup()
         )
     else:
-        yield from finalize_wrapper(
+        yield from finalize_wrapper(flystream_during_wrapper(
             bp.scan_nd(newdets + goodsignals, 
                     sigcycler, 
                     md=md),
+                    [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,en]),
             cleanup()
         )
     for det in newdets:
@@ -614,7 +626,7 @@ def new_en_scan_core(
 
 
 @finalize_decorator(rsoxs_config.write_plan)
-def NEXAFS_fly_scan_core(
+def NEXAFS_old_fly_scan_core(
     scan_params,
     openshutter=True,
     pol=0,
@@ -739,6 +751,133 @@ def NEXAFS_fly_scan_core(
     return uid
 
 
+
+@finalize_decorator(rsoxs_config.write_plan)
+def NEXAFS_fly_scan_core(
+    scan_params,
+    openshutter=True,
+    pol=0,
+    grating="best",
+    enscan_type=None,
+    master_plan=None,
+    angle=None,
+    cycles=0,
+    locked = True,
+    md=None,
+    sim_mode=False,
+    **kwargs #extraneous settings from higher level plans are ignored
+):
+    # grab locals
+    if md is None:
+        md = {}
+    arguments = dict(locals())
+    del arguments["md"]  # no recursion here!
+    if md is None:
+        md = {}
+    md.setdefault("acq_history", [])
+
+    for argument in arguments:
+        if isinstance(argument,np.ndarray):
+            argument = list(argument)
+    md["acq_history"].append(
+        {"plan_name": "NEXAFS_fly_scan_core", "arguments": arguments}
+    )
+    md.update({"plan_name": enscan_type, "master_plan": master_plan})
+    # validate inputs
+    valid = True
+    validation = ""
+    energies = np.empty(0)
+    speeds = []
+    scan_params = deepcopy(scan_params)
+    for scanparam in scan_params:
+        (sten, enden, speed) = scanparam
+        energies = np.append(energies, np.linspace(sten, enden, 10))
+        speeds.append(speed)
+    if len(energies) < 10:
+        valid = False
+        validation += f"scan parameters {scan_params} could not be parsed\n"
+    if min(energies) < 70 or max(energies) > 2200:
+        valid = False
+        validation += "energy input is out of range for SST 1\n"
+    if grating in ["1200",1200]:
+        if min(energies) < 150:
+            valid = False
+            validation += "energy is to low for the 1200 l/mm grating\n"
+    elif grating in ["250",250]:
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    elif grating == "rsoxs":
+        if max(energies) > 1300:
+            valid = False
+            validation += "energy is too high for 250 l/mm grating\n"
+    else:
+        valid = False
+        validation += "invalid grating was chosen"
+    if pol < -1 or pol > 180:
+        valid = False
+        validation += f"polarization of {pol} is not valid\n"
+    if angle is not None:
+        if -155 > angle or angle > 195:
+            valid = False
+            validation += f"angle of {angle} is out of range\n"
+    if sim_mode:
+        if valid:
+            retstr = f"fly scanning from {min(energies)} eV to {max(energies)} eV on the {grating} l/mm grating\n"
+            retstr += f"    at speeds from {max(speeds)} to {max(speeds)} ev/second\n"
+            return retstr
+        else:
+            return validation
+    if not valid:
+        raise ValueError(validation)
+    if angle is not None:
+        print(f'moving angle to {angle}')
+        yield from rotate_now(angle)
+    if 'hopg_loc' in md.keys():
+        hopgx = md['hopg_loc']['x']
+        hopgy = md['hopg_loc']['y']
+        hopgth = md['hopg_loc']['th']
+    else:
+        hopgx = None
+        hopgy = None
+        hopgth = None
+    if grating == "1200":
+        yield from grating_to_1200(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "250":
+        yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    elif grating == "rsoxs":
+        yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
+    signals = [Beamstop_WAXS, Beamstop_SAXS, Izero_Mesh, Sample_TEY]
+    if np.isnan(pol):
+        pol = en.polarization.setpoint.get()
+    (en_start, en_stop, en_speed) = scan_params[0]
+    yield from bps.mv(en.scanlock, 0) # unlock parameters
+    print("Moving to initial position before scan start")
+    yield from bps.mv(en.energy, en_start+10, en.polarization, pol )  # move to the initial energy
+    samplepol = en.sample_polarization.setpoint.get()
+    if locked:
+        yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
+    yield from bps.mv(en.energy, en_start-0.10 )  # move to the initial energy
+    print(f"Effective sample polarization is {samplepol}")
+    for kwarg,value in kwargs.items():
+        if kwarg not in ['uid','sample_id','priority','group','configuration','type']:
+            warnings.warn(f"argument {kwarg} with value {value} is being ignored because NEXAFS_fly_scan_core does not understand how to use it",stacklevel=2)
+    if cycles>0:
+        rev_scan_params = []
+        for (start, stop, speed) in scan_params:
+            rev_scan_params = [(stop, start, speed)]+rev_scan_params
+        scan_params += rev_scan_params
+        scan_params *= int(cycles)
+
+    uid = ""
+    if openshutter:
+        yield from bps.mv(Shutter_enable, 0)
+        yield from bps.mv(Shutter_control, 1)
+    uid = (yield from finalize_wrapper(flyer_scan_energy(list(chain.from_iterable(scan_params)),sigs=signals, md=md, locked=locked, polarization=pol),cleanup()))
+
+    return uid
+
+
 def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
     """
     Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
@@ -849,6 +988,67 @@ def fly_scan_eliot(scan_params, sigs=[], polarization=0, locked = 1, *, md={}):
             step += 1
 
     return (yield from inner_scan_eliot())
+
+
+
+def flyer_scan_energy(scan_params, sigs=[], md={},locked=True,polarization=0):
+    """
+    Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
+
+    scan proceeds as:
+    1.) set up the flying parameters in the monochromator
+    2.) move to the starting position in both undulator and monochromator
+    3.) begin the scan (take baseline, begin monitors)
+    4.) read the current mono readback
+    5.) set the undulator to move to the corresponding position
+    6.) if the mono is still running (not at end position), return to step 4
+    7.) if the mono is done, load the next parameters and start at step 1
+    8.) if no more parameters, end the scan
+
+    Parameters
+    ----------
+    scan_params : a list of tuples consisting of:
+        (start_en : eV to begin the scan,
+        stop_en : eV to stop the scan,
+        speed_en : eV / second to move the monochromator)
+        the stop energy of each tuple should match the start of the next to make a continuous scan
+            although this is not strictly enforced to allow for flexibility
+    pol : polarization to run the scan
+    grating : grating to run the scan
+    md : dict, optional
+        metadata
+
+    """
+    detectors = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]
+
+
+    _md = {
+        "detectors": [detector.name for detector in detectors],
+        "motors": [en.name],
+        "plan_name": "flyer_scan_energy",
+        "hints": {},
+    }
+    _md.update(md or {})
+    flyers = [d for d in detectors + [en] if isinstance(d, Flyable)]
+    readers = [d for d in detectors + [en] if isinstance(d, Readable)]
+    for reader in readers:
+        if hasattr(reader,'set_exposure'):
+            reader.set_exposure(0.5)
+
+    en.preflight(*scan_params,locked=locked,time_resolution=0.5)
+
+    @bpp.stage_decorator(readers)
+    @bpp.run_decorator(md=_md)
+    def inner_flyscan():
+        status = en.fly()
+
+        while not status.done:
+            yield from trigger_and_read(readers)
+
+        en.land()
+
+    return (yield from flystream_during_wrapper(inner_flyscan(), flyers))
+
 
 
 def fly_scan_dets(scan_params,dets, polarization=0, locked = 1, *, md={}):

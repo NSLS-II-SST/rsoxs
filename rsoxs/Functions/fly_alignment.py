@@ -1,8 +1,15 @@
 from ophyd.sim import NullStatus
 
 from bluesky.preprocessors import monitor_during_wrapper,  finalize_wrapper, finalize_decorator
+
+from bluesky.protocols import Readable, Flyable
+import bluesky.utils as utils
+from bluesky.utils import Msg, short_uid as _short_uid, single_gen, ensure_generator
+from bluesky.preprocessors import plan_mutator
+from bluesky.plan_stubs import trigger_and_read, move_per_step, stage, unstage
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+from bluesky import preprocessors as bpp
 import pandas as pd
 import numpy as np
 from copy import deepcopy
@@ -24,6 +31,61 @@ from ..HW.motors import (
     BeamStopW,
     BeamStopS)
 from .alignment import load_configuration, rsoxs_config,correct_bar
+
+def flystream_during_wrapper(plan, flyers, stream=True):
+    """
+    Kickoff and collect "flyer" (asynchronously collect) objects during runs.
+    This is a preprocessor that insert messages immediately after a run is
+    opened and before it is closed.
+    Parameters
+    ----------
+    plan : iterable or iterator
+        a generator, list, or similar containing `Msg` objects
+    flyers : collection
+        objects that support the flyer interface
+    Yields
+    ------
+    msg : Msg
+        messages from plan with 'kickoff', 'wait' and 'collect' messages
+        inserted
+    See Also
+    --------
+    :func:`bluesky.plans.fly`
+    """
+    grp1 = _short_uid('flyers-kickoff')
+    grp2 = _short_uid('flyers-complete')
+    kickoff_msgs = [Msg('kickoff', flyer, group=grp1) for flyer in flyers]
+    complete_msgs = [Msg('complete', flyer, group=grp2) for flyer in flyers]
+    collect_msgs = [Msg('collect', flyer, stream=stream) for flyer in flyers]
+    if flyers:
+        # If there are any flyers, insert a 'wait' Msg after kickoff, complete
+        kickoff_msgs += [Msg('wait', None, group=grp1)]
+        complete_msgs += [Msg('wait', None, group=grp2)]
+
+    def insert_after_open(msg):
+        if msg.command == 'open_run':
+            def new_gen():
+                yield from ensure_generator(kickoff_msgs)
+            return single_gen(msg), new_gen()
+        else:
+            return None, None
+
+    def insert_before_close(msg):
+        if msg.command == 'close_run':
+            def new_gen():
+                yield from ensure_generator(complete_msgs)
+                yield from ensure_generator(collect_msgs)
+                yield msg
+            return new_gen(), None
+        else:
+            return None, None
+
+    # Apply nested mutations.
+    plan1 = plan_mutator(plan, insert_after_open)
+    plan2 = plan_mutator(plan1, insert_before_close)
+    return (yield from plan2)
+
+
 
 time_offset_defaults = {'en_monoen_readback_monitor':-0.0}
 
@@ -131,7 +193,7 @@ def fly_max(
         start -= rb_offset
         stop -= rb_offset
         print(f'starting scan from {start} to {stop} at {velocity}')
-        yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter)
+        yield from ramp_motor_scan(start,stop,motor, detectors, velocity=velocity, open_shutter=open_shutter,md=_md)
         yield from bps.sleep(5)
         signal_dict = find_optimum_motor_pos(db, -1, motor_name=motor_signal, signal_names=signals, time_offsets = time_offsets)
         print(f'maximum signal of {signals[0]} found at {signal_dict[signals[0]][motor_signal]}')
@@ -163,7 +225,7 @@ def return_NullStatus_decorator(plan):
     return wrapper
 
 
-def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep = 0.2,velocity = None,open_shutter=False):
+def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep = 0.2,velocity = None,open_shutter=False,md=None):
     yield from bps.mv(motor, start_pos)
     yield from bps.sleep(sleep)
     if velocity is not None:
@@ -173,7 +235,7 @@ def ramp_motor_scan(start_pos, stop_pos,motor=None, detector_channels=None,sleep
     def _move_plan():
         yield from bps.mv(motor, stop_pos)
         yield from bps.sleep(sleep)
-    ramp_plan = ramp_plan_with_multiple_monitors(_move_plan(), [motor] + detector_channels, bps.null)
+    ramp_plan = fly_plan(motor,start_pos, stop_pos,flyer_list=detector_channels,md=md)
     def _cleanup():
         yield from bps.mv(Shutter_control, 0)
         if velocity is not None:
@@ -226,6 +288,36 @@ def process_monitor_scan(db, uid, time_offsets=None):
     df = df.groupby('time').mean().sort_index().interpolate(method='index').ffill().bfill()
 
     return df
+
+
+def fly_plan(motor, *scan_params, exposure_time=0.5, flyer_list=[],md=None):
+    _md = {
+        "detectors": [detector.name for detector in flyer_list],
+        "motors": [motor.name],
+        "plan_name": "fly_plan",
+        "hints": {},
+    }
+    _md.update(md or {})
+
+    flyers = [d for d in flyer_list + [motor] if isinstance(d, Flyable)]
+    readers = [d for d in flyer_list + [motor] if isinstance(d, Readable)]
+    for reader in readers:
+        if hasattr(reader,'set_exposure'):
+            reader.set_exposure(exposure_time)
+
+    motor.preflight(*scan_params)
+
+    @bpp.stage_decorator(readers)
+    @bpp.run_decorator(md=_md)
+    def inner_flyscan():
+        status = motor.fly()
+
+        while not status.done:
+            yield from trigger_and_read(readers)
+
+        motor.land()
+
+    return (yield from flystream_during_wrapper(inner_flyscan(), flyers))
 
 
 def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_names=['RSoXS Au Mesh Current','SAXS Beamstop'], time_offsets = None):

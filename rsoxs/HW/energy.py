@@ -1,7 +1,7 @@
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from sst_hw.energy import (
-    EnPos,EnSimEPUPos,
+    EnPos,
     base_grating_to_250,
     base_grating_to_1200,
     base_grating_to_rsoxs,
@@ -26,12 +26,6 @@ en = EnPos("", rotation_motor=sam_Th, name="en")
 mono_en = en.monoen
 
 
-mono_en_int = I400SingleCh(
-    "XF:07ID1-OP{Mono:PGM1-Ax::ENERGY_MON",# PV for mono readback
-    name="RSoXS Sample Current",
-    kind="normal",
-)
-mono_en_int.exposure_time.set(0.2)
 mono_en.read_attrs = ['readback']
 
 #mono_en.tolerance.set(0.02)
