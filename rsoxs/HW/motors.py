@@ -3,6 +3,31 @@ from ophyd.sim import motor1
 from sst_funcs.printing import run_report
 from sst_base.motors import PrettyMotorFMBO, PrettyMotor, PrettyMotorDeadbandFlyer, PrettyMotorFMBODeadbandFlyer, PrettyMotorFMBODeadband
 
+class RetryFlyerMotor(PrettyMotorFMBODeadbandFlyer):
+    def __init__(self,*args,retries=5, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.retries = retries
+    
+    def move(self, position,wait=True, **kwargs):
+        """Move to a specified position, trying 5 times
+        """
+        self._started_moving = False
+        not_in_position = True
+        failed_count = 0
+        while not_in_position:
+            try:
+                status = super().move(position,wait=True, **kwargs) # ignore wait parameter, we always wait with this motor
+            except FailedStatus:
+                failed_count +=1
+                if failed_count < self.retries+1:
+                    warnings.warn(f'Motor failed to get to position, trying again (try {failed_count})',stacklevel=2)
+                    pass
+                else:
+                    raise FailedStatus(f"Failed to move to position after {self.retries} tries")
+            else:
+                not_in_position = False
+        return status
+
 
 run_report(__file__)
 
@@ -10,11 +35,11 @@ run_report(__file__)
 sam_viewer = PrettyMotorFMBO(
     "XF:07ID2-ES1{ImgY-Ax:1}Mtr", name="RSoXS Sample Imager", kind="hinted"
 )
-sam_X = PrettyMotorFMBODeadbandFlyer(
-    "XF:07ID2-ES1{Stg-Ax:X}Mtr", name="RSoXS Sample Outboard-Inboard", kind="hinted"
+sam_X = RetryFlyerMotor(
+    "XF:07ID2-ES1{Stg-Ax:X}Mtr", name="RSoXS Sample Outboard-Inboard", kind="hinted",retries=5
 )
-sam_Y = PrettyMotorFMBODeadbandFlyer(
-    "XF:07ID2-ES1{Stg-Ax:Y}Mtr", name="RSoXS Sample Up-Down", kind="hinted"
+sam_Y = RetryFlyerMotor(
+    "XF:07ID2-ES1{Stg-Ax:Y}Mtr", name="RSoXS Sample Up-Down", kind="hinted",retries=3,
 )
 sam_Z = PrettyMotorFMBODeadbandFlyer(
     "XF:07ID2-ES1{Stg-Ax:Z}Mtr", name="RSoXS Sample Downstream-Upstream", kind="hinted"
