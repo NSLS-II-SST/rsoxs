@@ -16,7 +16,8 @@ from ..startup import RE, db, bec, db0, rsoxs_config
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_hw.diode import Shutter_enable, Shutter_control
-from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange
+from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
+
 from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
 from sst_hw.shutters import psh10
 from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
@@ -52,7 +53,7 @@ from .configurations import (
 )
 
 from .alignment_local import *
-
+from .flystream_wrapper import flystream_during_wrapper
 run_report(__file__)
 
 
@@ -278,23 +279,8 @@ def load_sample(sam_dict, sim_mode=False):
     if sim_mode:
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
-    not_in_position = True
-    failed_count = 0
-    while not_in_position:
-        try:
-            yield from move_to_location(locs=sam_dict["location"])
-        except FailedStatus:
-            failed_count +=1
-            if failed_count < 4:
-                warnings.warn(f'Motor failed to get to position, trying again (try {failed_count})',stacklevel=2)
-                pass
-            else:
-                raise FailedStatus("Failed to move to position after 3 tries")
-        else:
-            not_in_position = False
-
-    yield from bps.sleep(0)
-
+    yield from move_to_location(locs=sam_dict["location"])
+    
 def load_samp(num_or_id, sim_mode=False):
     """
     move to a sample location and load the metadata with the sample information from persistant sample list by index or sample_id
@@ -303,11 +289,7 @@ def load_samp(num_or_id, sim_mode=False):
     :return:
     """
     sam_dict = samp_dict_from_id_or_num(num_or_id)
-    if sim_mode:
-        return f"move to {sam_dict['sample_name']}"
-    RE.md.update(sam_dict)
-    yield from move_to_location(locs=sam_dict["location"])
-    yield from bps.sleep(0)
+    yield from load_sample(sam_dict, sim_mode)
 
 
 def newsample():
@@ -496,11 +478,7 @@ def spiralsearch(
     stepsize : float, optional
         _description_, by default 0.2
     energy : int, optional
-        _description_, by default 270
-    pol : int, optional
-        _description_, by default 0
-    angle : _type_, optional
-        _description_, by default None
+        _description_, by default 270 -148.3
     exposure : int, optional
         _description_, by default 1
     master_plan : _type_, optional
@@ -593,18 +571,19 @@ def spiralsearch(
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
     md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
-    yield from bp.spiral_square(
-        newdets,
-        sam_X,
-        sam_Y,
-        x_center=x_center,
-        y_center=y_center,
-        x_range=diameter,
-        y_range=diameter,
-        x_num=num,
-        y_num=num,
-        md=md,
-    )
+
+    yield from flystream_during_wrapper(bp.spiral_square(
+                                                        newdets,
+                                                        sam_X,
+                                                        sam_Y,
+                                                        x_center=x_center,
+                                                        y_center=y_center,
+                                                        x_range=diameter,
+                                                        y_range=diameter,
+                                                        x_num=num,
+                                                        y_num=num,
+                                                        md=md,
+                ),[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int])
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 

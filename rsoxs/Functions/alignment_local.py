@@ -94,7 +94,7 @@ def sanatize_angle(samp, force=False):
         if samp["front"]:
             if goodnumber:
                 samp["bar_loc"]["th"] = float(np.mod(345 - np.mod(90 + samp["angle"] + 3600, 180) + 90, 360) - 165)
-                if samp["bar_loc"]["x0"] < -1.8 and np.abs(samp["angle"]) > 30:
+                if samp["bar_loc"]["x0"] > 6 and np.abs(samp["angle"]) > 30:
                     # transmission from the left side of the bar at a incident angle more than 20 degrees,
                     # flip sample around to come from the other side - this can take a minute or two
                     samp["bar_loc"]["th"] = float(
@@ -110,7 +110,7 @@ def sanatize_angle(samp, force=False):
         else:
             if goodnumber:
                 samp["bar_loc"]["th"] = float(np.mod(90 + samp["angle"] + 3600, 180) - 90)
-                if samp["bar_loc"]["x0"] > -1.8 and np.abs(samp["angle"]) > 30:
+                if samp["bar_loc"]["x0"] < -5 and np.abs(samp["angle"]) > 30: #TODO figure out the geometry constraints for the back of the bar transmission
                     # transmission from the right side of the bar at a incident angle more than 20 degrees,
                     # flip to come from the left side
                     samp["bar_loc"]["th"] = float(np.mod(90 - samp["angle"] + 3600, 180) - 90.0)
@@ -127,6 +127,7 @@ def sanatize_angle(samp, force=False):
 
 
 def samp_dict_from_id_or_num(num_or_id):
+    rsoxs_config.read()
     if isinstance(num_or_id,str):
         sam_dict = [d for (index, d) in enumerate(rsoxs_config['bar']) if d['sample_id'].find(num_or_id) >= 0]
         if len(sam_dict) > 0:
@@ -601,8 +602,8 @@ def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
 
     # offset the line by the front/back offset + height
     if front:
-        #return z0 - 2.5 - height # TODO: fix this 2.5 offset number - seems to be wrong perhaps needs to be on back?
-        return z0 - 4.5 - height # TODO: fix this 2.5 offset number - seems to be wrong perhaps needs to be on back?
+        #return z0 - 2.5 - height # 
+        return z0 + 4.5 - height # fixed Nov 2023 with new rotation stage
     else:
         return z0 + height
     # return the offset intersect
@@ -724,7 +725,7 @@ def resolve_spirals(bar=None):
                 im_num = input(f"sample {samp['sample_name']} scan {h['start']['scan_id']} which image number (or numbers, seperated by commas) is/are best?  ")
                 for i,im in enumerate(im_num.split(",")):
                     im = int(im)
-                    if i>1:
+                    if i>0:
                         accept = input(f"duplicate {samp['sample_name']} to a new sample with position {im} at ({xs[im],ys[im]}) (y,n)?")
                         if accept in ['y','Y','yes']:
                             newsamp =deepcopy(samp)
@@ -736,7 +737,8 @@ def resolve_spirals(bar=None):
                                                 'best_num':im}
                             newsamp['sample_name']+=f'_{i}'
                             newsamp['sample_id']+=f'_{i}'
-                            bar.append(newsamp)
+                            rsoxs_config['bar'].append(newsamp)
+                            rsoxs_config.write()
                     else:
                         accept = input(f"image {im} at ({xs[im],ys[im]}) is correct (y,n)?")
                         if accept in ['y','Y','yes']:
@@ -746,7 +748,8 @@ def resolve_spirals(bar=None):
                                                 {'motor':'z','position':z}]
                             samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
                                                 'best_num':im}
-    rsoxs_config.write()
+                            rsoxs_config.write()
+    
 
 
 def clear_bar():

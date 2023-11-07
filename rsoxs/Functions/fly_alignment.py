@@ -18,7 +18,7 @@ from sst_hw.diode import Shutter_control, Shutter_enable
 from ..startup import RE, db, bec, db0, sd, rsoxs_config
 from ..HW.energy import en
 
-from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS
+from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, Beamstop_WAXS_int
 from ..HW.motors import (
     sam_X,
     sam_Y,
@@ -183,7 +183,7 @@ def fly_max(
     if motor_signal == None:
         motor_signal = motor.name
     motor.kind='hinted'
-    bec.enable_plots()
+    #bec.enable_plots()
     max_val = max((start,stop))
     min_val = min((start,stop))
     direction = 1
@@ -345,14 +345,14 @@ def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=
     yield from bps.mv(Shutter_enable, 0)
     yield from bps.mv(Shutter_control, 0)
     yield from load_configuration("WAXSNEXAFS")
-    Beamstop_WAXS.kind = "hinted"
+    Beamstop_WAXS_int.kind = "hinted"
     bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
     maxlocs = []
     for startxs, starty in zip(startxss, startys):
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
         peaklist = []
-        yield from fly_max([Beamstop_WAXS],
+        yield from fly_max([Beamstop_WAXS_int],
                            ['WAXS Beamstop'],
                            sam_Y,
                            starty-1,
@@ -366,7 +366,7 @@ def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=
             yield from bps.mv(sam_X, startx, sam_Th, angle)
             yield from bps.mv(Shutter_control, 1)
             peaklist = []
-            yield from fly_max([Beamstop_WAXS],
+            yield from fly_max([Beamstop_WAXS_int],
                                 ['WAXS Beamstop'],
                                 sam_X,
                                 startx - 0.5 * xrange,

@@ -58,7 +58,9 @@ from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sampl
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
-from ..Functions.fly_alignment import find_optimum_motor_pos, bec, db, return_NullStatus_decorator, flystream_during_wrapper
+from ..Functions.fly_alignment import find_optimum_motor_pos, bec, db, return_NullStatus_decorator
+
+from .flystream_wrapper import flystream_during_wrapper
 from sst_hw.diode import (
     Shutter_open_time,
     Shutter_control,
@@ -610,7 +612,8 @@ def new_en_scan_core(
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
-                    [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,en]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int]),
+                    #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
     else:
@@ -618,7 +621,8 @@ def new_en_scan_core(
             bp.scan_nd(newdets + goodsignals, 
                     sigcycler, 
                     md=md),
-                    [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,en]),
+                    #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int]),
             cleanup()
         )
     for det in newdets:

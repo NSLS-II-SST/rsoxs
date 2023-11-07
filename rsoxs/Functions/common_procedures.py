@@ -67,8 +67,8 @@ def buildeputable(
     ensout = []
     heights = []
     heightsbs = []
-    Izero_Mesh.kind = "hinted"
-    Beamstop_SAXS.kind = "hinted"
+    #Izero_Mesh.kind = "hinted"
+    #Beamstop_SAXS.kind = "hinted"
     mono_en.kind = "hinted"
     epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
@@ -78,7 +78,7 @@ def buildeputable(
     #     yield from grating_to_250(2.0,-6.3,0.0)
     # elif grat == "rsoxs":
     #     yield from grating_to_rsoxs(2.0,-6.3,0.0)
-    bec.enable_plots()
+    # bec.enable_plots()
 
     plt.close()
     plt.close()
@@ -124,7 +124,7 @@ def buildeputable(
             epu_gap,
             startgap,
             endgap,
-            [None],
+            [200],
             10,
             True,
             True,
@@ -193,22 +193,26 @@ def do_some_eputables_2023_en():
         return energy+5
 
     #angles = np.linspace(18,10,4)
-    up = list(np.geomspace(0.5,45,6))
-    down = list(90-np.geomspace(0.5,40,6))
-    down.reverse()
-    angles = [0,90] + up + down
+    #up = list(np.geomspace(0.5,45,9))
+    #down = list(90-np.geomspace(0.5,40,9))
+    #down.reverse()
+    #angles = [0,90] + up + down
     # linear polarizations 0-90
-    for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L", "rsoxs", f"linear_{angle}deg_r5")
+    #for angle in angles:
+    for angle in [0,90]:
+        yield from buildeputable(starting_energy(angle)*3, 2200, 50, 3, 14000, phase_from_angle(angle), "L", "1200", f"linear3x_{angle}deg_r5")
     # circular polarizations
-    yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "C", "rsoxs", f"Circ_r5")
-    yield from buildeputable(100, 1300, 20, 3, 14000, 15000, "CW", "rsoxs", f"CWCirc_r5")
+    yield from buildeputable(300, 2200, 50, 3, 14000, 15000, "C", "1200", f"Circ3_r5")
+    yield from buildeputable(300, 2200, 50, 3, 14000, 15000, "CW", "1200", f"CWCirc3_r5")
+
+    for angle in [30,60,45,10,80]:
+        yield from buildeputable(starting_energy(angle)*3, 2200, 50, 5, 14000, phase_from_angle(angle), "L", "1200", f"linear3x_{angle}deg_r5")
     
-    angles = up + down
+    #angles = up + down
 
     # linear polarizations 90-180
-    for angle in angles:
-        yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r6")
+    #for angle in [0,15,30,45,60,75,85]:
+    #    yield from buildeputable(starting_energy(angle), 1300, 20, 3, 14000, phase_from_angle(angle), "L3", "rsoxs", f"linear_{180-angle}deg_r6")
 
 
     #third harmonics
@@ -216,7 +220,7 @@ def do_some_eputables_2023_en():
 
     # # linear polarizations 0-90
     # for angle in angles:
-    #     yield from buildeputable(starting_energy(angle)*3, 2200, 30, 5, 14000, phase_from_angle(angle), "L", "1200", f"linear3_{angle}deg_r5")
+    #     yield from buildeputable(1000, 2200, 50, 5, 14000, phase_from_angle(angle), "L", "1200", f"linear3_{angle}deg_r5")
 
     
     # angles = up + down
