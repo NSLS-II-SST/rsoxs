@@ -82,6 +82,39 @@ run_report(__file__)
 
 
 
+import bluesky.plan_stubs as bps
+import bluesky.plans as bp
+from bluesky.utils import short_uid
+
+def per_step_factory(fake_flyer):
+    group = None
+    target = None
+
+    def per_step(detectors, step, pos_cache, take_reading=None):
+        nonlocal group, target
+        fly_target = step.pop(fake_flyer)
+        if target != fly_target:
+            if group is not None:
+                yield from bps.wait(group=group)
+            group = short_uid(label='fake_flyer')
+            yield from bps.abs_set(fake_flyer, target)
+        yield from bps.one_nd_step(detectors, step, pos_cache, take_reading=take_reading)
+
+    def final():
+        if group is not None:
+            yield from bps.wait(group=group)
+
+    return per_step, final
+
+
+def my_scan(...):
+
+    per_step, final = per_step_factory(lakeshore)
+
+    yield from bp.scan_nd(..., per_step=per_step)
+    yield from final()
+
+
 
 
 
