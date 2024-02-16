@@ -35,17 +35,20 @@ from ..HW.energy import (
 from ..HW.energy import epu_mode
 from sst_hw.diode import Shutter_control, Shutter_enable
 from ..HW.slits import slits1, slits2
-from ..Functions.alignment import load_configuration
-from ..HW.detectors import set_exposure#, waxs_det
+from .alignment import load_configuration,load_samp
+from ..HW.detectors import set_exposure, waxs_det
 from ..HW.motors import sam_Th, sam_Y
 from sst_hw.gatevalves import gv28, gv27a, gvll
 from sst_hw.shutters import psh10
 from sst_hw.vacuum import rsoxs_ll_gpwr
+from sst_hw.motors import Exit_Slit
 from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
 from ..startup import bec
 from sst_funcs.printing import run_report
 from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
 from .fly_alignment import fly_max
+from .energyscancore import cdsaxs_scan
+from .rsoxs_plans import do_rsoxs
 
 run_report(__file__)
 
@@ -652,3 +655,31 @@ def reset_amps():
     yield from bps.mv(MC19_disable, 1, MC20_disable, 1, MC21_disable, 1)
     yield from bps.sleep(5)
     yield from bps.mv(MC19_disable, 0, MC20_disable, 0, MC21_disable, 0)
+
+#[200,250,270,280,282,283,284,285,286,287,288,500,535,800]
+
+def do_cdsaxs(energies, samples):
+    #yield from bps.mv(Exit_Slit,-1.05)
+    #for samp in samples:
+    #    yield from load_samp(samp)
+    #    for energy in energies:
+    #        yield from bps.mv(en,energy)
+    #        yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-55,end_angle=-80,exp_time=9,md={'plan_name':f'cd_p3_{energy}'})
+    yield from bps.mv(Exit_Slit,-0.05)
+    for samp in samples:
+        yield from load_samp(samp)
+        for energy in energies:
+            yield from bps.mv(en,energy)
+            yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-55,end_angle=-85,exp_time=9,md={'plan_name':f'cd_low_{energy}'})
+            yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-65,end_angle=-88,exp_time=9,md={'plan_name':f'cd_low_{energy}'})
+    yield from bps.mv(Exit_Slit,-0.01)
+    for samp in samples:
+        yield from load_samp(samp)
+        for energy in energies:
+            yield from bps.mv(en,energy)
+            yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-65,end_angle=-88,exp_time=9,md={'plan_name':f'cd_low_{energy}'})
+    yield from bps.mv(Exit_Slit,-3.05)
+    for samp in samps:
+        yield from load_samp(samp)
+        yield from bps.mv(sam_Th,-70)
+        yield from do_rsoxs(edge=energies,frames=1,exposure=.1,md={'plan_name':f'cd_full_en_20deg','plan_intent':f'cd_full_en_20deg'})

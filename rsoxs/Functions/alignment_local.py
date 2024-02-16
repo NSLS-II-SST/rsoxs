@@ -700,6 +700,7 @@ def sample_recenter_sample(samp):
     # rsoxs_config.write()
 
 
+
 def read_positions(bar=None):
     if bar == None:
         rsoxs_config.read()

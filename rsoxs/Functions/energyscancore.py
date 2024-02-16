@@ -86,39 +86,15 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.utils import short_uid
 
-def per_step_factory(fake_flyer):
-    group = None
-    target = None
-
-    def per_step(detectors, step, pos_cache, take_reading=None):
-        nonlocal group, target
-        fly_target = step.pop(fake_flyer)
-        if target != fly_target:
-            if group is not None:
-                yield from bps.wait(group=group)
-            group = short_uid(label='fake_flyer')
-            yield from bps.abs_set(fake_flyer, target)
-        yield from bps.one_nd_step(detectors, step, pos_cache, take_reading=take_reading)
-
-    def final():
-        if group is not None:
-            yield from bps.wait(group=group)
-
-    return per_step, final
-
-
-def my_scan(...):
-
-    per_step, final = per_step_factory(lakeshore)
-
-    yield from bp.scan_nd(..., per_step=per_step)
-    yield from final()
-
 
 
 
 
 SLEEP_FOR_SHUTTER = 1
+
+
+
+
 
 
 def cleanup():
@@ -636,6 +612,8 @@ def new_en_scan_core(
                 sigcycler = cycler(tem_tempstage.setpoint,temperatures)*sigcycler # run every location for each temperature step
 
 
+    #flyer_per_step, flyer_final = flyer_per_step_factory(tem_tempstage)
+
     #print(sigcycler)
     exps = {}
     if check_exposure:
@@ -645,7 +623,7 @@ def new_en_scan_core(
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
-                    [Beamstop_WAXS_int, Izero_Mesh_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int]),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
@@ -653,13 +631,41 @@ def new_en_scan_core(
         yield from finalize_wrapper(flystream_during_wrapper(
             bp.scan_nd(newdets + goodsignals, 
                     sigcycler, 
-                    md=md),
+                    md=md,
+                    ),#per_step=flyer_per_step),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
-                    [Beamstop_WAXS_int, Izero_Mesh_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
+        #yield from flyer_final()
     for det in newdets:
         det.number_exposures = old_n_exp[det.name]
+
+
+
+def flyer_per_step_factory(fake_flyer):
+    group = None
+    target = None
+
+    def per_step(detectors, step, pos_cache, take_reading=None):
+        nonlocal group, target
+        fly_target = step.pop(fake_flyer)
+        if target != fly_target:
+            if group is not None:
+                yield from bps.wait(group=group)
+            group = short_uid(label='fake_flyer')
+            yield from bps.abs_set(fake_flyer, target)
+        yield from bps.one_nd_step(detectors, step, pos_cache, take_reading=take_reading)
+
+    def final():
+        if group is not None:
+            yield from bps.wait(group=group)
+
+    return per_step, final
+
+
+
+
 
 
 @finalize_decorator(rsoxs_config.write_plan)
@@ -1325,3 +1331,99 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_
     yield from take_reading(list(detectors) + list(motors))
     output_time = Shutter_open_time.get()
     remember['last_correction'] = float(output_time) / float(input_time)
+
+
+
+
+def cdsaxs_scan(det=waxs_det,angle_mot = sam_Th,shutter = Shutter_control,start_angle=50,end_angle=85,exp_time=9,md=None):
+    if md == None:
+        md={}
+    yield from bps.mv(Shutter_open_time,exp_time*1000)
+    yield from bps.mv(det.cam.acquire_time, exp_time)
+    yield from bps.mv(angle_mot,start_angle)
+    old_velo = angle_mot.velocity.get()
+    if np.abs(end_angle - start_angle)/old_velo < exp_time:
+        yield from bps.mv(angle_mot.velocity,np.abs((end_angle - start_angle)/exp_time))
+    @bpp.run_decorator(md=md)
+    @bpp.stage_decorator([det])
+    def _inner_scan():
+        yield from bps.abs_set(shutter, 1, just_wait=True, group='shutter') # start waiting for the shutter to open
+        yield from bps.trigger(det, group='measure') # trigger the detector, which will eventually open the shutter
+        yield from bps.wait(group='shutter') # wait for the shutter to open
+        yield from bps.abs_set(angle_mot,end_angle,group='measure') # begin motor movement
+        yield from bps.wait(group='measure') # wait for the detector to finish
+        yield from create('primary')
+        reading = (yield from read(det))
+        yield from save()
+        return reading
+    def _cleanup():
+        yield from bps.mv(angle_mot.velocity,old_velo)
+    return (yield from bpp.contingency_wrapper(_inner_scan(),final_plan=_cleanup))
+
+def flymotor_trigger_and_read(devices, name='primary'):
+
+    """
+    Trigger and read a list of detectors and bundle readings into one Event.
+
+    Parameters
+    ----------
+    devices : iterable
+        devices to trigger (if they have a trigger method) and then read
+    name : string, optional
+        event stream name, a convenient human-friendly identifier; default
+        name is 'primary'
+
+    Yields
+    ------
+    msg : Msg
+        messages to 'trigger', 'wait' and 'read'
+    """
+    from bpp import contingency_wrapper
+    # If devices is empty, don't emit 'create'/'save' messages.
+    if not devices:
+        yield from null()
+    devices = separate_devices(devices)  # remove redundant entries
+    rewindable = all_safe_rewind(devices)  # if devices can be re-triggered
+
+    def inner_trigger_and_read():
+        grp = _short_uid('trigger')
+        no_wait = True
+        for obj in devices:
+            if isinstance(obj, Triggerable):
+                no_wait = False
+                yield from trigger(obj, group=grp)
+        
+        # add the motor kick off and wait for the shutter to open here
+        
+        
+        # Skip 'wait' if none of the devices implemented a trigger method.
+
+        if not no_wait:
+            yield from wait(group=grp)
+        yield from create(name)
+
+        def read_plan():
+            ret = {}  # collect and return readings to give plan access to them
+            for obj in devices:
+                reading = (yield from read(obj))
+                if reading is not None:
+                    ret.update(reading)
+            return ret
+
+        def standard_path():
+            yield from save()
+
+        def exception_path(exp):
+            yield from drop()
+            raise exp
+
+        ret = yield from contingency_wrapper(
+            read_plan(),
+            except_plan=exception_path,
+            else_plan=standard_path
+            )
+        return ret
+
+    from .preprocessors import rewindable_wrapper
+    return (yield from rewindable_wrapper(inner_trigger_and_read(),
+                                          rewindable))
