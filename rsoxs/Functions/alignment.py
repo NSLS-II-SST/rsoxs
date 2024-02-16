@@ -146,6 +146,15 @@ def get_sample_location():
     return locs
 
 
+def duplicate_sample(samp_num,name_suffix):
+     newsamp =deepcopy(samp_dict_from_id_or_num(samp_num))
+     newsamp['location'] = get_sample_location()
+     newsamp['sample_name']+=f'_{name_suffix}'
+     newsamp['sample_id']+=f'_{name_suffix}'
+     rsoxs_config['bar'].append(newsamp)
+     rsoxs_config.write()
+
+
 def move_to_location(locs=get_sample_location()):
     for item in locs:
         item.setdefault("order", 0)
