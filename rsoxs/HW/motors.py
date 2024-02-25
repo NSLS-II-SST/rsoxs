@@ -36,10 +36,10 @@ sam_viewer = PrettyMotorFMBO(
     "XF:07ID2-ES1{ImgY-Ax:1}Mtr", name="RSoXS Sample Imager", kind="hinted"
 )
 sam_X = PrettyMotorFMBODeadbandFlyer(
-    "XF:07ID2-ES1{Stg-Ax:X}Mtr", name="RSoXS Sample Outboard-Inboard", kind="hinted",retries=5
+    "XF:07ID2-ES1{Stg-Ax:X}Mtr", name="RSoXS Sample Outboard-Inboard", kind="hinted"#,retries=5
 )
 sam_Y = PrettyMotorFMBODeadbandFlyer(
-    "XF:07ID2-ES1{Stg-Ax:Y}Mtr", name="RSoXS Sample Up-Down", kind="hinted",retries=3,
+    "XF:07ID2-ES1{Stg-Ax:Y}Mtr", name="RSoXS Sample Up-Down", kind="hinted"#,retries=3,
 )
 sam_Z = PrettyMotorFMBODeadbandFlyer(
     "XF:07ID2-ES1{Stg-Ax:Z}Mtr", name="RSoXS Sample Downstream-Upstream", kind="hinted"

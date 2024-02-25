@@ -15,7 +15,7 @@ import numpy as np
 from copy import deepcopy
 
 from sst_hw.diode import Shutter_control, Shutter_enable
-from ..startup import RE, db, bec, db0, sd, rsoxs_config
+from ..startup import RE, db,  db0, sd, rsoxs_config #bec,
 from ..HW.energy import en
 
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, Beamstop_WAXS_int
@@ -214,7 +214,7 @@ def fly_max(
     for detector in detectors:
         detector.kind = 'normal'
     motor.kind='normal'
-    bec.disable_plots
+    # bec.disable_plots
     return signal_dict
 
 
@@ -346,7 +346,7 @@ def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=
     yield from bps.mv(Shutter_control, 0)
     yield from load_configuration("WAXSNEXAFS")
     Beamstop_WAXS_int.kind = "hinted"
-    bec.enable_plots()
+    # bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
     maxlocs = []
     for startxs, starty in zip(startxss, startys):
@@ -384,4 +384,4 @@ def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=
             if samp['front'] ==False:
                 back = True
         correct_bar(maxlocs,include_back=back)
-    bec.disable_plots()
+    #bec.disable_plots()

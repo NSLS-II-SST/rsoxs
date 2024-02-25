@@ -58,7 +58,7 @@ from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sampl
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
-from ..Functions.fly_alignment import find_optimum_motor_pos, bec, db, return_NullStatus_decorator
+from ..Functions.fly_alignment import find_optimum_motor_pos, db, return_NullStatus_decorator #bec, 
 
 from .flystream_wrapper import flystream_during_wrapper
 from sst_hw.diode import (
@@ -623,7 +623,7 @@ def new_en_scan_core(
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
-                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int],stream=False),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
@@ -634,7 +634,7 @@ def new_en_scan_core(
                     md=md,
                     ),#per_step=flyer_per_step),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
-                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int],stream=False),
             cleanup()
         )
         #yield from flyer_final()
@@ -1090,7 +1090,7 @@ def flyer_scan_energy(scan_params, sigs=[], md={},locked=True,polarization=0):
 
         en.land()
 
-    return (yield from flystream_during_wrapper(inner_flyscan(), flyers))
+    return (yield from flystream_during_wrapper(inner_flyscan(), flyers,stream=False))
 
 
 

@@ -12,7 +12,7 @@ import bluesky.plan_stubs as bps
 from bluesky.utils import FailedStatus
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
-from ..startup import RE, db, bec, db0, rsoxs_config
+from ..startup import RE, db,  db0, rsoxs_config #bec,
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_hw.diode import Shutter_enable, Shutter_control
@@ -616,50 +616,50 @@ def spiralsearch(
 # correct_bar(bar,af1x,af1y,af2x,af2y)
 
 
-def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
-    thoffset = 0
-    angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
-    xrange = 3.5
-    xnum = 36
-    startxss = [f2, [4.2, 3.5, 1, 1.1]]
-    yield from bps.mv(Shutter_enable, 0)
-    yield from bps.mv(Shutter_control, 0)
-    yield from load_configuration("SAXSNEXAFS")
-    Beamstop_SAXS.kind = "hinted"
-    # yield from bps.mv(DiodeRange, 7)
-    bec.enable_plots()
-    startys = [3, -187.0]  # af2 first because it is a safer location
-    maxlocs = []
-    for startxs, starty in zip(startxss, startys):
-        yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
-        yield from bps.mv(Shutter_control, 1)
-        yield from bp.rel_scan([Beamstop_SAXS], sam_Y, -1, 0.5, 16)
-        yield from bps.mv(Shutter_control, 0)
-        maxlocs.append(bec.peaks.max["SAXS Beamstop"][0])
-        yield from bps.mv(sam_Y, bec.peaks.max["SAXS Beamstop"][0])
-        for startx, angle in zip(startxs, angles):
-            yield from bps.mv(sam_X, startx, sam_Th, angle)
-            yield from bps.mv(Shutter_control, 1)
-            yield from bp.scan(
-                [Beamstop_SAXS],
-                sam_X,
-                startx - 0.5 * xrange,
-                startx + 0.5 * xrange,
-                xnum,
-            )
-            yield from bps.mv(Shutter_control, 0)
-            yield from bps.sleep(3)
-            maxlocs.append(bec.peaks.max["SAXS Beamstop"][0])
-    print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
-    accept = input(f"Do you want to apply this correction (y,n)?")
-    if accept in ['y','Y','yes']:
-        back = False
-        rsoxs_config.read()
-        for samp in rsoxs_config['bar']:
-            if samp['front'] ==False:
-                back = True
-        correct_bar(maxlocs,include_back=back)
-    bec.disable_plots()
+# def find_fiducials(f2=[7.5, 3.5, -2.5, 1.1]):
+#     thoffset = 0
+#     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
+#     xrange = 3.5
+#     xnum = 36
+#     startxss = [f2, [4.2, 3.5, 1, 1.1]]
+#     yield from bps.mv(Shutter_enable, 0)
+#     yield from bps.mv(Shutter_control, 0)
+#     yield from load_configuration("SAXSNEXAFS")
+#     Beamstop_SAXS.kind = "hinted"
+#     # yield from bps.mv(DiodeRange, 7)
+#     # bec.enable_plots() # TODO: need to turn on plotting temporarilly for this function
+#     startys = [3, -187.0]  # af2 first because it is a safer location
+#     maxlocs = []
+#     for startxs, starty in zip(startxss, startys):
+#         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
+#         yield from bps.mv(Shutter_control, 1)
+#         yield from bp.rel_scan([Beamstop_SAXS], sam_Y, -1, 0.5, 16) # TODO: replace with flymax
+#         yield from bps.mv(Shutter_control, 0)
+#         #maxlocs.append(bec.peaks.max["SAXS Beamstop"][0]) #TODO: need to find maxiumum another way
+#         # yield from bps.mv(sam_Y, bec.peaks.max["SAXS Beamstop"][0])
+#         for startx, angle in zip(startxs, angles):
+#             yield from bps.mv(sam_X, startx, sam_Th, angle)
+#             yield from bps.mv(Shutter_control, 1)
+#             yield from bp.scan( # TODO: replace with flymax
+#                 [Beamstop_SAXS],
+#                 sam_X,
+#                 startx - 0.5 * xrange,
+#                 startx + 0.5 * xrange,
+#                 xnum,
+#             )
+#             yield from bps.mv(Shutter_control, 0)
+#             yield from bps.sleep(3)
+#             # maxlocs.append(bec.peaks.max["SAXS Beamstop"][0]) #TODO: need to find maxiumum another way
+#     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
+#     accept = input(f"Do you want to apply this correction (y,n)?")
+#     if accept in ['y','Y','yes']:
+#         back = False
+#         rsoxs_config.read()
+#         for samp in rsoxs_config['bar']:
+#             if samp['front'] ==False:
+#                 back = True
+#         correct_bar(maxlocs,include_back=back)
+#     # bec.disable_plots()
 
 
 def rotate_now(theta, force=False):

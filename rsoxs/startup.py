@@ -44,22 +44,22 @@ if not is_re_worker_active():
     ip = get_ipython()
     ns = get_ipython().user_ns
     nslsii.configure_base(
-        ns, "rsoxs", configure_logging=True, publish_documents_with_kafka=True
+        ns, "rsoxs", ec=False, configure_logging=True, publish_documents_with_kafka=True
     )
     ip.log.setLevel("ERROR")
     RE = ip.user_ns["RE"]
     db = ip.user_ns["db"]
     sd = ip.user_ns["sd"]
-    bec = ip.user_ns["bec"]
+    #bec = ip.user_ns["bec"]
 else:
     ns = {}
     nslsii.configure_base(
-        ns, "rsoxs", configure_logging=True, publish_documents_with_kafka=True
+        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
     )
     RE = ns["RE"]
     db = ns["db"]
     sd = ns["sd"]
-    bec = ns["bec"]
+    #bec = ns["bec"]
 
 
 # === START PERSISTENT DICT CODE ===
@@ -192,7 +192,7 @@ print(f'You are using the "{control_layer}" control layer')
 import logging
 
 logging.getLogger("caproto").setLevel("ERROR")
-bec.disable_baseline()
+#bec.disable_baseline()
 
 #from bluesky.callbacks.zmq import Publisher
 
@@ -213,8 +213,8 @@ from databroker.v0 import Broker
 
 db0 = Broker.named("rsoxs")
 
-bec.disable_table()
-bec.disable_plots()
+#bec.disable_table()
+#bec.disable_plots()
 
 RE.md['scan_id'] = int(RE.md['scan_id'])
 

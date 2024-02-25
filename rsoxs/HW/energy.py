@@ -13,7 +13,7 @@ from ..HW.motors import sam_Th, sam_X, sam_Y
 from sst_funcs.printing import run_report
 from sst_hw.diode import Shutter_control
 from .signals import Sample_TEY
-from ..startup import bec
+# from ..startup import bec
 
 from sst_base.detectors.scalar import I400SingleCh
 
@@ -152,43 +152,43 @@ def grating_to_rsoxs(hopgx=None,hopgy=None,hopgtheta=None):
         yield from calibrate_energy(x,y,th)
 
 
-def calibrate_energy(x,y,th):
-    ensave = en.energy.setpoint.get()
-    xsave = sam_X.user_setpoint.get()
-    ysave = sam_Y.user_setpoint.get()
-    thsave = sam_Th.user_setpoint.get()
-    bec.enable_plots()
-    Sample_TEY.kind='hinted'
-    yield from bps.mv(sam_X,x,sam_Y,y,sam_Th,th)
-    yield from bps.mv(en.polarization, 90)
-    yield from bps.mv(en, 291.65)
-    yield from bps.sleep(1)
-    yield from bps.mv(en, 291.65)
-    yield from bps.sleep(1)
-    yield from bps.mv(en, 291.65)
-    yield from bps.mv(Shutter_control,1)
-    yield from bp.rel_scan([Sample_TEY],grating,-0.5,.5,mirror2,-0.5,.5,201)
-    yield from bps.mv(Shutter_control,0)
-    yield from bps.sleep(5)
-    newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
-    if -0.45 < newoffset < 0.45 :
-        yield from bps.mvr(grating.user_offset,newoffset,mirror2.user_offset,newoffset)
-    yield from bps.mv(en, 291.65)
-    yield from bps.sleep(1)
-    yield from bps.mv(en, 291.65)
-    yield from bps.sleep(1)
-    yield from bps.mv(en, 291.65)
-    yield from bps.mv(Shutter_control,1)
-    yield from bp.rel_scan([Sample_TEY],grating,-0.02,.02,mirror2,-0.02,.02,101)
-    yield from bps.mv(Shutter_control,0)
-    yield from bps.mv(sam_X,xsave,sam_Y,ysave,sam_Th,thsave)
-    yield from bps.sleep(5)
-    newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
-    if -0.019 < newoffset < 0.019 :
-        yield from bps.mvr(grating.user_offset,newoffset,mirror2.user_offset,newoffset)
-    yield from bps.mv(en, ensave)
-    bec.disable_plots()
-    Sample_TEY.kind='normal'
+# def calibrate_energy(x,y,th):
+#     ensave = en.energy.setpoint.get()
+#     xsave = sam_X.user_setpoint.get()
+#     ysave = sam_Y.user_setpoint.get()
+#     thsave = sam_Th.user_setpoint.get()
+#     #bec.enable_plots()
+#     Sample_TEY.kind='hinted'
+#     yield from bps.mv(sam_X,x,sam_Y,y,sam_Th,th)
+#     yield from bps.mv(en.polarization, 90)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.sleep(1)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.sleep(1)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.mv(Shutter_control,1)
+#     yield from bp.rel_scan([Sample_TEY],grating,-0.5,.5,mirror2,-0.5,.5,201)
+#     yield from bps.mv(Shutter_control,0)
+#     yield from bps.sleep(5)
+#     newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
+#     if -0.45 < newoffset < 0.45 :
+#         yield from bps.mvr(grating.user_offset,newoffset,mirror2.user_offset,newoffset)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.sleep(1)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.sleep(1)
+#     yield from bps.mv(en, 291.65)
+#     yield from bps.mv(Shutter_control,1)
+#     yield from bp.rel_scan([Sample_TEY],grating,-0.02,.02,mirror2,-0.02,.02,101)
+#     yield from bps.mv(Shutter_control,0)
+#     yield from bps.mv(sam_X,xsave,sam_Y,ysave,sam_Th,thsave)
+#     yield from bps.sleep(5)
+#     newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
+#     if -0.019 < newoffset < 0.019 :
+#         yield from bps.mvr(grating.user_offset,newoffset,mirror2.user_offset,newoffset)
+#     yield from bps.mv(en, ensave)
+#     bec.disable_plots()
+#     Sample_TEY.kind='normal'
 
 speed_offset_factor = 30
 

@@ -43,7 +43,7 @@ from sst_hw.shutters import psh10
 from sst_hw.vacuum import rsoxs_ll_gpwr
 from sst_hw.motors import Exit_Slit
 from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
-from ..startup import bec
+# from ..startup import bec
 from sst_funcs.printing import run_report
 from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
 from .fly_alignment import fly_max
@@ -351,7 +351,7 @@ def do_2023_eputables():
     mono_en.readback.kind = "hinted"
     mono_en.kind = "hinted"
     mono_en.read_attrs = ["readback"]
-    bec.enable_plots()  # TODO: this will work, but not needed - need to move all plotting to a seperate app
+    # bec.enable_plots()  # TODO: this will work, but not needed - need to move all plotting to a seperate app
     yield from load_configuration("WAXSNEXAFS")
     yield from bps.mv(slits1.hsize, 1)
     yield from bps.mv(slits2.hsize, 1)
@@ -610,7 +610,7 @@ def tune_pgm(
     grating_measured = []
     energy_measured = []
     m_measured = []
-    bec.enable_plots()
+    # bec.enable_plots()
     for cff, m_order in zip(cs, ms):
         m_set, g_set = get_mirror_grating_angles(energy, cff, k, m_order)
         print(f'setting cff to {cff} for a mirror with k={k} at {m_order} order')
@@ -647,7 +647,7 @@ def tune_pgm(
     accept = input("Accept these values and set the offset (y/n)? ")
     if accept in ["y", "Y", "yes"]:
         yield from bps.mvr(mirror2.user_offset, -fit.x[0], grating.user_offset, -fit.x[1])
-    bec.disable_plots()
+    # bec.disable_plots()
     detector.kind = "normal"
     return fit
 
