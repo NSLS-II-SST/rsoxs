@@ -362,28 +362,55 @@ def SAXSNEXAFS():
         },
     ]
 
+"""
+┌─── Upstream Scatter Slits ────────────────────────────────────────────────┐
+│      vertical   size   =   0.026 mm                                       │
+│      vertical   center =  -0.549 mm                                       │
+│      horizontal size   =   0.201 mm                                       │
+│      horizontal center =   0.700 mm                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+
+RSoXS /nsls2/data/sst/proposals/2024-1/pass-312112 [151]: slits2.wh()
+Middle Scatter Slits:
+
+┌─── Middle Scatter Slits ──────────────────────────────────────────────────┐
+│      vertical   size   =   0.301 mm                                       │
+│      vertical   center =  -0.851 mm                                       │
+│      horizontal size   =   0.701 mm                                       │
+│      horizontal center =   0.650 mm                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+
+RSoXS /nsls2/data/sst/proposals/2024-1/pass-312112 [152]: slits3.wh()
+Final Scatter Slits:
+
+┌─── Final Scatter Slits ───────────────────────────────────────────────────┐
+│      vertical   size   =   0.898 mm                                       │
+│      vertical   center =  -0.450 mm                                       │
+│      horizontal size   =   1.199 mm                                       │
+│      horizontal center =   0.900 mm   
+"""
 
 def WAXSNEXAFS():
     return [
         [
             {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.1, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.3, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.25, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.65, "order": 0},
-            {"motor": slits3.vsize, "position": 1.2, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.4, "order": 0},
-            {"motor": slits3.hsize, "position": 0.745, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
+            {"motor": slits1.vsize, "position": 0.026, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.549, "order": 0},
+            {"motor": slits1.hsize, "position": 0.201, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.700, "order": 0},
+            {"motor": slits2.vsize, "position":  0.301, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.851, "order": 0},
+            {"motor": slits2.hsize, "position": 0.701, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.650, "order": 0},
+            {"motor": slits3.vsize, "position": 0.898, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.450, "order": 0},
+            {"motor": slits3.hsize, "position": 1.199, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.900, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 0},
+            {"motor": Izero_Y, "position": -31, "order": 0},
             {"motor": Det_W, "position": waxs_out_pos, "order": 1},
             # {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": 71.2, "order": 1},
+            {"motor": BeamStopW, "position": 71, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
@@ -403,20 +430,20 @@ def WAXS():
     return [
         [
             {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.1, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.7, "order": 0},
-            {"motor": slits2.vsize, "position": 0.3, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.9, "order": 0},
-            {"motor": slits2.hsize, "position": 0.25, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.65, "order": 0},
-            {"motor": slits3.vsize, "position": 1.2, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.4, "order": 0},
-            {"motor": slits3.hsize, "position": 0.745, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.9, "order": 0},
+            {"motor": slits1.vsize, "position": 0.026, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.549, "order": 0},
+            {"motor": slits1.hsize, "position": 0.201, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.700, "order": 0},
+            {"motor": slits2.vsize, "position":  0.301, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.851, "order": 0},
+            {"motor": slits2.hsize, "position": 0.701, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.650, "order": 0},
+            {"motor": slits3.vsize, "position": 0.898, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.450, "order": 0},
+            {"motor": slits3.hsize, "position": 1.199, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.900, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -29, "order": 1},
+            {"motor": Izero_Y, "position": -31, "order": 0},
             {"motor": Det_W, "position": waxs_in_pos, "order": 1},
             {"motor": BeamStopW, "position": 71, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
