@@ -74,7 +74,13 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
             if hasattr(cpt, "ensure_nonblocking"):
                 cpt.ensure_nonblocking()
 
-
+class BooleanSignal(Signal):
+    def describe(self):
+        res = super().describe()
+        (key,) = res
+        res[key]["dtype"] = "boolean"
+        res[key]["dtype_str"] = "|b"
+        return res
 
 class GreateyesTransform(TransformPlugin):
     def __init__(self, *args, **kwargs):
@@ -101,12 +107,12 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     stats1 = C(StatsWithHist, "Stats1:",kind='hinted')
     stats2 = C(StatsWithHist, 'Stats2:')
-    under_exposed = C(Signal,value=False,kind='hinted',name='under_exposed')
+    under_exposed = C(BooleanSignal,value=False,kind='hinted',name='under_exposed')
     saturation_high_threshold = 100000
     saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
     saturation_low_threshold = 500
     saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
-    saturated = C(Signal,value=False,kind='hinted',name='saturated')
+    saturated = C(BooleanSignal,value=False,kind='hinted',name='saturated')
     high_sat_check = [False,False]
 
     underexposure_min_value = 2000

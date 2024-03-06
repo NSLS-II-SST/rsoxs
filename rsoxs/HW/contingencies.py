@@ -12,10 +12,13 @@ from ..Functions.contingencies import (
     det_down_notice,
     temp_bad_notice,
     temp_ok_notice,
+    amp_fault_clear_19,
+    amp_fault_clear_20,
+    amp_fault_clear_21,
 )
 from sst_hw.gatevalves import gvll, gv27a
 from sst_hw.shutters import psh4, FEsh1
-from ..HW.signals import ring_current, sst_control
+from ..HW.signals import ring_current, sst_control, mc19_fault, mc20_fault, mc21_fault
 from ..HW.motors import sam_X
 from sst_hw.vacuum import rsoxs_pg_main_val, rsoxs_ccg_main_val
 from ..HW.detectors import (
@@ -167,6 +170,32 @@ suspendx = SuspendBoolHigh(
     "resume automatically.",
     pre_plan=enc_clr_x,
 )
+
+
+suspendmc19_amp_fault = SuspendBoolLow(
+    mc19_fault,
+    sleep=10,
+    tripped_message="Amp fault detected in MC19, waiting for clear before continuing",
+    pre_plan=amp_fault_clear_19,
+)
+
+
+suspendmc20_amp_fault = SuspendBoolLow(
+    mc20_fault,
+    sleep=10,
+    tripped_message="Amp fault detected in MC20, waiting for clear before continuing",
+    pre_plan=amp_fault_clear_20,
+)
+
+
+suspendmc21_amp_fault = SuspendBoolLow(
+    mc21_fault,
+    sleep=10,
+    tripped_message="Amp fault detected in MC21, waiting for clear before continuing",
+    pre_plan=amp_fault_clear_21,
+)
+
+
 suspendgx = SuspendBoolHigh(
     sam_X.enc_lss,
     sleep=40,
@@ -193,6 +222,9 @@ def turn_on_checks():
     #RE.install_suspender(suspend_pressure)
     RE.install_suspender(suspend_pressure2)
     RE.install_suspender(suspend_gate_valve)
+    RE.install_suspender(suspendmc19_amp_fault)
+    RE.install_suspender(suspendmc20_amp_fault)
+    RE.install_suspender(suspendmc21_amp_fault)
     #RE.install_suspender(suspend_waxs_temp_low)
     #RE.install_suspender(suspend_waxs_temp_high)
     # RE.install_suspender(suspend_saxs_temp_low)
@@ -209,6 +241,9 @@ def turn_off_checks():
     RE.remove_suspender(suspend_pressure2)
     RE.remove_suspender(suspend_current)
     RE.remove_suspender(suspendx)
+    RE.remove_suspender(suspendmc19_amp_fault)
+    RE.remove_suspender(suspendmc20_amp_fault)
+    RE.remove_suspender(suspendmc21_amp_fault)
     #RE.remove_suspender(suspend_pressure)
     #RE.remove_suspender(suspend_waxs_temp_low)
     #RE.remove_suspender(suspend_waxs_temp_high)

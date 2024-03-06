@@ -5,9 +5,11 @@ import logging
 global no_notifications_until
 from ..startup import RE
 from ..HW.slackbot import rsoxs_bot
-from ..HW.motors import sam_X
+from ..HW.motors import sam_X, sam_Y, sam_Th,sam_Z, BeamStopS, BeamStopW,Det_S,Det_W, Izero_Y, Shutter_Y
 from sst_hw.motors import gratingx, mirror2x, mirror2, grating
+from ..HW.slits import slits1, slits2, slits3
 from sst_funcs.printing import run_report
+from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
 
 
 run_report(__file__)
@@ -46,6 +48,94 @@ def send_notice(subject, msg):
 def send_notice_plan(subject, msg):
     send_notice(subject, msg)
     yield from bps.sleep(0.1)
+
+
+def enc_clr_x():
+    send_notice(
+        "SST had a small problem",
+        "the encoder loss has happened on the RSoXS beamline" "\rEverything is probably just fine",
+    )
+    xpos = sam_X.user_readback.get()
+    yield from sam_X.clear_encoder_loss()
+    yield from sam_X.home()
+    yield from bps.sleep(30)
+    yield from bps.mv(sam_X, xpos)
+
+
+def amp_fault_clear_19():
+    send_notice(
+        "AmpFault on MC19",
+        "Attempting automatic clear",
+    )
+    # turn on disable to MC19 amps
+    yield from bps.mv(MC19_disable,1)
+    # wait a second
+    yield from bps.sleep(1)
+    # enable all MC19 amps
+    yield from bps.mv(
+        slits1.top.enable,1,
+        slits1.bottom.enable,1,
+        slits1.inboard.enable,1,
+        slits1.outboard.enable,1,
+        Shutter_Y.enable,1,
+        Izero_Y.enable,1,
+    )
+    # wait a second
+    yield from bps.sleep(1)
+    # turn off MC19 amps
+    yield from bps.mv(MC19_disable,0)
+
+
+def amp_fault_clear_20():
+    send_notice(
+        "AmpFault on MC20",
+        "Attempting automatic clear",
+    )
+    # turn on disable to MC19 amps
+    yield from bps.mv(MC20_disable,1)
+    # wait a second
+    yield from bps.sleep(1)
+    # enable all MC19 amps
+    yield from bps.mv(
+        slits2.top.enable,1,
+        slits2.bottom.enable,1,
+        slits2.inboard.enable,1,
+        slits2.outboard.enable,1,
+        slits3.top.enable,1,
+        slits3.bottom.enable,1,
+        slits3.inboard.enable,1,
+        slits3.outboard.enable,1,
+    )
+    # wait a second
+    yield from bps.sleep(1)
+    # turn off MC19 amps
+    yield from bps.mv(MC20_disable,0)
+
+
+def amp_fault_clear_21():
+    send_notice(
+        "AmpFault on MC21",
+        "Attempting automatic clear",
+    )
+    # turn on disable to MC19 amps
+    yield from bps.mv(MC21_disable,1)
+    # wait a second
+    yield from bps.sleep(1)
+    # enable all MC19 amps
+    yield from bps.mv(
+        sam_X.top.enable,1,
+        sam_Y.bottom.enable,1,
+        sam_Th.inboard.enable,1,
+        sam_Z.outboard.enable,1,
+        #Det_S.enable,1,
+        Det_W.enable,1,
+        BeamStop_S.enable,1,
+        BeamStop_W.enable,1,
+    )
+    # wait a second
+    yield from bps.sleep(1)
+    # turn off MC19 amps
+    yield from bps.mv(MC21_disable,0)
 
 
 def enc_clr_x():

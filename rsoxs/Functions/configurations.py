@@ -292,7 +292,7 @@ def SAXS():
     return [
         [
             {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.025, "order": 0},
+            {"motor": slits1.vsize, "position": 0.1, "order": 0},
             {"motor": slits1.vcenter, "position": -0.55, "order": 0},
             {"motor": slits1.hsize, "position": 0.1, "order": 0},
             {"motor": slits1.hcenter, "position": 0.7, "order": 0},

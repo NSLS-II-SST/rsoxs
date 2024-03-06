@@ -10,6 +10,7 @@ from sst_hw.energy import (
     mirror2
 )
 from ..HW.motors import sam_Th, sam_X, sam_Y
+from ophyd import EpicsSignal
 from sst_funcs.printing import run_report
 from sst_hw.diode import Shutter_control
 from .signals import Sample_TEY
@@ -74,11 +75,11 @@ epu_mode = en.epumode
 # en.epugap.kind = "normal"
 # en.read_attrs = ['readback']
 
-Mono_Scan_Start_ev = en.monoen.Scan_Start_ev
-Mono_Scan_Stop_ev = en.monoen.Scan_Stop_ev
-Mono_Scan_Speed_ev = en.monoen.Scan_Speed_ev
-Mono_Scan_Start = en.monoen.Scan_Start
-Mono_Scan_Stop = en.monoen.Scan_Stop
+#Mono_Scan_Start_ev = en.monoen.Scan_Start_ev
+#Mono_Scan_Stop_ev = en.monoen.Scan_Stop_ev
+#Mono_Scan_Speed_ev = en.monoen.Scan_Speed_ev
+#Mono_Scan_Start = en.monoen.Scan_Start
+#Mono_Scan_Stop = en.monoen.Scan_Stop
 
 def set_polarization(pol):
     yield from base_set_polarization(pol, en)
@@ -197,3 +198,40 @@ def get_gap_offset(start,stop,speed):
         return speed * speed_offset_factor
     else:
         return -speed * speed_offset_factor
+
+
+
+
+
+### new code to test the undulator fly scanning
+'''
+interesting PVs:
+SR:C07-ID:G1A{SST1:1}CalculateSpline.PROC
+SR:C07-ID:G1A{SST1:1}EScan-Speed-SP
+SR:C07-ID:G1A{SST1:1}EScan-Speed-RB
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr-SP
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr-Go.PROC
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr.STOP
+SR:C07-ID:G1A{SST1:1}FlyMove-Speed-SP
+SR:C07-ID:G1A{SST1:1}FlyMove-Speed-RB
+
+Energy and Gap arrays which are used for the spline calculation:
+SR:C07-ID:G1A{SST1:1}FlyLUT-Energy-RB
+SR:C07-ID:G1A{SST1:1}FlyLUT-Gap-RB
+SR:C07-ID:G1A{SST1:1}FlyLUT-Energy-SP
+SR:C07-ID:G1A{SST1:1}FlyLUT-Gap-SP
+
+Process to calculate a new spline:
+SR:C07-ID:G1A{SST1:1}CalculateSpline.PROC
+
+For Energy Move:
+
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr-SP # setpoint of move final position
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr-Go.PROC # go
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr.STOP # stop
+SR:C07-ID:G1A{SST1:1}FlyMove-Speed-SP # setpoint speed
+SR:C07-ID:G1A{SST1:1}FlyMove-Speed-RB # readback speed
+
+SR:C07-ID:G1A{SST1:1}FlyMove-Mtr.MOVN # moving
+'''
+

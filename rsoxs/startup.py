@@ -44,7 +44,7 @@ if not is_re_worker_active():
     ip = get_ipython()
     ns = get_ipython().user_ns
     nslsii.configure_base(
-        ns, "rsoxs", ec=False, configure_logging=True, publish_documents_with_kafka=True
+        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
     )
     ip.log.setLevel("ERROR")
     RE = ip.user_ns["RE"]

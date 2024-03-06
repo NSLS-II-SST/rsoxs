@@ -592,7 +592,7 @@ def spiralsearch(
                                                         x_num=num,
                                                         y_num=num,
                                                         md=md,
-                ),[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int])
+                ),[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int],stream=False)
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 

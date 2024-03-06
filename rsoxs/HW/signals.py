@@ -252,6 +252,10 @@ Sample_TEY = EpicsSignalRO(
 )
 
 
+mc19_fault = EpicsSignalRO('SST1_Upstream:MC19AmpFaultSum-Sts',name="MC19 Amp Fault")
+mc20_fault = EpicsSignalRO('SST1_Upstream:MC20AmpFaultSum-Sts',name="MC20 Amp Fault")
+mc21_fault = EpicsSignalRO('SST1_Upstream:MC21AmpFaultSum-Sts',name="MC21 Amp Fault")
+
 Izero_update_time = EpicsSignal(
      "XF:07ID1-BI{EM:1}EM180:AveragingTime",
      name="RSoXS quadem Averaging Time",

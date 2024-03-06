@@ -683,3 +683,26 @@ def do_cdsaxs(energies, samples):
         yield from load_samp(samp)
         yield from bps.mv(sam_Th,-70)
         yield from do_rsoxs(edge=energies,frames=1,exposure=.1,md={'plan_name':f'cd_full_en_20deg','plan_intent':f'cd_full_en_20deg'})
+
+
+def ramp_temp_test(temp,ramp_rate,interval,energies,pols,name):
+    yield from bps.mv(tem_tempstage.ramp_rate,ramp_rate)
+    status = (yield from bps.abs_set(tem_tempstage.setpoint,temp,group='temp'))
+    while not status.done:
+        yield from bps.sleep(interval)
+        for energy in energies:
+            for pol in pols:
+                yield from bps.mv(en,energy,en.polarization,pol)
+                temp = tem_tempstage.readback.get()
+                RE.md['sample_id']=f'{name}_{energy}eV__{temp}C'
+                RE.md['sample_name']=f'{name}_{energy}eV__{temp}C'
+                print(f'taking an image with name {RE.md["sample_name"]}')
+                yield from bps.count([waxs_det])
+
+
+def do_hopg_nexafs(sizes,pols):
+    for gaps in sizes:
+        RE(bps.mv(slits1.vsize,gaps))
+        RE.md['sample_id']=f'HOPG_vslit{gaps}'
+        RE.md['sample_name']=f'HOPG_vslit{gaps}'
+        RE(do_nexafs(edge='carbon',speed=.2,cycles=0,polarizations=pols))
