@@ -12,16 +12,22 @@ run_report(__file__)
 # These might need/make more sense to be split up into separate files later on.
 # But while we have so few, I'm just putting them in this single file.
 
+
+#signals
 bpm13_sum = EpicsSignalRO(
     "XF:07ID-BI{BPM:13}Stats5:Total_RBV", name="Downstream Izero Phosphor Intensity"
 )
-
 ring_current = EpicsSignalRO(
     "SR:OPS-BI{DCCT:1}I:Real-I", name="NSLS-II Ring Current", kind="normal"
 )
+
+
+
 sst_control = EpicsSignalRO(
     "XF:07ID1-CT{Bl-Ctrl}Endstn-Sel", name="SST endstation in Control", kind="normal",string=True
 )
+
+#detectors (Jamie's definition)
 Beamstop_WAXS = EpicsSignalRO(
     "XF:07ID-ES1{DMR:I400-1}:IC1_MON", name="WAXS Beamstop", kind="normal"
 )
