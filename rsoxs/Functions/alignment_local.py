@@ -477,7 +477,7 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
         back = False
     else:
         back = include_back
-    af1x_img = af1_front["location"][0]["position"]
+    af1x_img = af1_front["location"][0]["position"] # TODO: should change to image position, so you can run fiducials again and again without problems
     af1y_img = af1_front["location"][1]["position"]
     af2x_img = af2_front["location"][0]["position"]
     af2y_img = af2_front["location"][1]["position"]

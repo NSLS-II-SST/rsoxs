@@ -81,7 +81,7 @@ def amp_fault_clear_19():
         Izero_Y.enable,1,
     )
     # wait a second
-    yield from bps.sleep(1)
+    yield from bps.sleep(5)
     # turn off MC19 amps
     yield from bps.mv(MC19_disable,0)
 
@@ -107,7 +107,7 @@ def amp_fault_clear_20():
         slits3.outboard.enable,1,
     )
     # wait a second
-    yield from bps.sleep(1)
+    yield from bps.sleep(5)
     # turn off MC19 amps
     yield from bps.mv(MC20_disable,0)
 
@@ -133,7 +133,7 @@ def amp_fault_clear_21():
         BeamStop_W.enable,1,
     )
     # wait a second
-    yield from bps.sleep(1)
+    yield from bps.sleep(5)
     # turn off MC19 amps
     yield from bps.mv(MC21_disable,0)
 

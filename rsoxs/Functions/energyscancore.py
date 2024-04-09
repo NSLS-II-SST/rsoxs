@@ -623,7 +623,7 @@ def new_en_scan_core(
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
-                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int],stream=True),
+                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=True),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
@@ -634,7 +634,7 @@ def new_en_scan_core(
                     md=md,
                     ),#per_step=flyer_per_step),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
-                    [Beamstop_WAXS_int, Izero_Mesh_int, Sample_TEY_int],stream=True),
+                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=True),
             cleanup()
         )
         #yield from flyer_final()
@@ -890,7 +890,7 @@ def NEXAFS_fly_scan_core(
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    signals = [Beamstop_WAXS, Beamstop_SAXS, Izero_Mesh, Sample_TEY]
+    signals = [Beamstop_WAXS, Izero_Mesh, Sample_TEY]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
