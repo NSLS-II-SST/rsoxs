@@ -54,7 +54,7 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det#, saxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int, ring_current
+from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, DM7_Photodiode_int, Izero_Mesh_int,Sample_TEY_int, ring_current
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -131,7 +131,7 @@ def NEXAFS_step_scan_core(
 ):
     # grab locals
     if dets is None:
-        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int]
+        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, DM7_Photodiode_int, Izero_Mesh_int,Sample_TEY_int]
     if energies is None:
         energies = []
     if times is None:
@@ -366,7 +366,7 @@ def new_en_scan_core(
     master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
-    signals = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,mono_en,epu_gap,ring_current],
+    signals = [Beamstop_WAXS_int, Beamstop_SAXS_int, DM7_Photodiode_int, Izero_Mesh_int, Sample_TEY_int,mono_en,epu_gap,ring_current],
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
@@ -1062,7 +1062,7 @@ def flyer_scan_energy(scan_params, sigs=[], md={},locked=True,polarization=0):
         metadata
 
     """
-    detectors = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]
+    detectors = [Beamstop_WAXS_int, Beamstop_SAXS_int, DM7_Photodiode_int, Izero_Mesh_int, Sample_TEY_int]
 
 
     _md = {
