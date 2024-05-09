@@ -269,6 +269,11 @@ Izero_update_time = EpicsSignal(
 
 DiodeRange = EpicsSignal("XF:07ID-ES1{DMR:I400-1}:RANGE_BP")
 
+DM7_Photodiode_int = ophScalar(
+    "XF:07ID-ES1{DMR:I400-1}:IC4_MON", ## PK: Copied over ID from Beamstop_SAXS_int and just changed to "IC4", as the signal is coming from Channel 4.  Also confirmed the name on phoebus RSoXS archiver.
+    name="DM7 Photodiode", 
+    kind="normal" ## PK: following the other examples.  What does "normal" mean?
+)
 # DM7_Diode = EpicsSignalRO('XF:07ID-BI{DM7:I400-1}:IC4_MON',name = 'DM7 Photodiode', kind='normal')
 DM4_PD = EpicsSignalRO(
     "XF:07ID-BI{DM5:F4}Cur:I3-I", name="DM4 Photodiode", kind="normal"
