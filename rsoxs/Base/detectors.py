@@ -204,9 +204,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 "yellow",
                 85,
             )
-        # self.cam.num_images.set(self.number_exposures)
-        
-        #self.stage_sigs["cam.num_images"] = self.number_exposures
+
+        #self.stage_sigs["cam.num_images"] = self.number_exposures # if we do it this way, the dark stage will also set this?
         self.cam.num_images.set(self.number_exposures).wait()
         return [self].append(super().stage(*args, **kwargs))
 
