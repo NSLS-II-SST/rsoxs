@@ -269,10 +269,10 @@ Izero_update_time = EpicsSignal(
 
 DiodeRange = EpicsSignal("XF:07ID-ES1{DMR:I400-1}:RANGE_BP")
 
-DM7_Photodiode_int = ophScalar(
+DownstreamLargeDiode_int = ophScalar(
     "XF:07ID-ES1{DMR:I400-1}:IC4_MON", ## PK: Copied over ID from Beamstop_SAXS_int and just changed to "IC4", as the signal is coming from Channel 4.  Also confirmed the name on phoebus RSoXS archiver.
-    name="DM7 Photodiode", 
-    kind="normal" ## PK: following the other examples.  What does "normal" mean?
+    name="DownstreamLargeDiode", ## Large area photodiode in diagnostic module (DM) 7 downstream of RSoXS chamber and M4
+    kind="normal" ## Refers to hinting.  By default, there is omitted, config (recorded once if the device is used in a scan, e.g., slit positions in baseline datastream), normal (recorded for every reading if the device is used in a scan, e.g., beamstop signal at every time/energy point), and hinted (normal but also added to any plots)
 )
 # DM7_Diode = EpicsSignalRO('XF:07ID-BI{DM7:I400-1}:IC4_MON',name = 'DM7 Photodiode', kind='normal')
 DM4_PD = EpicsSignalRO(
@@ -281,7 +281,7 @@ DM4_PD = EpicsSignalRO(
 
 # scalars (integrating detectors)
 
-Beamstop_WAXS_int = ophScalar(
+Beamstop_WAXS_int = ophScalar( ## _int refers to signals that should be flyable, vs. those that do not have _int should not be flyable in theory, though that does not seem to be the case in practice
     "XF:07ID-ES1{DMR:I400-1}:IC1_MON", name="WAXS Beamstop", kind="normal"
 )
 Beamstop_SAXS_int = ophScalar(
