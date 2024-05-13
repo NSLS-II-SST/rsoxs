@@ -54,7 +54,7 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det#, saxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int, ring_current
+from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int, ring_current
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -131,7 +131,7 @@ def NEXAFS_step_scan_core(
 ):
     # grab locals
     if dets is None:
-        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int]
+        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int]
     if energies is None:
         energies = []
     if times is None:
@@ -763,7 +763,7 @@ def NEXAFS_old_fly_scan_core(
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    signals = [Beamstop_WAXS, Beamstop_SAXS, Izero_Mesh, Sample_TEY]
+    signals = [Beamstop_WAXS, Beamstop_SAXS, DownstreamLargeDiode_int, Izero_Mesh, Sample_TEY]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
@@ -890,7 +890,7 @@ def NEXAFS_fly_scan_core(
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    signals = [Beamstop_WAXS, Izero_Mesh, Sample_TEY]
+    signals = [Beamstop_WAXS, DownstreamLargeDiode_int, Izero_Mesh, Sample_TEY]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
@@ -1062,7 +1062,7 @@ def flyer_scan_energy(scan_params, sigs=[], md={},locked=True,polarization=0):
         metadata
 
     """
-    detectors = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]
+    detectors = [Beamstop_WAXS_int, Beamstop_SAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int, Sample_TEY_int]
 
 
     _md = {
