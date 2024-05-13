@@ -12,6 +12,7 @@ from ..HW.signals import (
     Izero_Mesh_int,
     Beamstop_WAXS,
     Beamstop_WAXS_int,
+    DownstreamLargeDiode_int,
     Sample_TEY,
     Sample_TEY_int,
     Beamstop_SAXS,
@@ -119,7 +120,7 @@ def buildeputable(
         
         yield from bps.mv(mono_en, energy,en.scanlock, False,epu_gap,startgap)
         yield from fly_max(
-            [Izero_Mesh_int, Beamstop_WAXS_int],
+            [Izero_Mesh_int, Beamstop_WAXS_int, DownstreamLargeDiode_int],
             [
                 "RSoXS Au Mesh Current",
                 "WAXS Beamstop",
@@ -250,7 +251,7 @@ def Scan_izero_peak(startingen, widfract):
     ps = PeakStats("en_energy", "RSoXS Au Mesh Current")
     yield from subs_wrapper(
         tune_max(
-            [Izero_Mesh, Beamstop_WAXS],
+            [Izero_Mesh, Beamstop_WAXS, DownstreamLargeDiode_int],
             "RSoXS Au Mesh Current",
             mono_en,
             min(2100, max(72, startingen - 10 * widfract)),
@@ -273,6 +274,7 @@ def buildeputablegaps(start, stop, step, widfract, startingen, name, phase, grat
     gapsout = []
     heights = []
     Beamstop_WAXS.kind = "hinted"
+    DownstreamLargeDiode_int.kind = "hinted"
     Izero_Mesh.kind = "hinted"
     epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
@@ -292,7 +294,7 @@ def buildeputablegaps(start, stop, step, widfract, startingen, name, phase, grat
         yield from bps.mv(mono_en, max(72, startingen - 10 * widfract))
         peaklist = []
         yield from tune_max(
-            [Izero_Mesh, Beamstop_WAXS],
+            [Izero_Mesh, Beamstop_WAXS, DownstreamLargeDiode_int],
             "RSoXS Au Mesh Current",
             mono_en,
             min(2100, max(72, startingen - 10 * widfract)),
@@ -348,6 +350,7 @@ def do_2020_eputables():
 def do_2023_eputables():
     Izero_Mesh.kind = "hinted"
     Beamstop_WAXS.kind = "hinted"
+    DownstreamLargeDiode_int.kind = "hinted"
     mono_en.readback.kind = "hinted"
     mono_en.kind = "hinted"
     mono_en.read_attrs = ["readback"]
