@@ -12,8 +12,9 @@ from ..HW.motors import (
     sam_Y,
     sam_X,
     TEMZ
+    dm7
 )
-from sst_hw.mirrors import mir1, mir3
+from sst_hw.mirrors import mir1, mir3, mir4
 from sst_hw.motors import Exit_Slit
 from sst_hw.shutters import psh10
 from ..HW.energy import en, mono_en, grating_to_1200
@@ -425,6 +426,50 @@ def WAXSNEXAFS():
         },
     ]
 
+
+
+def DM7NEXAFS():
+    return [
+        [
+            {"motor": TEMZ, "position": 1, "order": 0},
+            {"motor": slits1.vsize, "position": 0.026, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.549, "order": 0},
+            {"motor": slits1.hsize, "position": 0.01, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.700, "order": 0},
+            {"motor": slits2.vsize, "position":  0.301, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.851, "order": 0},
+            {"motor": slits2.hsize, "position": 0.4, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.650, "order": 0},
+            {"motor": slits3.vsize, "position": 0.898, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.450, "order": 0},
+            {"motor": slits3.hsize, "position": 1.199, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.900, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -31, "order": 0},
+            {"motor": Det_W, "position": waxs_out_pos, "order": 1},
+            # {"motor": Det_S, "position": -100, "order": 1},
+            {"motor": BeamStopW, "position": 3, "order": 1},
+            {"motor": BeamStopS, "position": 3, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+            {"motor": mir4.X, "position": 0, "order": 2},
+            {"motor": mir4.Y, "position": -10, "order": 2},
+            {"motor": dm7, "position": -15, "order": 2},
+            
+        ],
+        {
+            "RSoXS_Config": "DM7NEXAFS",
+            "RSoXS_Main_DET": "DownstreamLargeDiode_int",
+            "RSoXS_WAXS_SDD": None,
+            "RSoXS_WAXS_BCX": None,
+            "RSoXS_WAXS_BCY": None,
+            "RSoXS_SAXS_SDD": None,
+            "RSoXS_SAXS_BCX": None,
+            "RSoXS_SAXS_BCY": None,
+        },
+    ]
+
+
+
 """ positions march 2024
         [
             {"motor": TEMZ, "position": 1, "order": 0},
@@ -700,12 +745,14 @@ def all_out():
         0,
         sam_Th,
         0,
-        en.polarization,
+        en.polarization, #TODO - remove this to another step with try except for PV access error
         0,
         Exit_Slit,
         -0.05,
         TEMZ,
-        1
+        1,
+        dm7, #TODO - check with cherno about moving mirror 4 back as well
+        -80
     )
     print("moving back to 1200 l/mm grating")
     yield from grating_to_1200()
