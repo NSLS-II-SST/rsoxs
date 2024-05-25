@@ -11,10 +11,10 @@ from ..HW.motors import (
     sam_Z,
     sam_Y,
     sam_X,
-    TEMZ
+    TEMZ,
     dm7
 )
-from sst_hw.mirrors import mir1, mir3, mir4
+from sst_hw.mirrors import mir1, mir3, mir4OLD
 from sst_hw.motors import Exit_Slit
 from sst_hw.shutters import psh10
 from ..HW.energy import en, mono_en, grating_to_1200
@@ -25,6 +25,7 @@ run_report(__file__)
 
 waxs_in_pos = 2
 waxs_out_pos = -94
+bs_waxs_in_pos = 69.7
 
 
 # TODO lots of metadata manipulation here, and
@@ -79,7 +80,7 @@ def DetW_out():
 
 
 def BSw_in():
-    yield from bps.mv(BeamStopW, 71.4)
+    yield from bps.mv(BeamStopW, bs_waxs_in_pos)
 
 
 def BSw_out():
@@ -180,8 +181,9 @@ def slits_in_WAXS():
         0.55,
     )
 
+#TODO do we want these functions anymore?
 
-def mirror3_NEXAFSpos():
+def mirror3_NEXAFSpos():# TODO positions names are all lowercase now
     yield from bps.mv(mir3.Pitch, 8.04)
     yield from bps.sleep(3)
     yield from bps.mv(mir3.X, 27.9)
@@ -196,7 +198,7 @@ def mirror3_NEXAFSpos():
     yield from bps.sleep(3)
 
 
-def mirror_pos_NEXAFS():
+def mirror_pos_NEXAFS():# TODO positions names are all lowercase now
     yield from bps.mv(mir1.Pitch, 0.66)
     yield from bps.mv(mir1.X, 0)
     yield from bps.mv(mir1.Y, -18)
@@ -205,7 +207,7 @@ def mirror_pos_NEXAFS():
     yield from bps.mv(mir1.Yaw, 0)
 
 
-def mirror_pos_rsoxs():
+def mirror_pos_rsoxs():# TODO positions names are all lowercase now
     yield from bps.mv(
         mir3.Pitch,
         7.92,
@@ -236,29 +238,29 @@ def mirror_pos_rsoxs():
 
 def mirror1_NEXAFSpos():
     yield from bps.mv(
-        mir3.Pitch,
+        mir3.pitch,
         7.94,
-        mir3.X,
+        mir3.x,
         26.5,
-        mir3.Y,
+        mir3.y,
         18,
-        mir3.Z,
+        mir3.z,
         0,
-        mir3.Roll,
+        mir3.roll,
         0,
-        mir3.Yaw,
+        mir3.yaw,
         1,
-        mir1.Pitch,
+        mir1.pitch,
         0.68,
-        mir1.X,
+        mir1.x,
         0,
-        mir1.Y,
+        mir1.y,
         -18,
-        mir1.Z,
+        mir1.z,
         0,
-        mir1.Roll,
+        mir1.roll,
         0,
-        mir1.Yaw,
+        mir1.yaw,
         0,
     )
 
@@ -411,7 +413,7 @@ def WAXSNEXAFS():
             {"motor": Izero_Y, "position": -31, "order": 0},
             {"motor": Det_W, "position": waxs_out_pos, "order": 1},
             # {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": 71, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
@@ -451,10 +453,9 @@ def DM7NEXAFS():
             {"motor": BeamStopW, "position": 3, "order": 1},
             {"motor": BeamStopS, "position": 3, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
-            {"motor": mir4.X, "position": 0, "order": 2},
-            {"motor": mir4.Y, "position": -10, "order": 2},
-            {"motor": dm7, "position": -15, "order": 2},
-            
+            #{"motor": mir4OLD.x, "position": 0, "order": 1},
+            {"motor": mir4OLD.y, "position": -10, "order": 1},
+            {"motor": dm7, "position": -15, "order": 1},
         ],
         {
             "RSoXS_Config": "DM7NEXAFS",
@@ -511,7 +512,7 @@ def WAXS():
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -31, "order": 0},
             {"motor": Det_W, "position": waxs_in_pos, "order": 1},
-            {"motor": BeamStopW, "position": 71, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
@@ -630,7 +631,7 @@ def WAXS_liquid():
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -31, "order": 1},
             {"motor": Det_W, "position": waxs_in_pos, "order": 1},
-            {"motor": BeamStopW, "position": 71, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2},
         ],
         {
@@ -700,7 +701,7 @@ def WAXSNEXAFS_liquid():
             {"motor": slits3.hcenter, "position": 0.75, "order": 0},
             {"motor": Shutter_Y, "position": 2.2, "order": 0},
             {"motor": Izero_Y, "position": -31, "order": 1},
-            {"motor": BeamStopW, "position": 71, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
             {"motor": Det_W, "position": waxs_out_pos, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2}
         ],

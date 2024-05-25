@@ -23,6 +23,7 @@ from sst_hw.shutters import psh10
 from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
 from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
+from sst_hw.mirrors import mir4OLD
 from ..HW.motors import (
     sam_X,
     sam_Y,
@@ -37,6 +38,7 @@ from ..HW.motors import (
     TEMX,
     TEMY,
     TEMZ,
+    dm7
 )
 from . import configurations
 from ..HW.slits import slits1, slits2, slits3
@@ -191,6 +193,9 @@ def move_to_location(locs=get_sample_location()):
         BeamStopS: BeamStopS,
         BeamStopW: BeamStopW,
         Exit_Slit: Exit_Slit,
+        mir4OLD.x:mir4OLD.x,
+        mir4OLD.y:mir4OLD.y,
+        dm7:dm7,
     }
     for order in orderlist:
         outputlist = [

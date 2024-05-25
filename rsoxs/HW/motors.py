@@ -88,6 +88,6 @@ TEMZ = PrettyMotor(
 )
 
 dm7 = PrettyMotorFMBODeadbandFlyer(
-    "XF:07ID1-OP{Mono:PGM1-Ax:MirX}Mtr", name="Downstream diagnostic module translation", kind="normal"
+    "XF:07ID2-BI{Diag:07-Ax:Y}Mtr", name="Downstream diagnostic module translation", kind="normal"
 )
 
