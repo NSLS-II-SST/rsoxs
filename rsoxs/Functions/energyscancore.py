@@ -890,7 +890,7 @@ def NEXAFS_fly_scan_core(
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    signals = [Beamstop_WAXS, DownstreamLargeDiode_int, Izero_Mesh, Sample_TEY]
+    signals = [Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int, Sample_TEY_int]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
