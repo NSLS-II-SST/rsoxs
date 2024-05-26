@@ -275,8 +275,8 @@ DownstreamLargeDiode_int = ophScalar(
     kind="normal" ## Refers to hinting.  By default, there is omitted, config (recorded once if the device is used in a scan, e.g., slit positions in baseline datastream), normal (recorded for every reading if the device is used in a scan, e.g., beamstop signal at every time/energy point), and hinted (normal but also added to any plots)
 )
 # DM7_Diode = EpicsSignalRO('XF:07ID-BI{DM7:I400-1}:IC4_MON',name = 'DM7 Photodiode', kind='normal')
-DM4_PD = EpicsSignalRO(
-    "XF:07ID-BI{DM5:F4}Cur:I3-I", name="DM4 Photodiode", kind="normal"
+DownstreamLargeDiode = EpicsSignalRO(
+    "XF:07ID-ES1{DMR:I400-1}:IC4_MON", name="DownstreamLargeDiode", kind="normal"
 )
 
 # scalars (integrating detectors)

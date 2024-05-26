@@ -54,7 +54,7 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det#, saxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int, ring_current
+from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int,DownstreamLargeDiode, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int, ring_current
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -890,7 +890,6 @@ def NEXAFS_fly_scan_core(
         yield from grating_to_250(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
     elif grating == "rsoxs":
         yield from grating_to_rsoxs(hopgx=hopgx,hopgy=hopgy,hopgtheta=hopgth)
-    signals = [Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int, Sample_TEY_int]
     if np.isnan(pol):
         pol = en.polarization.setpoint.get()
     (en_start, en_stop, en_speed) = scan_params[0]
@@ -916,7 +915,7 @@ def NEXAFS_fly_scan_core(
     if openshutter:
         yield from bps.mv(Shutter_enable, 0)
         yield from bps.mv(Shutter_control, 1)
-    uid = (yield from finalize_wrapper(flyer_scan_energy(list(chain.from_iterable(scan_params)),sigs=signals, md=md, locked=locked, polarization=pol),cleanup()))
+    uid = (yield from finalize_wrapper(flyer_scan_energy(list(chain.from_iterable(scan_params)), md=md, locked=locked, polarization=pol),cleanup()))
 
     return uid
 
@@ -1034,7 +1033,7 @@ def NEXAFS_fly_scan_core(
 
 
 
-def flyer_scan_energy(scan_params, sigs=[], md={},locked=True,polarization=0):
+def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
     """
     Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
 
