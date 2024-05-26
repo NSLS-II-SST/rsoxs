@@ -529,6 +529,45 @@ def WAXS():
     ]
 
 
+## PK: Saving this temporary configuration when I am doing slit scans so that I can save my progress and load it back without changing the main configurations just yet.
+## PK: Will comment this out after slit refining is complete, and the settings are updated into the main configurations.
+def WAXS_20240526Temporary():
+    return [
+        [
+            {"motor": TEMZ, "position": 1, "order": 0},
+            {"motor": slits1.vsize, "position": 0.2, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.549, "order": 0},
+            {"motor": slits1.hsize, "position": 0.6, "order": 0},
+            {"motor": slits1.hcenter, "position": 0.3, "order": 0},
+            {"motor": slits2.vsize, "position":  0.6, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.67, "order": 0},
+            {"motor": slits2.hsize, "position": 0.6, "order": 0},
+            {"motor": slits2.hcenter, "position": 0.1, "order": 0},
+            {"motor": slits3.vsize, "position": 0.6, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.30, "order": 0},
+            {"motor": slits3.hsize, "position": 0.6, "order": 0},
+            {"motor": slits3.hcenter, "position": 0.35, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -31, "order": 0},
+            {"motor": Det_W, "position": waxs_in_pos, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        ],
+        {
+            "RSoXS_Config": "WAXS",
+            "RSoXS_Main_DET": "WAXS",
+            "RSoXS_WAXS_SDD": 39.19,
+            "RSoXS_WAXS_BCX": 396.341,
+            "RSoXS_WAXS_BCY": 549.99,
+            "WAXS_Mask": [(367, 545), (406, 578), (880, 0), (810, 0)],
+            "RSoXS_SAXS_SDD": None,
+            "RSoXS_SAXS_BCX": None,
+            "RSoXS_SAXS_BCY": None,
+        },
+    ]
+
+
+
 def SAXS_liquid():
     return [
         [
