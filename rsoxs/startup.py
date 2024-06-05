@@ -163,7 +163,7 @@ def md_validator(md):
         pass
 
 # md_validator will be called before a plan runs
-#RE.md_validator = md_validator
+RE.md_validator = md_validator
 
 
 # === END PERSISTENT DICT CODE ===
