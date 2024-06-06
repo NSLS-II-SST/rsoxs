@@ -25,7 +25,7 @@ run_report(__file__)
 
 waxs_in_pos = 2
 waxs_out_pos = -94
-bs_waxs_in_pos = 68.9
+bs_waxs_in_pos = 69.1
 
 
 # TODO lots of metadata manipulation here, and
@@ -726,40 +726,6 @@ def WAXSNEXAFS_liquid():
 
 
 
-## PK: temporary configuration to do slits
-def WAXSNEXAFS_liquid_20240605Temporary():
-    return [
-        [
-            {"motor": slits1.vsize, "position": 0.1, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.7, "order": 0},
-            {"motor": slits1.hcenter, "position": -0.2, "order": 0},
-            {"motor": slits2.vsize, "position": 0.4, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.72, "order": 0},
-            {"motor": slits2.hsize, "position": 0.4, "order": 0},
-            {"motor": slits2.hcenter, "position": -0.48, "order": 0},
-            {"motor": slits3.vsize, "position": 2.8, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.35, "order": 0},
-            {"motor": slits3.hsize, "position": 2.8, "order": 0},
-            {"motor": slits3.hcenter, "position": -0.35, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -31, "order": 1},
-            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
-            {"motor": Det_W, "position": waxs_out_pos, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2}
-        ],
-        {
-            "RSoXS_Config": "WAXS",
-            "RSoXS_Main_DET": "WAXS",
-            "RSoXS_WAXS_SDD": 39.19,
-            "RSoXS_WAXS_BCX": 396.341,
-            "RSoXS_WAXS_BCY": 549.99,
-            "WAXS_Mask": [(367, 545), (406, 578), (880, 0), (810, 0)],
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
 
 
 
