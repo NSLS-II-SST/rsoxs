@@ -165,7 +165,7 @@ def enc_clr_gx():
 
 def det_down_notice():
     send_notice(
-        f"<@U04EZ5DSB33> {get_user_slack_tag()} SST-1 detector seems to have failed",  # username for rsoxs slack U016YV35UAJ
+        f"<@U04EK5L230D> {get_user_slack_tag()} SST-1 detector seems to have failed",  # username for rsoxs slack U016YV35UAJ
         "The temperature is reading below -90C which is a mistake"
         "\rScans have been paused until the detector and IOC are restarted.",
     )
@@ -226,7 +226,7 @@ def get_user_slack_tag():
 class OSEmailHandler(logging.Handler):
     def emit(self, record):
         send_notice(
-            f"<@U04EZ5DSB33> {get_user_slack_tag()} SST has thrown an exception",
+            f"<@U04EK5L230D> {get_user_slack_tag()} SST has thrown an exception",
             record.getMessage(),
         )  # record.stack_info
 

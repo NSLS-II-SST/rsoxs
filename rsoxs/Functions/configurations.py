@@ -292,7 +292,7 @@ def mirror1_NEXAFSpos():
 # │      horizontal size   =   0.849 mm                                       │
 # │      horizontal center =   0.900 mm
 
-
+## 
 def SAXS():
     return [
         [
