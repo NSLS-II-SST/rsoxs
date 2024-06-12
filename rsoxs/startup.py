@@ -119,11 +119,12 @@ def md_validator(md):
         else:
             proposal_number = data_session_match.group("proposal_number")
             nslsii_api_client = httpx.Client(
-                base_url="https://api-staging.nsls2.bnl.gov"
+                #base_url="https://api-staging.nsls2.bnl.gov"
+                base_url="https://api.nsls2.bnl.gov"
             )
             try:
                 proposal_response = nslsii_api_client.get(
-                    f"/proposal/{proposal_number}"
+                    f"/v1/proposal/{proposal_number}"
                 )
                 proposal_response.raise_for_status()
                 if "error_message" in proposal_response.json():
