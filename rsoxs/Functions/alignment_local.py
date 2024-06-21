@@ -105,8 +105,8 @@ def sanatize_angle(samp, force=False):
                 if samp["bar_loc"]["th"] <= -155:
                     samp["bar_loc"]["th"] = -150
             else:
-                samp["bar_loc"]["th"] = 180
-                samp["angle"] = 180
+                samp["bar_loc"]["th"] = 0
+                samp["angle"] = 0
         else:
             if goodnumber:
                 samp["bar_loc"]["th"] = float(np.mod(90 + samp["angle"] + 3600, 180) - 90)
