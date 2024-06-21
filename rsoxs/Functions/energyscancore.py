@@ -623,7 +623,7 @@ def new_en_scan_core(
                     md=md,
                     per_step=partial(one_nd_sticky_exp_step,remember=exps,take_reading=partial(take_exposure_corrected_reading,check_exposure=check_exposure))
                     ),
-                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=True),
+                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=False),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
             cleanup()
         )
@@ -634,7 +634,7 @@ def new_en_scan_core(
                     md=md,
                     ),#per_step=flyer_per_step),
                     #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
-                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=True),
+                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=False),
             cleanup()
         )
         #yield from flyer_final()
@@ -1089,7 +1089,7 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
 
         en.land()
 
-    return (yield from flystream_during_wrapper(inner_flyscan(), flyers,stream=True))
+    return (yield from flystream_during_wrapper(inner_flyscan(), flyers,stream=False))
 
 
 

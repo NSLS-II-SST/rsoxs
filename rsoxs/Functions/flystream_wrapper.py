@@ -8,7 +8,7 @@ from bluesky.utils import Msg, short_uid as _short_uid, single_gen, ensure_gener
 from bluesky.preprocessors import plan_mutator
 
 
-def flystream_during_wrapper(plan, flyers, stream=True):
+def flystream_during_wrapper(plan, flyers, stream=False):
     """
     Kickoff and collect "flyer" (asynchronously collect) objects during runs.
     This is a preprocessor that insert messages immediately after a run is
