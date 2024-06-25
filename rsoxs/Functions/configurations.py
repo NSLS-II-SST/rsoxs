@@ -430,6 +430,42 @@ def WAXSNEXAFS():
         },
     ]
 
+## PK: Temporary configuration to test the effects of the slit sizes on signal stability
+def WAXSNEXAFS_20240616():
+    return [
+        [
+            {"motor": TEMZ, "position": 1, "order": 0},
+            {"motor": slits1.vsize, "position": 0.02, "order": 0},
+            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+            {"motor": slits1.hsize, "position": 0.01, "order": 0},
+            {"motor": slits1.hcenter, "position": -0.2, "order": 0},
+            {"motor": slits2.vsize, "position":  0.3, "order": 0},
+            {"motor": slits2.vcenter, "position": -0.72, "order": 0},
+            {"motor": slits2.hsize, "position": 0.3, "order": 0},
+            {"motor": slits2.hcenter, "position": -0.48, "order": 0},
+            {"motor": slits3.vsize, "position": 1.3, "order": 0},
+            {"motor": slits3.vcenter, "position": -0.35, "order": 0},
+            {"motor": slits3.hsize, "position": 1.3, "order": 0},
+            {"motor": slits3.hcenter, "position": -0.35, "order": 0},
+            {"motor": Shutter_Y, "position": 2.2, "order": 0},
+            {"motor": Izero_Y, "position": -31, "order": 0},
+            {"motor": Det_W, "position": waxs_out_pos, "order": 1},
+            # {"motor": Det_S, "position": -100, "order": 1},
+            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
+            {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        ],
+        {
+            "RSoXS_Config": "WAXSNEXAFS_20240616",
+            "RSoXS_Main_DET": "Beamstop_WAXS",
+            "RSoXS_WAXS_SDD": None,
+            "RSoXS_WAXS_BCX": None,
+            "RSoXS_WAXS_BCY": None,
+            "RSoXS_SAXS_SDD": None,
+            "RSoXS_SAXS_BCX": None,
+            "RSoXS_SAXS_BCY": None,
+        },
+    ]
+
 
 
 def DM7NEXAFS():
@@ -760,9 +796,9 @@ def all_out():
         Exit_Slit,
         -0.05,
         TEMZ,
-        1,
-        dm7, #TODO - check with cherno about moving mirror 4 back as well
-        80 ## PK 20240528: Changed from -80 to 80 because while running nmode, I got LimitError.  I think the negative sign is a typo and DM7 is supposed to move up to get out of the way.
+        1
+        #dm7, ## PK 20240625 - commenting out because it throws an error while running nmode #TODO - check with cherno about moving mirror 4 back as well
+        #80 ## PK 20240528: Changed from -80 to 80 because while running nmode, I got LimitError.  I think the negative sign is a typo and DM7 is supposed to move up to get out of the way.
     )
     print("moving back to 1200 l/mm grating")
     yield from grating_to_1200()
