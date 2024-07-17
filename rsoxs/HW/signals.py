@@ -298,3 +298,7 @@ Sample_TEY_int = ophScalar(
     kind="normal",
 )
 
+
+Temperature_MonoPGM = EpicsSignalRO("XF:07IDA-OP{Mono:PGM}T:Grg-I", name="Temperature_MonoPGM", kind="normal")
+Temperature_M3 = EpicsSignalRO("XF:07IDA-OP{Mir:2}T:Mir-I", name="Temperature_M3", kind="normal")
+
