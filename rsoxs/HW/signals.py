@@ -301,4 +301,29 @@ Sample_TEY_int = ophScalar(
 
 Temperature_MonoPGM = EpicsSignalRO("XF:07IDA-OP{Mono:PGM}T:Grg-I", name="Temperature_MonoPGM", kind="normal")
 Temperature_M3 = EpicsSignalRO("XF:07IDA-OP{Mir:2}T:Mir-I", name="Temperature_M3", kind="normal")
+Temperature_M1 = EpicsSignalRO("XF:07IDA-OP{Mir:1}T:Msk-I", name="Temperature_M1", kind="normal")
+Temperature_L1 = EpicsSignalRO("XF:07IDA-OP{Mir:L1}T:Msk-I", name="Temperature_L1", kind="normal")
 
+Offset_EPU60_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7-2:Offset-x-Cal", name="Offset_EPU60_Horizontal", kind="normal")
+Offset_EPU60_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7-2:Offset-y-Cal", name="Offset_EPU60_Vertical", kind="normal")
+Angle_EPU60_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7-2:Angle-x-Cal", name="Angle_EPU60_Horizontal", kind="normal")
+Angle_EPU60_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7-2:Angle-y-Cal", name="Angle_EPU60_Vertical", kind="normal")
+Gap_EPU60 = EpicsSignalRO("SR:C07-ID:G1A{SST1:1-Ax:Gap}-Mtr.RBV", name="Gap_EPU60", kind="normal")
+Phase_EPU60 = EpicsSignalRO("SR:C07-ID:G1A{SST1:1-Ax:Phase}-Mtr.RBV", name="Phase_EPU60", kind="normal")
+
+Offset_C07U42_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7:Offset-x-Cal", name="Offset_C07U42_Horizontal", kind="normal")
+Offset_C07U42_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7:Offset-y-Cal", name="Offset_C07U42_Vertical", kind="normal")
+Angle_C07U42_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-x-Cal", name="Angle_C07U42_Horizontal", kind="normal")
+Angle_C07U42_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-y-Cal", name="Angle_C07U42_Vertical", kind="normal")
+Gap_C07U42 = EpicsSignalRO("SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr.RBV", name="Gap_C07U42", kind="normal")
+
+"""
+RE(bp.count([Beamstop_WAXS, Izero_Mesh, Temperature_MonoPGM, Temperature_M3,
+                                                    ...: Temperature_M1, Temperature_L1, Offset_EPU60_Horizontal, Offset_EPU60_Vertica
+                                                    ...: l, Angle_EPU60_Horizontal, Angle_EPU60_Vertical, Gap_EPU60, Phase_EPU60, Offs
+                                                    ...: et_C07U42_Horizontal, Offset_C07U42_Vertical, Angle_C07U42_Horizontal, Angle_
+                                                    ...: C07U42_Vertical, Gap_C07U42, Slit1_Current_Top, Slit1_Current_Bottom, Slit1_C
+                                                    ...: urrent_Inboard, Slit1_Current_Outboard], num=5000000000))
+
+
+"""
