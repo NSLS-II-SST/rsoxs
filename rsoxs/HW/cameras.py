@@ -1,12 +1,46 @@
+from nslsii.ad33 import StatsPluginV33
+from ophyd.areadetector.base import EpicsSignalWithRBV as SignalWithRBV
+
 from sst_funcs.printing import run_report
 from sst_base.cameras import StandardProsilicaWithTIFFV33, StandardProsilica, ColorProsilicaWithTIFFV33
 
 run_report(__file__)
 
+
+
+class StatsWCentroid(StatsPluginV33):
+    centroid_total = Cpt(EpicsSignalRO,'CentroidTotal_RBV',kind='hinted')
+    profile_avg_x = Cpt(EpicsSignalRO,'ProfileAverageX_RBV',kind='hinted')
+    profile_avg_y = Cpt(EpicsSignalRO,'ProfileAverageY_RBV',kind='hinted')
+
+class StandardProsilicawstats(StandardProsilicaWithTIFFV33):
+    stats1 = Cpt(StatsWCentroid, "Stats1:", kind='hinted')
+    stats2 = Cpt(StatsWCentroid, "Stats2:", read_attrs=["total"])
+    stats3 = Cpt(StatsWCentroid, "Stats3:", read_attrs=["total"])
+    stats4 = Cpt(StatsWCentroid, "Stats4:", read_attrs=["total"])
+    stats5 = Cpt(StatsWCentroid, "Stats5:", read_attrs=["total","centroid_total", "profile_avg_x", "profile_avg_y"])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+
 Side_cam = StandardProsilica("XF:07ID1-ES:1{Scr:2}", name="RSoXS Sample Area Camera")
 DetS_cam = StandardProsilica("XF:07ID1-ES:1{Scr:3}", name="WAXS Detector Area Camera")
 Izero_cam = StandardProsilica("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera")
 Sample_cam = StandardProsilica("XF:07ID1-ES:1{Scr:4}", name="RSoXS Sample Area Camera")
+FS7_cam = StandardProsilicawstats("XF:07ID-BI{BPM:7}", 
+                                name="FS7 pink beam stop Camera",
+                                read_attrs=['tiff','stats5']
+)
+FS1_cam = StandardProsilicawstats("XF:07ID-BI{BPM:1}", 
+                                name="FS1 white beam stop Camera",
+                                read_attrs=['tiff','stats5']
+)
+FS6_cam = StandardProsilicawstats("XF:07ID-BI{BPM:6}", 
+                                name="FS6 Camera",
+                                read_attrs=['tiff','stats5']
+)
 SampleViewer_cam = ColorProsilicaWithTIFFV33(
     "XF:07ID1-ES:1{Scr:5}",
     name="Sample Imager Detector Area Camera",
