@@ -7,7 +7,7 @@ from rsoxs_scans.acquisition import dryrun_bar, time_sec
 from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
-from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
+from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample, get_sample_dict
 from ..HW.lakeshore import tem_tempstage
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
@@ -188,7 +188,7 @@ def do_rsoxs(md=None, **kwargs):
         md=None,
     """
     if md == None:
-        md = deepcopy(dict(RE.md))
+        md = get_sample_dict()
     outputs = dryrun_rsoxs_plan(md=md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
@@ -196,6 +196,7 @@ def do_rsoxs(md=None, **kwargs):
     print("Starting RSoXS plan")
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
+    rsoxs_config.write() # bar may have changed - added annotations etc
     print("End of RSoXS plan")
 
 
@@ -217,7 +218,7 @@ def do_nexafs(md=None, **kwargs):
         md = None,
     """
     if md == None:
-        md = deepcopy(dict(RE.md))
+        md = get_sample_dict()
     outputs = dryrun_nexafs_plan(md=md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
@@ -225,6 +226,7 @@ def do_nexafs(md=None, **kwargs):
     print("Starting NEXAFS plan")
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
+    rsoxs_config.write() # bar may have changed - added annotations etc
     print("End of NEXAFS plan")
 
 
@@ -246,7 +248,7 @@ def do_nexafs_step(md=None, **kwargs):
         md=None,
     """
     if md == None:
-        md = deepcopy(dict(RE.md))
+        get_sample_dict() # need to get sample here rather than deepdopy - this resets scan_id, touches way too much... just need to update the sample info
     outputs = dryrun_nexafs_step_plan(md=md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
@@ -254,5 +256,6 @@ def do_nexafs_step(md=None, **kwargs):
     print("Starting NEXAFS step plan")
     for queue_step in outputs:
         yield from run_queue_step(queue_step)
+    rsoxs_config.write() # bar may have changed - added annotations etc
     print("End of NEXAFS step plan")
 

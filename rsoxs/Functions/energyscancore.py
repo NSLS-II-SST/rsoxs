@@ -896,6 +896,11 @@ def NEXAFS_fly_scan_core(
     yield from bps.mv(en.scanlock, 0) # unlock parameters
     print("Moving to initial position before scan start")
     yield from bps.mv(en.energy, en_start+10, en.polarization, pol)  # move to the initial energy
+    yield from bps.sleep(1)
+    yield from bps.mv(en.energy, en_start+10, en.polarization, pol)  # move to the initial energy
+    yield from bps.sleep(1)
+    yield from bps.mv(en.energy, en_start+10, en.polarization, pol)  # move to the initial energy
+
     samplepol = en.sample_polarization.setpoint.get()
     if locked:
         yield from bps.mv(en.scanlock, 1) # lock parameters for scan, if requested
@@ -912,10 +917,13 @@ def NEXAFS_fly_scan_core(
         scan_params *= int(cycles)
 
     uid = ""
+    pol = en.polarization.readback.get()
     if openshutter:
         yield from bps.mv(Shutter_enable, 0)
-        yield from bps.mv(Shutter_control, 1)
-    uid = (yield from finalize_wrapper(flyer_scan_energy(list(chain.from_iterable(scan_params)), md=md, locked=locked, polarization=pol),cleanup()))
+        shutter_list = [Shutter_control]
+    else:
+        shutter_list = []
+    uid = (yield from finalize_wrapper(flyer_scan_energy(list(chain.from_iterable(scan_params)),shutter_list = shutter_list, md=md, locked=locked, polarization=pol),cleanup()))
 
     return uid
 
@@ -1033,7 +1041,7 @@ def NEXAFS_fly_scan_core(
 
 
 
-def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
+def flyer_scan_energy(scan_params, shutter_list = [], md={},locked=True,polarization=0):
     """
     Specific scan for SST-1 monochromator fly scan, while catching up with the undulator
 
@@ -1077,8 +1085,10 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
         if hasattr(reader,'set_exposure'):
             reader.set_exposure(0.5)
 
-    en.preflight(*scan_params,locked=locked,time_resolution=0.5)
+    en.preflight(*scan_params,shutter_list = shutter_list,locked=locked,time_resolution=0.5)
 
+
+    
     @bpp.stage_decorator(readers)
     @bpp.run_decorator(md=_md)
     def inner_flyscan():
@@ -1087,9 +1097,7 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
         while not status.done:
             yield from trigger_and_read(readers)
 
-        en.land()
-
-    return (yield from flystream_during_wrapper(inner_flyscan(), flyers,stream=False))
+    return (yield from finalize_wrapper(flystream_during_wrapper(inner_flyscan(), flyers,stream=True),en.land))
 
 
 
