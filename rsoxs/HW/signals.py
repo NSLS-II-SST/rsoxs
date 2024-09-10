@@ -317,6 +317,7 @@ Angle_C07U42_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-x-Cal", name="Ang
 Angle_C07U42_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-y-Cal", name="Angle_C07U42_Vertical", kind="normal")
 Gap_C07U42 = EpicsSignalRO("SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr.RBV", name="Gap_C07U42", kind="normal")
 
+#
 """
 RE(bp.count([Beamstop_WAXS, Izero_Mesh, Temperature_MonoPGM, Temperature_M3,
                                                     ...: Temperature_M1, Temperature_L1, Offset_EPU60_Horizontal, Offset_EPU60_Vertica
@@ -326,4 +327,8 @@ RE(bp.count([Beamstop_WAXS, Izero_Mesh, Temperature_MonoPGM, Temperature_M3,
                                                     ...: urrent_Inboard, Slit1_Current_Outboard], num=5000000000))
 
 
+"""
+
+"""
+RE(bp.count([FS7_cam, Offset_EPU60_Horizontal, Offset_EPU60_Vertical, Angle_EPU60_Horizontal, Angle_EPU60_Vertical], num=5000000000, delay=6-))
 """
