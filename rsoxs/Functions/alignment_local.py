@@ -11,7 +11,7 @@ import datetime
 import bluesky.plan_stubs as bps
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
-from ..startup import RE, db, db0, rsoxs_config #bec, 
+from ..startup import db, rsoxs_config #bec, 
 from ..HW.motors import sam_viewer
 from ..HW.cameras import SampleViewer_cam
 from sst_funcs.printing import run_report
