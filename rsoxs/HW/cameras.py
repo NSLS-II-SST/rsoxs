@@ -1,5 +1,7 @@
 from nslsii.ad33 import StatsPluginV33
 from ophyd.areadetector.base import EpicsSignalWithRBV as SignalWithRBV
+from ophyd import Component as Cpt
+from ophyd import EpicsSignalRO
 
 from sst_funcs.printing import run_report
 from sst_base.cameras import StandardProsilicaWithTIFFV33, StandardProsilica, ColorProsilicaWithTIFFV33
