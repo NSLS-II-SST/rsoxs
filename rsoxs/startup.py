@@ -22,6 +22,21 @@ from bluesky.preprocessors import finalize_decorator
 from bluesky.run_engine import Msg
 import bluesky.plan_stubs as bps
 
+# RSoXS specific code
+# from rsoxs.Functions.alignment import *
+# from rsoxs.Functions.alignment_local import *
+# from rsoxs.Functions.common_procedures import *
+# from rsoxs.Functions.configurations import *
+# from rsoxs.Functions.schemas import *
+# from rsoxs.Functions.PVdictionary import *
+# from rsoxs.Functions.energyscancore import *
+# from rsoxs.Functions.rsoxs_plans import *
+# from rsoxs.Functions.fly_alignment import *
+# from rsoxs.Functions.spreadsheets import *
+# from rsoxs.HW.slackbot import rsoxs_bot
+# from rsoxs_scans.spreadsheets import *
+# from rsoxs_scans.acquisition import *
+
 from sst_funcs.printing import run_report
 
 run_report(__file__)
