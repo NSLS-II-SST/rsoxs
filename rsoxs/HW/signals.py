@@ -50,7 +50,7 @@ Slit1_Current_Inboard = EpicsSignalRO(
 Slit1_Current_Outboard = EpicsSignalRO(
     "XF:07ID-ES1{Slt1:I400-1}:IC4_MON", name="RSoXS Slit 1 Out Board Current", kind="normal"
 )
-
+## PK: bookmark for how far I have gotten in copying config details into profile_collection package
 Slit1_i400_cap = EpicsSignal(
     "XF:07ID-ES1{Slt1:I400-1}:CAP_SP", name="RSoXS Slit 1 i400 capasitor", kind="normal"
 ,string=True)
