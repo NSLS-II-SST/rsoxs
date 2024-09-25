@@ -253,7 +253,7 @@ Izero_Mesh = EpicsSignalRO(
     kind="normal",
 )
 Sample_TEY = EpicsSignalRO(
-    "XF:07ID1-BI{EM:1}EM180:Current1:MeanValue_RBV",
+    "XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV", ## Channel 1 had temporarily stopped working, but is now fixed.  In that meantime, the TEY signal was moved to channel 4 and is still currently there.
     name="RSoXS Sample Current",
     kind="normal",
 )
