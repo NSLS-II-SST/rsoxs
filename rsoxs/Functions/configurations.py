@@ -207,6 +207,7 @@ def mirror_pos_NEXAFS():# TODO positions names are all lowercase now
     yield from bps.mv(mir1.Yaw, 0)
 
 
+## TODO: make a wh() function for mirror positions in sst_base, similar to the wh() function for slits
 def mirror_pos_rsoxs():# TODO positions names are all lowercase now
     yield from bps.mv(
         mir3.Pitch,
@@ -265,34 +266,7 @@ def mirror1_NEXAFSpos():
     )
 
 
-# SAXS slits for the new rsoxs grating
-# ┌─── Upstream Scatter Slits ────────────────────────────────────────────────┐
-# │      vertical   size   =   0.025 mm                                       │
-# │      vertical   center =  -0.550 mm                                       │
-# │      horizontal size   =   0.100 mm                                       │
-# │      horizontal center =   0.700 mm                                       │
-# └───────────────────────────────────────────────────────────────────────────┘
-#
-# RSoXS 2022-2/C-308244-NIST/Calibration/auto/2022-05-28/  [97]: slits2.wh()
-# Middle Scatter Slits:
-#
-# ┌─── Middle Scatter Slits ──────────────────────────────────────────────────┐
-# │      vertical   size   =   0.402 mm                                       │
-# │      vertical   center =  -0.900 mm                                       │
-# │      horizontal size   =   0.249 mm                                       │
-# │      horizontal center =   0.648 mm                                       │
-# └───────────────────────────────────────────────────────────────────────────┘
-#
-# RSoXS 2022-2/C-308244-NIST/Calibration/auto/2022-05-28/  [98]: slits3.wh()
-# Final Scatter Slits:
-#
-# ┌─── Final Scatter Slits ───────────────────────────────────────────────────┐
-# │      vertical   size   =   0.900 mm                                       │
-# │      vertical   center =  -0.400 mm                                       │
-# │      horizontal size   =   0.849 mm                                       │
-# │      horizontal center =   0.900 mm
 
-## 
 def SAXS():
     return [
         [
@@ -367,33 +341,7 @@ def SAXSNEXAFS():
         },
     ]
 
-"""
-┌─── Upstream Scatter Slits ────────────────────────────────────────────────┐
-│      vertical   size   =   0.026 mm                                       │
-│      vertical   center =  -0.549 mm                                       │
-│      horizontal size   =   0.201 mm                                       │
-│      horizontal center =   0.700 mm                                       │
-└───────────────────────────────────────────────────────────────────────────┘
 
-RSoXS /nsls2/data/sst/proposals/2024-1/pass-312112 [151]: slits2.wh()
-Middle Scatter Slits:
-
-┌─── Middle Scatter Slits ──────────────────────────────────────────────────┐
-│      vertical   size   =   0.301 mm                                       │
-│      vertical   center =  -0.851 mm                                       │
-│      horizontal size   =   0.701 mm                                       │
-│      horizontal center =   0.650 mm                                       │
-└───────────────────────────────────────────────────────────────────────────┘
-
-RSoXS /nsls2/data/sst/proposals/2024-1/pass-312112 [152]: slits3.wh()
-Final Scatter Slits:
-
-┌─── Final Scatter Slits ───────────────────────────────────────────────────┐
-│      vertical   size   =   0.898 mm                                       │
-│      vertical   center =  -0.450 mm                                       │
-│      horizontal size   =   1.199 mm                                       │
-│      horizontal center =   0.900 mm   
-"""
 
 def WAXSNEXAFS():
     return [
@@ -420,42 +368,6 @@ def WAXSNEXAFS():
         ],
         {
             "RSoXS_Config": "WAXSNEXAFS",
-            "RSoXS_Main_DET": "Beamstop_WAXS",
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": None,
-            "RSoXS_SAXS_BCX": None,
-            "RSoXS_SAXS_BCY": None,
-        },
-    ]
-
-## PK: Temporary configuration to test the effects of the slit sizes on signal stability
-def WAXSNEXAFS_20240718():
-    return [
-        [
-            {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.02, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.04, "order": 0},
-            {"motor": slits1.hcenter, "position": -0.2, "order": 0},
-            {"motor": slits2.vsize, "position":  0.25, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.72, "order": 0},
-            {"motor": slits2.hsize, "position": 0.35, "order": 0},
-            {"motor": slits2.hcenter, "position": -0.59, "order": 0},
-            {"motor": slits3.vsize, "position": 0.9, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.25, "order": 0},
-            {"motor": slits3.hsize, "position": 1.0, "order": 0},
-            {"motor": slits3.hcenter, "position": -0.5, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -31, "order": 0},
-            {"motor": Det_W, "position": waxs_out_pos, "order": 1},
-            # {"motor": Det_S, "position": -100, "order": 1},
-            {"motor": BeamStopW, "position": bs_waxs_in_pos, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "WAXSNEXAFS_20240616",
             "RSoXS_Main_DET": "Beamstop_WAXS",
             "RSoXS_WAXS_SDD": None,
             "RSoXS_WAXS_BCX": None,
@@ -509,28 +421,7 @@ def DM7NEXAFS():
 
 
 
-""" positions march 2024
-        [
-            {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.026, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.549, "order": 0},
-            {"motor": slits1.hsize, "position": 0.01, "order": 0},
-            {"motor": slits1.hcenter, "position": 0.700, "order": 0},
-            {"motor": slits2.vsize, "position":  0.301, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.851, "order": 0},
-            {"motor": slits2.hsize, "position": 0.701, "order": 0},
-            {"motor": slits2.hcenter, "position": 0.650, "order": 0},
-            {"motor": slits3.vsize, "position": 0.898, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.450, "order": 0},
-            {"motor": slits3.hsize, "position": 1.199, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.900, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -31, "order": 0},
-            {"motor": Det_W, "position": waxs_in_pos, "order": 1},
-            {"motor": BeamStopW, "position": 71, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        """
+
 def WAXS():
     return [
         [
@@ -607,53 +498,6 @@ def SAXS_liquid():
             "RSoXS_SAXS_BCY": 514.4,
         },
     ]
-"""
-values after slit alignment on TEM liquid cell
-
-Upstream Scatter Slits:
-
-\u2502      vertical   size   =   0.100 mm                                       \u2502
-\u2502      vertical   center =  -0.549 mm                                       \u2502
-\u2502      horizontal size   =   0.201 mm                                       \u2502
-\u2502      horizontal center =   0.700 mm                                       \u2502
-
-Middle Scatter Slits:
-
-\u2502      vertical   size   =   0.402 mm                                       \u2502
-\u2502      vertical   center =  -0.750 mm                                       \u2502
-\u2502      horizontal size   =   0.400 mm                                       \u2502
-\u2502      horizontal center =   0.599 mm                                       \u2502
-
-Final Scatter Slits:
-
-\u2502      vertical   size   =   2.000 mm                                       \u2502
-\u2502      vertical   center =  -0.349 mm                                       \u2502
-\u2502      horizontal size   =   2.002 mm                                       \u2502
-\u2502      horizontal center =   0.750 mm                                       \u2502
-
-getting rid of more scatter (possibly lower resolution):
-
-┌─── Upstream Scatter Slits ────────────────────────────────────────────────┐
-│      vertical   size   =   0.150 mm                                       │
-│      vertical   center =  -0.549 mm                                       │
-│      horizontal size   =   0.100 mm                                       │
-│      horizontal center =   0.700 mm                                       │
-└───────────────────────────────────────────────────────────────────────────┘
-┌─── Middle Scatter Slits ──────────────────────────────────────────────────┐
-│      vertical   size   =   0.300 mm                                       │
-│      vertical   center =  -0.749 mm                                       │
-│      horizontal size   =   0.251 mm                                       │
-│      horizontal center =   0.599 mm                                       │
-└───────────────────────────────────────────────────────────────────────────┘
-┌─── Final Scatter Slits ───────────────────────────────────────────────────┐
-│      vertical   size   =   1.999 mm                                       │
-│      vertical   center =  -0.349 mm                                       │
-│      horizontal size   =   2.002 mm                                       │
-│      horizontal center =   0.749 mm                                       │
-└───────────────────────────────────────────────────────────────────────────┘
-
-
-"""
 
 def WAXS_liquid():
     return [

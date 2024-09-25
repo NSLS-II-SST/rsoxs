@@ -29,7 +29,7 @@ class StandardProsilicawstats(StandardProsilicaWithTIFFV33):
 
 Side_cam = StandardProsilica("XF:07ID1-ES:1{Scr:2}", name="RSoXS Sample Area Camera")
 DetS_cam = StandardProsilica("XF:07ID1-ES:1{Scr:3}", name="WAXS Detector Area Camera")
-Izero_cam = StandardProsilica("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera")
+Izero_cam = StandardProsilicawstats("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera", read_attrs=['tiff','stats5'])
 Sample_cam = StandardProsilica("XF:07ID1-ES:1{Scr:4}", name="RSoXS Sample Area Camera")
 FS7_cam = StandardProsilicawstats("XF:07ID-BI{BPM:7}", 
                                 name="FS7 pink beam stop Camera",

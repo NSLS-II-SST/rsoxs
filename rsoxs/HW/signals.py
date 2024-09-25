@@ -69,7 +69,7 @@ Slit1_i400_npnts = EpicsSignal(
 Slit1_i400_read_time = EpicsSignal(
     "XF:07ID-ES1{Slt1:I400-1}:PERIOD_SP", name="RSoXS Slit 1 i400  read time", kind="normal"
 ,string=True)
-## PK: bookmark for how far I have gotten in copying config details into profile_collection package
+
 diode_i400_npnts = EpicsSignal(
     "XF:07ID-ES1{DMR:I400-1}:TRIGPOINTS_SP", name="RSoXS diode i400 trigger points", kind="normal"
 ,string=True)
@@ -253,12 +253,12 @@ Izero_Mesh = EpicsSignalRO(
     kind="normal",
 )
 Sample_TEY = EpicsSignalRO(
-    "XF:07ID1-BI{EM:1}EM180:Current1:MeanValue_RBV",
+    "XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV", ## Channel 1 had temporarily stopped working, but is now fixed.  In that meantime, the TEY signal was moved to channel 4 and is still currently there.
     name="RSoXS Sample Current",
     kind="normal",
 )
 
-
+## PK: bookmark for how far I have gotten in copying config details into profile_collection package
 mc19_fault = EpicsSignalRO('SST1_Upstream:MC19AmpFaultSum-Sts',name="MC19 Amp Fault")
 mc20_fault = EpicsSignalRO('SST1_Upstream:MC20AmpFaultSum-Sts',name="MC20 Amp Fault")
 mc21_fault = EpicsSignalRO('SST1_Upstream:MC21AmpFaultSum-Sts',name="MC21 Amp Fault")
