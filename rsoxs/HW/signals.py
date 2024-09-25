@@ -69,7 +69,7 @@ Slit1_i400_npnts = EpicsSignal(
 Slit1_i400_read_time = EpicsSignal(
     "XF:07ID-ES1{Slt1:I400-1}:PERIOD_SP", name="RSoXS Slit 1 i400  read time", kind="normal"
 ,string=True)
-## PK: bookmark for how far I have gotten in copying config details into profile_collection package
+
 diode_i400_npnts = EpicsSignal(
     "XF:07ID-ES1{DMR:I400-1}:TRIGPOINTS_SP", name="RSoXS diode i400 trigger points", kind="normal"
 ,string=True)
@@ -258,7 +258,7 @@ Sample_TEY = EpicsSignalRO(
     kind="normal",
 )
 
-
+## PK: bookmark for how far I have gotten in copying config details into profile_collection package
 mc19_fault = EpicsSignalRO('SST1_Upstream:MC19AmpFaultSum-Sts',name="MC19 Amp Fault")
 mc20_fault = EpicsSignalRO('SST1_Upstream:MC20AmpFaultSum-Sts',name="MC20 Amp Fault")
 mc21_fault = EpicsSignalRO('SST1_Upstream:MC21AmpFaultSum-Sts',name="MC21 Amp Fault")
