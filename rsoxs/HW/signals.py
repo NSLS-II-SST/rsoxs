@@ -294,7 +294,7 @@ Izero_Mesh_int = ophScalar(
     kind="normal",
 )
 Sample_TEY_int = ophScalar(
-    "XF:07ID1-BI{EM:1}EM180:Current1:MeanValue_RBV",
+    "XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV",
     name="RSoXS Sample Current",
     kind="normal",
 )
