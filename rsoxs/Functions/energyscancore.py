@@ -103,7 +103,7 @@ def cleanup():
     yield from bps.mv(Shutter_control, 0)
     
 
-@finalize_decorator(rsoxs_config.write_plan)
+#@finalize_decorator(##rsoxs_config.write_plan)
 def NEXAFS_step_scan_core(
     dets=None,    # a list of detectors to run at each step - must be scalar type detectors wtih set_exp functions
     energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
@@ -342,7 +342,7 @@ def NEXAFS_step_scan_core(
 
 
 
-@finalize_decorator(rsoxs_config.write_plan)
+#@finalize_decorator(#rsoxs_config.write_plan)
 def new_en_scan_core(
     dets=None,    # a list of detectors to run at each step - get from md by default
     energy=None,  # optional energy object to set energy commands to - sets to energy by default, but allows for simulation
@@ -668,7 +668,7 @@ def flyer_per_step_factory(fake_flyer):
 
 
 
-@finalize_decorator(rsoxs_config.write_plan)
+#@finalize_decorator(#rsoxs_config.write_plan)
 def NEXAFS_old_fly_scan_core(
     scan_params,
     openshutter=True,
@@ -795,7 +795,7 @@ def NEXAFS_old_fly_scan_core(
 
 
 
-@finalize_decorator(rsoxs_config.write_plan)
+#@finalize_decorator(#rsoxs_config.write_plan)
 def NEXAFS_fly_scan_core(
     scan_params,
     openshutter=True,
