@@ -605,7 +605,7 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
         # moving z is dangerous = best to keep it at 0 by default
         rotate_sample(samp)  # this will take the positions found above and the desired incident angle and
         # rotate the location of the sample accordingly
-    rsoxs_config['bar'] = orjson.dumps(bar)
+    rsoxs_config['bar'] = bar #event_model.sanitize_doc() #rsoxs_config['bar'] = orjson.dumps(bar)
     #rsoxs_config.write()
 
 def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
