@@ -560,22 +560,22 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
     for samp in bar:
         xpos = samp["bar_loc"]["ximg"]  # x position from the image
         ypos = samp["bar_loc"]["yimg"]  # y position from the image
-        xoff = float(af1xoff - (af1xoff - af2xoff) * (ypos - af1y) / run_y)
+        xoff = af1xoff - (af1xoff - af2xoff) * (ypos - af1y) / run_y
         samp["bar_loc"]["xoff"] = float(xoff)  # this should pretty much be the same for both fiducials,
         # but just in case there is a tilt,
         # we account for that here, taking af1soff if the sample is towards the top and af2soff as it is lower
 
         if samp["front"]:
-            newx = float(xpos + x_offset + (ypos - af1y) * dx / run_y)
+            newx = xpos + x_offset + (ypos - af1y) * dx / run_y
             # new position is the image position, plus the offset from the image to the x-rays, plus a linear correction
             # from the top of the bar to the bottom
-            newy = float(ypos + y_offset + (ypos - af1y) * dy / run_y)
+            newy = ypos + y_offset + (ypos - af1y) * dy / run_y
             samp["bar_loc"]["x0"] = float(
                 newx
             )  # these are the positions at 0 rotation, so for the front, we are already good
         elif back:
-            newx = float(xpos + x_offset_back + (ypos - af1y) * dxb / run_y)
-            newy = float(ypos + y_offset_back + (ypos - af1y) * dyb / run_y)
+            newx = xpos + x_offset_back + (ypos - af1y) * dxb / run_y
+            newy = ypos + y_offset_back + (ypos - af1y) * dyb / run_y
             samp["bar_loc"]["x0"] = float(2 * xoff - newx)  # these are the positions at 0 rotation,
             # so for the back, we have to correct
         else:
@@ -590,13 +590,13 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
         samp["bar_loc"]["af2zoff"] = float(af2zoff)
 
         zoff = zoffset(
-            float(af1zoff),
-            float(af2zoff),
-            float(newy),
-            front=float(samp["front"]),
-            height=float(samp["height"]),
-            af1y=float(af1y),
-            af2y=float(af2y),
+            af1zoff,
+            af2zoff,
+            newy,
+            front=samp["front"],
+            height=samp["height"],
+            af1y=af1y,
+            af2y=af2y,
         )
         samp["bar_loc"]["zoff"] = float(zoff)
 
