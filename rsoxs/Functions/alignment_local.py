@@ -268,17 +268,18 @@ def update_bar(loc_Q, front, inbar=None):
             # add / replace the front fiducial bar entries (bar[0], bar[-1])
             AF1 = default_sample("AF1_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
             AF2 = default_sample("AF2_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
+            diode = default_sample("diode",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
             if sample_by_name("AF1_front") is not None:
                 gbar.remove(sample_by_name("AF1_front"))
             if sample_by_name("AF2_front") is not None:
                 gbar.remove(sample_by_name( "AF2_front"))
             gbar.insert(0, AF1)
-            gbar.append(AF2)
-            # add in a diode position as well
-            diode = default_sample("diode",proposal_id=gbar[1]['proposal_id'],institution=gbar[0]['institution'],front=True)
-            if sample_by_name( "diode") is not None:
-                gbar.insert(-1, diode)
+            gbar.insert(1, AF2)
+            gbar.insert(2, diode)
+            
+                
 
+        ## TODO: update the back of the bar code if the above front-bar code works
         else:
             # if front fiducials don't exist,add dummy ones (so thge AF2 ones are in the correct position)
             if sample_by_name("AF1_front") is None:
