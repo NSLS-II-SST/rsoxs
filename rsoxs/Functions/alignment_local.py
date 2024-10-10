@@ -23,7 +23,6 @@ from .common_functions import args_to_string
 
 def sample_by_value_match(key, string, bar=None):
     if bar == None:
-        ##rsoxs_config.read()
         bar = rsoxs_config['bar']
     results = [d for (index, d) in enumerate(bar) if d[key].find(string) >= 0]
     if len(results) == 1:
@@ -41,7 +40,6 @@ def sample_by_name( name, bar=None):
 
 def list_samples(bar=None):
     if bar == None:
-        ##rsoxs_config.read()
         bar = rsoxs_config['bar']
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
@@ -123,12 +121,10 @@ def sanatize_angle(samp, force=False):
         samp["bar_loc"]["th"] = 195.0
     if samp["bar_loc"]["th"] <= -155:
         samp["bar_loc"]["th"] = -155.0
-    ##rsoxs_config.write()
-
+    
 
 
 def samp_dict_from_id_or_num(num_or_id):
-    ##rsoxs_config.read()
     if isinstance(num_or_id,str):
         sam_dict = [d for (index, d) in enumerate(rsoxs_config['bar']) if d['sample_id'].find(num_or_id) >= 0]
         if len(sam_dict) > 0:
@@ -146,7 +142,6 @@ def samp_dict_from_id_or_num(num_or_id):
 
 def offset_bar(xoff, yoff, zoff, thoff, bar=None):
     if bar == None:
-        ##rsoxs_config.read()
         bar = rsoxs_config['bar']
     for samp in bar:
         for mot in samp["location"]:
@@ -160,8 +155,7 @@ def offset_bar(xoff, yoff, zoff, thoff, bar=None):
                 mot["position"] += thoff
         sample_recenter_sample(samp)
     
-    ##rsoxs_config.write()
-
+    
 def default_sample(name,proposal_id,institution='NIST',grazing=False,front=True):
     return {
         "institution": institution,
@@ -206,7 +200,6 @@ class BarPlotter(QtAwareCallback):
 import bluesky.preprocessors as bpp
 def image_bar( path=None, front=True, bar=None):
     if bar == None:
-        ##rsoxs_config.read()
         bar = rsoxs_config['bar']
     global loc_Q
     loc_Q = queue.Queue(1)
@@ -226,7 +219,6 @@ def image_bar( path=None, front=True, bar=None):
 
 def locate_samples_from_image( impath, front=True, bar=None):
     if bar == None:
-        ##rsoxs_config.read()
         bar = rsoxs_config['bar']
     # if the image was just taken itself, before a bar was compiled, then this can be run to just load that image
     # and then interactively place the elements of bar
@@ -249,7 +241,6 @@ def update_bar(loc_Q, front, inbar=None):
     updated with whether we are pointing at the front or the back of the bar
     """
     if inbar == None:
-        ##rsoxs_config.read()
         inbar = rsoxs_config['bar']
     from threading import Thread
 
@@ -300,7 +291,6 @@ def update_bar(loc_Q, front, inbar=None):
             AF2 = default_sample("AF2_back",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=False)
             gbar.insert(1, AF1)  # inserts in the second position
             gbar.insert(-1, AF2)  # inserts in the second to last position
-        ##rsoxs_config.write()
         while True:
             #        for sample in bar:
             sample = gbar[samplenum]
@@ -338,8 +328,6 @@ def update_bar(loc_Q, front, inbar=None):
                     sample["bar_loc"]["th0"] = float(180)
                 annotateImage(sample_image_axes, item, sample["sample_name"])
                 # advance sample and loop
-                #rsoxs_config['bar'] = gbar
-                #rsoxs_config.write()
                 samplenum += 1
             elif item == "escape":
                 print("aborting")
@@ -352,8 +340,6 @@ def update_bar(loc_Q, front, inbar=None):
                 samplenum -= 1
             if samplenum >= len(gbar):
                 print("done")
-                #rsoxs_config['bar'] = gbar
-                #rsoxs_config.write()
                 break
 
     t = Thread(target=worker)
@@ -448,7 +434,6 @@ def plot_key_press(event):
 def offset_bar( xoff, yoff, zoff, thoff, bar = None):
     
     if bar == None:
-        #rsoxs_config.read()
         bar = rsoxs_config['bar']
     for samp in bar:
         for mot in samp["location"]:
@@ -460,8 +445,7 @@ def offset_bar( xoff, yoff, zoff, thoff, bar = None):
                 mot["position"] += zoff
             if mot["motor"] == "th":
                 mot["position"] += thoff
-    #rsoxs_config.write()
-
+    
 
 def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
     """
@@ -475,7 +459,6 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
     fiducial list is the list output by find_fiducials()
     """
     if bar == None:
-        #rsoxs_config.read()
         bar = deepcopy(rsoxs_config['bar'])
     af2y = fiduciallist[0]
     af2xm90 = fiduciallist[1]
@@ -606,8 +589,7 @@ def correct_bar(fiduciallist, include_back, training_wheels=True, bar = None):
         rotate_sample(samp)  # this will take the positions found above and the desired incident angle and
         # rotate the location of the sample accordingly
     rsoxs_config['bar'] = bar #event_model.sanitize_doc() #rsoxs_config['bar'] = orjson.dumps(bar)
-    #rsoxs_config.write()
-
+    
 def zoffset(af1zoff, af2zoff, y, front=True, height=0.25, af1y=-186.3, af2y=4):
     """
     Using the z offset of the fiducial positions from the center of rotation,
@@ -688,7 +670,6 @@ def rotate_sample(samp, force=False):
             motor["position"] = theta_new
         if motor["motor"] == "y":
             motor["position"] = y0
-    # #rsoxs_config.write()
     # in future, updating y (if the rotation axis is not perfectly along y
     # and z (to keep the sample-detector distance constant) as needed would be good as well
     # newz = rotatedz(newx, th, zoff, af1xoff)
@@ -715,13 +696,11 @@ def sample_recenter_sample(samp):
     samp["bar_loc"]["x0"] = newx0
     samp["bar_loc"]["y0"] = newy  # y and y0 are the same, so we can just copy this
     samp["angle"] = newangle
-    # #rsoxs_config.write()
-
+    
 
 
 def read_positions(bar=None):
     if bar == None:
-        #rsoxs_config.read()
         bar = rsoxs_config['bar']
     # for when the positions are altered by hand in the excel sheet, (i.e. after spiral scans)
     # this reads those positions and sets the default positions (x0 and y0) to match
@@ -731,7 +710,6 @@ def read_positions(bar=None):
 
 def resolve_spirals(bar=None):
     if bar == None:
-        #rsoxs_config.read()
         bar = rsoxs_config['bar']
     for samp in bar:
         if len(str(samp['bar_loc'].get('spiral_started',''))) > 0 and len(samp['bar_loc'].get('spiral_done','')) == 0:
@@ -757,7 +735,6 @@ def resolve_spirals(bar=None):
                             newsamp['sample_name']+=f'_{i}'
                             newsamp['sample_id']+=f'_{i}'
                             rsoxs_config['bar'].append(newsamp)
-                            #rsoxs_config.write()
                     else:
                         accept = input(f"image {im} at ({xs[im],ys[im]}) is correct (y,n)?")
                         if accept in ['y','Y','yes']:
@@ -767,14 +744,9 @@ def resolve_spirals(bar=None):
                                                 {'motor':'z','position':z}]
                             samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
                                                 'best_num':im}
-                            #rsoxs_config.write()
-    
+                            
 
 
-#def clear_bar():
-#    accept = input(f"Are you sure you want to clear the presistant bar? (y,n)?")
-#    if accept in ['y','Y','yes']:
-        #rsoxs_config.clear_bar()
 
 def acq(id_or_num,acq_num=0):
     samp = samp_dict_from_id_or_num(id_or_num)
