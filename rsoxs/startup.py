@@ -56,16 +56,15 @@ except ImportError:
 
 
 if not is_re_worker_active():
-    ip = get_ipython()
     ns = get_ipython().user_ns
     nslsii.configure_base(
         ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
     )
-    ip.log.setLevel("ERROR")
-    RE = ip.user_ns["RE"]
-    db = ip.user_ns["db"]
-    sd = ip.user_ns["sd"]
-    #bec = ip.user_ns["bec"]
+    get_ipython().log.setLevel("ERROR")
+    RE = ns["RE"]
+    db = ns["db"]
+    sd = ns["sd"]
+    #bec = ns["bec"]
 else:
     ns = {}
     nslsii.configure_base(
