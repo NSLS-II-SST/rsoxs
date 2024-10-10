@@ -268,6 +268,7 @@ def update_bar(loc_Q, front, inbar=None):
             gbar.insert(0, AF1)
             gbar.insert(1, AF2)
             gbar.insert(2, diode)
+            ## Appending fiducials/diodes to the end does not always reliably add image position into rsoxs_config (Issue #2, also encountered during 20241006 beam time), so it is simpler to add these at the beginnng.
             
                 
 
