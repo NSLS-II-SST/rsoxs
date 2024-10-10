@@ -65,37 +65,8 @@ sd = ns["sd"]
 #bec = ns["bec"]
 
 
-# === START PERSISTENT DICT CODE ===
-# old code, using the files on lustre to store the persistent dict
-#from bluesky.utils import PersistentDict
-#runengine_metadata_dir = Path("/nsls2/data/sst/legacy/RSoXS/config/runengine-metadata")
-#RE.md = PersistentDict(runengine_metadata_dir)
 
-# new code, using redis
 from nslsii.md_dict import RunEngineRedisDict
-
-class Sync_Dict(RunEngineRedisDict):
-
-    def write(self):
-        self._set_local_metadata_on_server()
-        print('RSoXS configuration saved to redis')
-
-    def read(self):
-        self.update(self._get_local_metadata_from_server())
-    
-    def write_plan(self):
-        yield from bps.null()
-        self.write()
-        yield from bps.null()
-    
-    def clear_bar(self):
-        self['bar'] = []
-        self.write()
-
-
-#RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
-#rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
-
 import redis
 from redis_json_dict import RedisJSONDict
 mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
