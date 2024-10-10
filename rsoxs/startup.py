@@ -105,9 +105,15 @@ class Sync_Dict(RunEngineRedisDict):
         self.write()
 
 
-RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
-rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
+#RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
+#rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
 
+import redis
+from redis_json_dict import RedisJSONDict
+mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
+RE.md = RedisJSONDict(mdredis, prefix="rsoxs-")
+rsoxsredis = redis.Redis("info.sst.nsls2.bnl.gov",port=60737,db=1)
+rsoxs_config = RedisJSONDict(mdredis, prefix="rsoxs-")
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
 

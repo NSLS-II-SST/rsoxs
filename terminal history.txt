@@ -3056,13 +3056,13 @@ Out[12]: ()
 RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [13]: RE(bps.mv(slits1.vsize, 0.026))
 Out[13]: ()                                                                                              
 
-RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [14]: rsoxs_config.save()
+RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [14]: #rsoxs_config.save()
 An exception has occurred, use '%tb verbose' to see the full traceback.
 AttributeError: 'Sync_Dict' object has no attribute 'save'
 
 See /var/log/bluesky/bluesky.log for the full traceback.
 
-RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [15]: rsoxs_config.write()
+RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [15]: #rsoxs_config.write()
 RSoXS configuration saved to redis
 
 RSoXS /nsls2/data/sst/proposals/commissioning/pass-315993 [16]: RE(do_nexafs(edge="carbon"))

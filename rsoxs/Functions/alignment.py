@@ -154,7 +154,7 @@ def duplicate_sample(samp_num,name_suffix):
      newsamp['sample_name']+=f'_{name_suffix}'
      newsamp['sample_id']+=f'_{name_suffix}'
      rsoxs_config['bar'].append(newsamp)
-     rsoxs_config.write()
+     #rsoxs_config.write()
 
 
 def move_to_location(locs=get_sample_location()):
@@ -466,7 +466,7 @@ def samxscan():
 
 
 
-@finalize_decorator(rsoxs_config.write_plan)
+#@finalize_decorator(#rsoxs_config.write_plan)
 def spiralsearch(
     diameter=0.6,
     stepsize=0.2,
@@ -659,7 +659,7 @@ def spiralsearch(
 #     accept = input(f"Do you want to apply this correction (y,n)?")
 #     if accept in ['y','Y','yes']:
 #         back = False
-#         rsoxs_config.read()
+#         #rsoxs_config.read()
 #         for samp in rsoxs_config['bar']:
 #             if samp['front'] ==False:
 #                 back = True
@@ -672,7 +672,7 @@ def rotate_now(theta, force=False):
         samp = get_sample_dict()
         samp["angle"] = theta
         rotate_sample(samp, force)
-        rsoxs_config.write()
+        #rsoxs_config.write()
         yield from load_sample(samp)
 
 
@@ -686,7 +686,7 @@ def jog_samp_zoff(id_or_num,jog_val,write_default=True,move=True):
             samp['bar_loc']['zoff'] += jog_val
             if write_default:
                 rotate_sample(samp) # this will write the new rotated positions into the position (without moving anything)
-            rsoxs_config.write() # this saves the zoff and the new rotated position to the persistent sample list
+            #rsoxs_config.write() # this saves the zoff and the new rotated position to the persistent sample list
             if(move):
                 RE(load_samp(id_or_num))
         else:
