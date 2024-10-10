@@ -147,7 +147,7 @@ def md_validator(md):
 RE.md_validator = md_validator
 
 
-# === END PERSISTENT DICT CODE ===
+
 
 
 # Optional: set any metadata that rarely changes.
