@@ -32,6 +32,7 @@ from ..HW.motors import (
     BeamStopS)
 from .alignment import load_configuration, rsoxs_config,correct_bar
 
+## TODO: Not sure why this is redefined identically as the function in flystream_wrapper.py, but end goal is to move to Jamie's function.
 def flystream_during_wrapper(plan, flyers, stream=False):
     """
     Kickoff and collect "flyer" (asynchronously collect) objects during runs.
