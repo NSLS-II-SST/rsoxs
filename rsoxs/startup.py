@@ -55,25 +55,14 @@ except ImportError:
         return False
 
 
-if not is_re_worker_active():
-    ns = get_ipython().user_ns
-    nslsii.configure_base(
-        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
-    )
-    get_ipython().log.setLevel("ERROR")
-    RE = ns["RE"]
-    db = ns["db"]
-    sd = ns["sd"]
-    #bec = ns["bec"]
-else:
-    ns = {}
-    nslsii.configure_base(
-        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
-    )
-    RE = ns["RE"]
-    db = ns["db"]
-    sd = ns["sd"]
-    #bec = ns["bec"]
+if not is_re_worker_active(): ns = get_ipython().user_ns
+else: ns = {}
+nslsii.configure_base(ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True)
+if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
+RE = ns["RE"]
+db = ns["db"]
+sd = ns["sd"]
+#bec = ns["bec"]
 
 
 # === START PERSISTENT DICT CODE ===
