@@ -62,7 +62,7 @@ if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
 RE = ns["RE"]
 db = ns["db"]
 sd = ns["sd"]
-bec = ns["bec"] ## Was initially commented out
+#bec = ns["bec"]
 
 
 
