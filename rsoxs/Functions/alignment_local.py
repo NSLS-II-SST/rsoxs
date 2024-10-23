@@ -735,7 +735,7 @@ def resolve_spirals(bar=None):
                                                 'best_num':im}
                             newsamp['sample_name']+=f'_{i}'
                             newsamp['sample_id']+=f'_{i}'
-                            rsoxs_config['bar'] += {newsamp} #rsoxs_config['bar'].append(newsamp)
+                            rsoxs_config['bar'].extend(newsamp) #rsoxs_config['bar'].append(newsamp)
                     else:
                         accept = input(f"image {im} at ({xs[im],ys[im]}) is correct (y,n)?")
                         if accept in ['y','Y','yes']:
