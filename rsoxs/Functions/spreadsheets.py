@@ -7,7 +7,6 @@ def load_sheet(path):
     newbar = load_samplesxlsx(path)
     if isinstance(newbar, list):
         rsoxs_config['bar'] = newbar
-        ##rsoxs_config.write()
         print(f'replaced persistent bar with bar loaded from {path}')
         return
 

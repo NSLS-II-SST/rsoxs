@@ -55,59 +55,18 @@ except ImportError:
         return False
 
 
-if not is_re_worker_active():
-    ip = get_ipython()
-    ns = get_ipython().user_ns
-    nslsii.configure_base(
-        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
-    )
-    ip.log.setLevel("ERROR")
-    RE = ip.user_ns["RE"]
-    db = ip.user_ns["db"]
-    sd = ip.user_ns["sd"]
-    #bec = ip.user_ns["bec"]
-else:
-    ns = {}
-    nslsii.configure_base(
-        ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True
-    )
-    RE = ns["RE"]
-    db = ns["db"]
-    sd = ns["sd"]
-    #bec = ns["bec"]
+if not is_re_worker_active(): ns = get_ipython().user_ns
+else: ns = {}
+nslsii.configure_base(ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True)
+if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
+RE = ns["RE"]
+db = ns["db"]
+sd = ns["sd"]
+#bec = ns["bec"]
 
 
-# === START PERSISTENT DICT CODE ===
-# old code, using the files on lustre to store the persistent dict
-#from bluesky.utils import PersistentDict
-#runengine_metadata_dir = Path("/nsls2/data/sst/legacy/RSoXS/config/runengine-metadata")
-#RE.md = PersistentDict(runengine_metadata_dir)
 
-# new code, using redis
 from nslsii.md_dict import RunEngineRedisDict
-
-class Sync_Dict(RunEngineRedisDict):
-
-    def write(self):
-        self._set_local_metadata_on_server()
-        print('RSoXS configuration saved to redis')
-
-    def read(self):
-        self.update(self._get_local_metadata_from_server())
-    
-    def write_plan(self):
-        yield from bps.null()
-        self.write()
-        yield from bps.null()
-    
-    def clear_bar(self):
-        self['bar'] = []
-        self.write()
-
-
-#RE.md = Sync_Dict(host="info.sst.nsls2.bnl.gov", port=60737) # port specific to rsoxs run engine
-#rsoxs_config = Sync_Dict(re_md_channel_name='RSoXS Config',host="info.sst.nsls2.bnl.gov", port=60737,db=1,global_keys=[])
-
 import redis
 from redis_json_dict import RedisJSONDict
 mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
@@ -188,7 +147,7 @@ def md_validator(md):
 RE.md_validator = md_validator
 
 
-# === END PERSISTENT DICT CODE ===
+
 
 
 # Optional: set any metadata that rarely changes.

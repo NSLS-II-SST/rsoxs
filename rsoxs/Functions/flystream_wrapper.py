@@ -8,6 +8,7 @@ from bluesky.utils import Msg, short_uid as _short_uid, single_gen, ensure_gener
 from bluesky.preprocessors import plan_mutator
 
 
+## TODO: This is intended to be centralized in Jamie Titus's nbs-bl package.  Switch the imports after moving to all the new packages.
 def flystream_during_wrapper(plan, flyers, stream=False):
     """
     Kickoff and collect "flyer" (asynchronously collect) objects during runs.

@@ -34,7 +34,6 @@ actions = {
 motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
-#@finalize_decorator(#rsoxs_config.write_plan)
 def run_bar(
     bar=None,
     sort_by=["apriority"],
@@ -72,7 +71,6 @@ def run_bar(
         _description_
     """
     if bar == None:
-        #rsoxs_config.read()
         bar = rsoxs_config['bar']
     if dry_run:
         verbose = True
@@ -120,7 +118,6 @@ def run_bar(
         message += f'total time {time_sec(actual_total_time)}, expected {time_sec(queue_step["time_before"]+queue_step["acq_time"])}\n'
         message += f'expected time remaining {time_sec(queue_step["time_after"])} plus overhead\n'
 
-    #rsoxs_config.write() # bar may have changed - added annotations etc
     message = message[:message.rfind('expected')]
     message += f"End of Queue"
     rsoxs_bot.send_message(message)

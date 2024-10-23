@@ -32,6 +32,7 @@ from ..HW.motors import (
     BeamStopS)
 from .alignment import load_configuration, rsoxs_config,correct_bar
 
+## TODO: Not sure why this is redefined identically as the function in flystream_wrapper.py, but end goal is to move to Jamie's function.
 def flystream_during_wrapper(plan, flyers, stream=False):
     """
     Kickoff and collect "flyer" (asynchronously collect) objects during runs.
@@ -334,8 +335,6 @@ def find_optimum_motor_pos(db, uid, motor_name='RSoXS Sample Up-Down', signal_na
 
 
 
-#@finalize_decorator(#rsoxs_config.write_plan)
-#RE(fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=2)) # new encoders
 #def fly_find_fiducials(f2=[7.5,5,-2.5,0],f1=[4.6, 4, 1, 1.1],y2=2.5,y1=-188):
 def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=2):
     thoffset = 0
@@ -380,7 +379,6 @@ def fly_find_fiducials(f2=[3.5,-1,-2.4,1.5],f1=[2.0,-0.9,-1.5,0.8],y1=-187.5,y2=
     accept = input(f"Do you want to apply this correction (y,n)?")
     if accept in ['y','Y','yes']:
         back = False
-        #rsoxs_config.read()
         for samp in rsoxs_config['bar']:
             if samp['front'] ==False:
                 back = True
