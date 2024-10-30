@@ -367,6 +367,7 @@ def new_en_scan_core(
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
+    ## Used for RSoXS scattering scans
     # warning about all kwargs that are being ignored
     for kwarg,value in kwargs.items():
         if kwarg not in ['uid','sample_id','priority','group','configuration','type']:
@@ -626,6 +627,19 @@ def new_en_scan_core(
         )
     else:
             # temporarily disabling flystreaming for Oct27 beamtime
+        yield from finalize_wrapper(flystream_during_wrapper(
+            bp.scan_nd(newdets + goodsignals, 
+                    sigcycler, 
+                    md=md,
+                    ),#per_step=flyer_per_step),
+                    #[Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int]),
+                    [Beamstop_WAXS_int, Izero_Mesh_int],stream=False),
+            cleanup()
+        )
+        #yield from flyer_final()
+        ## The flystream_during_wrapper is needed here and during spiral scans even though energy is not moving in a fly-scan manner because this wrapper is used to asynchronously and continuously collect data for the photodiode and I0 signals.  Without the wrapper, these data only would be collected approximately when the shutter is opened, but the shutter timing and data collection timing may not match.
+        ## For GI-CDSAXS scans such as those performed during 20241027 beam time, the beamstop data is less important, and the flystream_during_wrapper could be removed (see quoted code below), especially as it would have caused the scan to pause for an unnecessary amount of time before moving to the next scan.
+        """
         yield from finalize_wrapper( # flystream_during_wrapper(
             bp.scan_nd(newdets + goodsignals, 
                     sigcycler, 
@@ -635,7 +649,7 @@ def new_en_scan_core(
                     #  [Beamstop_WAXS_int, Izero_Mesh_int],stream=False),
             cleanup()
         )
-        #yield from flyer_final()
+        """
     for det in newdets:
         det.number_exposures = old_n_exp[det.name]
 
