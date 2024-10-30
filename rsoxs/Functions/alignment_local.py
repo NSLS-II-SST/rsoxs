@@ -280,7 +280,7 @@ def update_bar(loc_Q, front, inbar=None):
                 gbar.insert(0, AF1)
             if sample_by_name("AF2_front") is None:
                 AF2 = default_sample("AF2_front",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=True)
-                gbar.append(AF2)
+                gbar.insert(1, AF2) #gbar.append(AF2)
 
             # add / replace the back fiducial bar entries (bar[1], bar[-2])
 
@@ -291,7 +291,7 @@ def update_bar(loc_Q, front, inbar=None):
             AF1 = default_sample("AF1_back",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=False)
             AF2 = default_sample("AF2_back",proposal_id=gbar[0]['proposal_id'],institution=gbar[0]['institution'],front=False)
             gbar.insert(1, AF1)  # inserts in the second position
-            gbar.insert(-1, AF2)  # inserts in the second to last position
+            gbar.insert(1, AF2) #gbar.insert(-1, AF2)  # inserts in the second to last position
         while True:
             #        for sample in bar:
             sample = gbar[samplenum]
