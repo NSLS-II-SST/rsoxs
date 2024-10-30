@@ -34,9 +34,7 @@ Beamstop_WAXS = EpicsSignalRO(
 Beamstop_SAXS = EpicsSignalRO(
     "XF:07ID-ES1{DMR:I400-1}:IC2_MON", name="SAXS Beamstop", kind="normal"
 )
-Izero_Diode = EpicsSignalRO(
-    "XF:07ID-ES1{DMR:I400-1}:IC3_MON", name="Izero Photodiode", kind="normal"
-)
+Izero_Diode = EpicsSignalRO("XF:07ID-ES1{DMR:I400-1}:IC3_MON", name="Izero Photodiode", kind="normal")
 
 Slit1_Current_Bottom = EpicsSignalRO(
     "XF:07ID-ES1{Slt1:I400-1}:IC1_MON", name="RSoXS Slit 1 Bottom Current", kind="normal"
@@ -247,16 +245,17 @@ mir1_pressure = EpicsSignalRO(
 
 # Beamstop_SAXS  = EpicsSignalRO('XF:07ID1-BI{EM:1}EM180:Current3:MeanValue_RBV',
 #                           name = 'SAXS Beamstop', kind='hinted')
-Izero_Mesh = EpicsSignalRO(
-    "XF:07ID1-BI{EM:1}EM180:Current2:MeanValue_RBV",
-    name="RSoXS Au Mesh Current",
-    kind="normal",
-)
-Sample_TEY = EpicsSignalRO(
-    "XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV", ## Channel 1 had temporarily stopped working, but is now fixed.  In that meantime, the TEY signal was moved to channel 4 and is still currently there.
-    name="RSoXS Sample Current",
-    kind="normal",
-)
+
+## PK: 20241028 - trying to use I400 to get I0 and TEY signals
+#Izero_Mesh = EpicsSignalRO("XF:07ID1-BI{EM:1}EM180:Current2:MeanValue_RBV", name="RSoXS Au Mesh Current", kind="normal")
+#Sample_TEY = EpicsSignalRO("XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV", name="RSoXS Sample Current", kind="normal")
+#Izero_Mesh_int = ophScalar("XF:07ID1-BI{EM:1}EM180:Current2:MeanValue_RBV", name="RSoXS Au Mesh Current", kind="normal")
+#Sample_TEY_int = ophScalar("XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV", name="RSoXS Sample Current", kind="normal")
+Izero_Mesh = EpicsSignalRO("XF:07ID-ES1{Slt1:I400-1}:IC1_MON", name="RSoXS Au Mesh Current", kind="normal")
+Sample_TEY = EpicsSignalRO("XF:07ID-ES1{Slt1:I400-1}:IC2_MON", name="RSoXS Sample Current", kind="normal")
+Izero_Mesh_int = ophScalar("XF:07ID-ES1{Slt1:I400-1}:IC1_MON", name="RSoXS Au Mesh Current", kind="normal")
+Sample_TEY_int = ophScalar("XF:07ID-ES1{Slt1:I400-1}:IC2_MON", name="RSoXS Sample Current", kind="normal")
+
 
 ## PK: bookmark for how far I have gotten in copying config details into profile_collection package
 mc19_fault = EpicsSignalRO('SST1_Upstream:MC19AmpFaultSum-Sts',name="MC19 Amp Fault")
@@ -288,16 +287,7 @@ Beamstop_WAXS_int = ophScalar( ## _int refers to signals that should be flyable,
 Beamstop_SAXS_int = ophScalar(
     "XF:07ID-ES1{DMR:I400-1}:IC2_MON", name="SAXS Beamstop", kind="normal"
 )
-Izero_Mesh_int = ophScalar(
-    "XF:07ID1-BI{EM:1}EM180:Current2:MeanValue_RBV",
-    name="RSoXS Au Mesh Current",
-    kind="normal",
-)
-Sample_TEY_int = ophScalar(
-    "XF:07ID1-BI{EM:1}EM180:Current4:MeanValue_RBV",
-    name="RSoXS Sample Current",
-    kind="normal",
-)
+
 
 
 Temperature_MonoPGM = EpicsSignalRO("XF:07IDA-OP{Mono:PGM}T:Grg-I", name="Temperature_MonoPGM", kind="normal")
