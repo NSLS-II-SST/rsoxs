@@ -184,9 +184,12 @@ def do_rsoxs(md=None, **kwargs):
         temp_wait=True,
         md=None,
     """
+
+    _md = deepcopy(dict(RE.md))
     if md == None:
-        md = deepcopy(dict(RE.md))
-    outputs = dryrun_rsoxs_plan(md=md, **kwargs)
+        md = {}
+    _md.update(md)
+    outputs = dryrun_rsoxs_plan(md=_md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
         out["queue_step"] = 0
@@ -213,9 +216,13 @@ def do_nexafs(md=None, **kwargs):
         temp_wait=True,
         md = None,
     """
+    #if md == None:
+    #    md = deepcopy(dict(RE.md))
+    _md = deepcopy(dict(RE.md))
     if md == None:
-        md = deepcopy(dict(RE.md))
-    outputs = dryrun_nexafs_plan(md=md, **kwargs)
+        md = {}
+    _md.update(md)
+    outputs = dryrun_nexafs_plan(md=_md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
         out["queue_step"] = 0
@@ -242,9 +249,13 @@ def do_nexafs_step(md=None, **kwargs):
         temp_wait=True,
         md=None,
     """
+    #if md == None:
+    #    md = deepcopy(dict(RE.md))
+    _md = deepcopy(dict(RE.md))
     if md == None:
-        md = deepcopy(dict(RE.md))
-    outputs = dryrun_nexafs_step_plan(md=md, **kwargs)
+        md = {}
+    _md.update(md)
+    outputs = dryrun_nexafs_step_plan(md=_md, **kwargs)
     for i, out in enumerate(outputs):
         out["acq_index"] = i
         out["queue_step"] = 0
