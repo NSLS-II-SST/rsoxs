@@ -662,6 +662,7 @@ def reset_amps():
 #[200,250,270,280,282,283,284,285,286,287,288,500,535,800]
 
 def do_cdsaxs(energies, samples):
+    ## If a reduction in X-ray dose is needed, then adjust the Exit_Slit aperture size and not the exposure time.  The 9 s exposure time is necessary to ensure X-ray exposure is delivered at all angles.
     yield from bps.mv(Exit_Slit,-1.05) # big flux
     for samp in samples:
         yield from load_samp(samp)
