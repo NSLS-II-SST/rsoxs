@@ -71,7 +71,7 @@ import redis
 from redis_json_dict import RedisJSONDict
 mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
 RE.md = RedisJSONDict(mdredis, prefix="rsoxs-")
-rsoxsredis = redis.Redis("info.sst.nsls2.bnl.gov",port=60737,db=1)
+rsoxsredis = redis.Redis("info.sst.nsls2.bnl.gov",port=60737,db=1) ## RSoXS uses keys 0-3, https://nsls2.slack.com/archives/C01Q3BYKFRD/p1730137096878679
 rsoxs_config = RedisJSONDict(rsoxsredis, prefix="rsoxs-")
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
