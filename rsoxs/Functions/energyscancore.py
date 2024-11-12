@@ -24,6 +24,7 @@ from collections import defaultdict
 from bluesky import preprocessors as bpp
 from bluesky import FailedStatus
 import numpy as np
+import redis_json_dict
 from functools import partial
 from ophyd import Device, Signal
 from ophyd.status import StatusTimeoutError
@@ -288,8 +289,8 @@ def NEXAFS_step_scan_core(
     old_n_exp = {}
     for det in newdets:
         sigcycler += cycler(det.exposure_time, times.copy()) # cycler for changing each detector exposure time
-    if isinstance(polarizations,list):
-        sigcycler = cycler(en.polarization, polarizations)*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
+    if isinstance(polarizations, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
+        sigcycler = cycler(en.polarization, list(polarizations))*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
 
     #print(f'locations {locations}')
     #print(f'temperatures {temperatures}')
@@ -572,8 +573,8 @@ def new_en_scan_core(
         det.number_exposures = repeats
         sigcycler += cycler(det.cam.acquire_time, times.copy()) # cycler for changing each detector exposure time
     sigcycler += cycler(Shutter_open_time, shutter_times) # cycler for changing the shutter opening time
-    if isinstance(polarizations,list):
-        sigcycler = cycler(en.polarization, polarizations)*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
+    if isinstance(polarizations,(list, redis_json_dict.redis_json_dict.ObservableSequence)):
+        sigcycler = cycler(en.polarization, list(polarizations))*sigcycler # cycler for polarization changes (multiplied means we do everything above for each polarization)
 
     #print(f'locations {locations}')
     #print(f'temperatures {temperatures}')
