@@ -8,7 +8,16 @@ from functools import partial
 import bluesky.plan_stubs as bps
 from ophyd import Device
 from ..startup import RE, db,  db0, rsoxs_config #bec,
-from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
+from ..HW.signals import (
+    Beamstop_SAXS, 
+    Beamstop_WAXS, 
+    DiodeRange, 
+    Beamstop_SAXS_int,
+    Beamstop_WAXS_int, 
+    Izero_Mesh_int,
+    Sample_TEY_int,
+    default_sigs,
+)
 
 from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
 from sst_hw.shutters import psh10
@@ -528,7 +537,7 @@ def spiralsearch(
     valid = True
     validation = ""
     newdets = []
-    signals = [] # TODO: put list of ophyd scalar objects here
+    signals = default_sigs
     for argument in arguments:
         if isinstance(argument,np.ndarray):
             argument = list(argument)

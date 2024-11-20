@@ -55,7 +55,21 @@ from ..HW.motors import (
 )
 from sst_hw.mirrors import mir3
 from ..HW.detectors import waxs_det#, saxs_det
-from ..HW.signals import DiodeRange,Beamstop_WAXS,Beamstop_SAXS,Izero_Mesh,Sample_TEY, Beamstop_SAXS_int,Beamstop_WAXS_int,DownstreamLargeDiode, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int, ring_current
+from ..HW.signals import (
+    DiodeRange,
+    Beamstop_WAXS,
+    Beamstop_SAXS,
+    Izero_Mesh,
+    Sample_TEY, 
+    Beamstop_SAXS_int,
+    Beamstop_WAXS_int,
+    DownstreamLargeDiode, 
+    DownstreamLargeDiode_int, 
+    Izero_Mesh_int,
+    Sample_TEY_int, 
+    ring_current,
+    default_sigs,
+)
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
@@ -424,7 +438,7 @@ def new_en_scan_core(
             newdets.append(det)
             detnames.append(det.name)
     
-    goodsignals = []
+    goodsignals = default_sigs
     signames = []
     for signal in signals:
         if not isinstance(signal, (Device,Signal)):
