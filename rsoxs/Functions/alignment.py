@@ -1,21 +1,13 @@
 import bluesky.plans as bp
-from matplotlib import pyplot as plt
-import queue
-from PIL import Image
 from operator import itemgetter
 from copy import deepcopy
 import collections
 import numpy as np
-import datetime
-import warnings
+
+from functools import partial
 import bluesky.plan_stubs as bps
-from bluesky.utils import FailedStatus
 from ophyd import Device
-from bluesky.preprocessors import finalize_decorator
 from ..startup import RE, db,  db0, rsoxs_config #bec,
-from ..HW.motors import sam_viewer
-from ..HW.cameras import SampleViewer_cam
-from sst_hw.diode import Shutter_enable, Shutter_control
 from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
 
 from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
@@ -24,6 +16,9 @@ from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, g
 from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 from sst_hw.mirrors import mir4OLD
+from sst_hw.diode import (
+    Shutter_control,
+)
 from ..HW.motors import (
     sam_X,
     sam_Y,
@@ -53,9 +48,12 @@ from .configurations import (
     SAXS_liquid,
     WAXS_liquid,
 )
+from .per_steps import (
+    take_exposure_corrected_reading,
+    one_nd_sticky_exp_step
+)
 
 from .alignment_local import *
-from .flystream_wrapper import flystream_during_wrapper
 run_report(__file__)
 
 
@@ -530,6 +528,7 @@ def spiralsearch(
     valid = True
     validation = ""
     newdets = []
+    signals = [] # TODO: put list of ophyd scalar objects here
     for argument in arguments:
         if isinstance(argument,np.ndarray):
             argument = list(argument)
@@ -546,9 +545,9 @@ def spiralsearch(
             except Exception:
                 valid = False
                 validation += f"detector {det} is not an ophyd device\n"
-    if len(newdets) < 1:
+    if len(newdets) != 1:
         valid = False
-        validation += "No detectors are given\n"
+        validation += "a detector number not equal to 1 was given\n"
 
     if isinstance(angle,(float,int)):
         if -155 > angle or angle > 195:
@@ -574,7 +573,15 @@ def spiralsearch(
         yield from grating_to_rsoxs()
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
-    set_exposure(exposure)  # TODO: make this yield from ...
+    
+    for det in newdets:
+        if hasattr(det,'cam'):
+            yield from bps.set(det.cam.acquire_time, exposure) # cycler for changing each detector exposure time
+    for sig in signals:
+        if hasattr(sig,'exposure_time'):
+            yield from bps.set(sig.exposure_time, exposure) # any ophyd signal devices should have their exposure times set here
+            # TODO: potentially shorten the exposure times by some constant to allow for shutter opening and closing times
+
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
@@ -584,18 +591,25 @@ def spiralsearch(
         yield from rotate_now(angle)
     md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
 
-    yield from flystream_during_wrapper(bp.spiral_square(
-                                                        newdets,
-                                                        sam_X,
-                                                        sam_Y,
-                                                        x_center=x_center,
-                                                        y_center=y_center,
-                                                        x_range=diameter,
-                                                        y_range=diameter,
-                                                        x_num=num,
-                                                        y_num=num,
-                                                        md=md,
-                ),[Beamstop_WAXS_int, Izero_Mesh_int],stream=False)
+    yield from bp.spiral_square(
+                signals,
+                sam_X,
+                sam_Y,
+                x_center=x_center,
+                y_center=y_center,
+                x_range=diameter,
+                y_range=diameter,
+                x_num=num,
+                y_num=num,
+                md=md,
+                per_step=partial(one_nd_sticky_exp_step,
+                                    remember={},
+                                    take_reading=partial(take_exposure_corrected_reading,
+                                                        lead_detector = newdets[0],
+                                                        shutter = Shutter_control,
+                                                        check_exposure=False))
+                )
+                
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 
