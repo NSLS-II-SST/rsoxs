@@ -33,7 +33,13 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
     based on trigger_and_read, but adding parameter for the "lead" detector, which is triggered first,
     and a shutter which will be waited for (controlled by the lead detector) 
     once the shutter opens, all the rest of the devices are triggered and read
+    when added as a perstep, something like partial must be used to inject the added required elements
 
+    example:
+    
+    yield from bp.count(default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
+                                                    lead_detector = det,
+                                                    shutter = Shutter_control))
 
     Parameters
     ----------
@@ -42,6 +48,7 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
         NOT INCLUDING the lead detector
     lead_detector : device with a trigger method which should be triggered first
         and which will open the shutter at some point
+        if not specified or left as None, this function will default to normal trigger and read
     shutter : device with set and waiting enabled which can be waited for after 
         triggering the lead detector
     name : string, optional
@@ -53,6 +60,8 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
     msg : Msg
         messages to 'trigger', 'wait' and 'read'
     """
+    if lead_detector is None or shutter is None:
+        return (yield from trigger_and_read(devices))
 
     devices = separate_devices(devices)  # remove redundant entries
     rewindable = all_safe_rewind(devices)  # if devices can be re-triggered
@@ -74,11 +83,11 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
 
 
         ret = {}  # collect and return readings to give plan access to them
-        for obj in devices: # read all signals
+        for obj in devices: # read all signals ( except lead detector )
             reading = (yield from read(obj))
             if reading is not None:
                 ret.update(reading)
-        yield from bps.wait(group='measure') # wait for the detector to finish
+        yield from bps.wait(group='measure') # wait for the detector to finish - may be several seconds after shutter closes
         reading = (yield from read(lead_detector)) # read the lead detector
         if reading is not None:
             ret.update(reading)
@@ -93,6 +102,8 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
 def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_read_with_shutter, lead_detector=None, shutter=None, check_exposure=False):
     # this is a replacement of trigger and read, that continues to trigger increasing or decreasing the
     # explsure time until limits are reached or neither under exposing or over exposing
+    # by default this further wraps the trigger and read into trigger and read with shutter
+
     if detectors == None:
         detectors = []
     yield from take_reading(list(detectors), lead_detector=lead_detector)

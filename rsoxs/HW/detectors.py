@@ -11,7 +11,7 @@ from ..Functions.per_steps import trigger_and_read_with_shutter
 from ..startup import RE
 from sst_funcs.printing import run_report
 from functools import partial
-from sst_hw.diode import Shutter_control
+from sst_hw.diode import Shutter_control, Shutter_open_time
 from ..HW.signals import default_sigs
 
 run_report(__file__)
@@ -60,6 +60,10 @@ def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
         # saxs_det.set_exptime(exposure)
         waxs_det.set_exptime(exposure)
+        Shutter_open_time.set(secs * 1000).wait()
+        for sig in default_sigs:
+            if hasattr(sig,'exposure_time'):
+                sig.exposure_time.set(secs).wait()
     else:
         print("Invalid time, exposure time not set")
 
@@ -112,9 +116,6 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="waxs",n_exp=1):
     #print(bp.count)
     #print(count)
     det.number_exposures = n_exp
-    for sig in default_sigs:
-        if hasattr(sig,'exposure_time'):
-            sig.exposure_time.set(secs).wait()
     yield from bp.count(default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
                                                         lead_detector = det,
                                                         shutter = Shutter_control))

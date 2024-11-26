@@ -252,8 +252,6 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def set_exptime(self, secs):
         self.cam.acquire_time.set(secs).wait()
-        if self.useshutter:
-            Shutter_open_time.set(secs * 1000).wait()
 
     def set_exptime_detonly(self, secs):
         self.cam.acquire_time.set(secs).wait()
