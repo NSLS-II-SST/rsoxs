@@ -375,7 +375,7 @@ def new_en_scan_core(
     master_plan=None,   # if this is lying within an outer plan, that name can be stored here
     sim_mode=False,  # if true, check all inputs but do not actually run anything
     md=None,  # md to pass to the scan
-    signals = [Beamstop_WAXS_int, Beamstop_SAXS_int, Izero_Mesh_int, Sample_TEY_int,mono_en,epu_gap,ring_current],
+    signals = None,
     check_exposure = False,
     **kwargs #extraneous settings from higher level plans are ignored
 ):
@@ -583,6 +583,7 @@ def new_en_scan_core(
         old_n_exp[det.name] = det.number_exposures
         det.number_exposures = repeats
         sigcycler += cycler(det.cam.acquire_time, times.copy()) # cycler for changing each detector exposure time
+    goodsignals = separate_devices(goodsignals)
     for sig in goodsignals:
         if hasattr(sig,'exposure_time'):
             sigcycler += cycler(sig.exposure_time, times.copy()) # any ophyd signal devices should have their exposure times set here

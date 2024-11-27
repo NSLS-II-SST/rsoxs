@@ -191,10 +191,9 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # self.cam.sync.set(1)
         # self.cam.temperature.set(-80)
         # self.cam.enable_cooling.set(1)
-        print('staging the detector')
+        #print('staging the detector')
         if self.useshutter:
 
-            print('ebanling the shutter')
             Shutter_enable.set(1).wait()
             Shutter_delay.set(0).wait()
         if abs(self.cam.temperature_actual.get() - self.cam.temperature.get()) > 2.0:

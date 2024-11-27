@@ -60,8 +60,8 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
     if shutter is None:
         return (yield from trigger_and_read(devices))
     _devices = copy.copy(devices)
-    lead_detector = _devices.pop(0)
     _devices = separate_devices(_devices)  # remove redundant entries
+    lead_detector = _devices.pop(0)
     rewindable = all_safe_rewind(_devices)  # if devices can be re-triggered
 
     def inner_trigger_and_read():
@@ -197,7 +197,7 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_
         if remember['last_correction'] != 1 and 0.0005 < remember['last_correction'] < 50000:
             new_time = round(input_time * remember['last_correction'])
         if(2 < new_time < 10000):
-            print(f"last exposure correction was {remember['last_correction']}, so applying that to {input_time}ms gives an exposure time of {new_time}ms")
+            #print(f"last exposure correction was {remember['last_correction']}, so applying that to {input_time}ms gives an exposure time of {new_time}ms")
             yield from bps.mov(Shutter_open_time,new_time)
             for detector in detectors:
                 if hasattr(detector,'cam'):

@@ -585,12 +585,11 @@ def spiralsearch(
     
     for det in newdets:
         if hasattr(det,'cam'):
-            yield from bps.set(det.cam.acquire_time, exposure) # cycler for changing each detector exposure time
+            yield from bps.mv(det.cam.acquire_time, exposure) # cycler for changing each detector exposure time
     for sig in signals:
         if hasattr(sig,'exposure_time'):
-            yield from bps.set(sig.exposure_time, exposure) # any ophyd signal devices should have their exposure times set here
-            # TODO: potentially shorten the exposure times by some constant to allow for shutter opening and closing times
-
+            yield from bps.mv(sig.exposure_time, max(0.3,exposure-0.5)) # any ophyd signal devices should have their exposure times set here
+            
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
