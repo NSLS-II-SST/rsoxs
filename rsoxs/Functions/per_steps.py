@@ -5,6 +5,7 @@ from bluesky.utils import short_uid, separate_devices, all_safe_rewind
 from bluesky.plan_stubs import trigger_and_read, move_per_step, stage, unstage
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+import copy
 
 from bluesky.plan_stubs import (
     checkpoint,
@@ -58,9 +59,10 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
     """
     if shutter is None:
         return (yield from trigger_and_read(devices))
-    lead_detector = devices.pop(0)
-    devices = separate_devices(devices)  # remove redundant entries
-    rewindable = all_safe_rewind(devices)  # if devices can be re-triggered
+    _devices = copy.copy(devices)
+    lead_detector = _devices.pop(0)
+    _devices = separate_devices(_devices)  # remove redundant entries
+    rewindable = all_safe_rewind(_devices)  # if devices can be re-triggered
 
     def inner_trigger_and_read():
         grp = _short_uid('trigger')
@@ -68,8 +70,9 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
         yield from bps.trigger(lead_detector, group='measure') # trigger the lead_detector, which will eventually open the shutter
         yield from bps.wait(group='shutter') # wait for the shutter to open
         # begin motor movement
+        #yield from bps.sleep(0.2)
         no_wait = True
-        for obj in devices:
+        for obj in _devices:
             if hasattr(obj, 'trigger'):
                 no_wait = False
                 yield from trigger(obj, group=grp)
@@ -79,7 +82,7 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
 
 
         ret = {}  # collect and return readings to give plan access to them
-        for obj in devices: # read all signals ( except lead detector )
+        for obj in _devices: # read all signals ( except lead detector )
             reading = (yield from read(obj))
             if reading is not None:
                 ret.update(reading)

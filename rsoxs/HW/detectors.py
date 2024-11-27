@@ -63,7 +63,7 @@ def set_exposure(exposure):
         Shutter_open_time.set(exposure * 1000).wait()
         for sig in default_sigs:
             if hasattr(sig,'exposure_time'):
-                sig.exposure_time.set(exposure).wait()
+                sig.exposure_time.set(max(0.3,exposure-0.5)).wait()
     else:
         print("Invalid time, exposure time not set")
 
