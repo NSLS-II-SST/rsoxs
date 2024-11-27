@@ -103,19 +103,19 @@ default_sigs = [Beamstop_WAXS_int,
 def setup_slit1_i400():
     yield from bps.mv(Slit1_i400_enable, 'Disabled')
     try:
-        yield from bps.mv(Slit1_i400_cap, '1000pF',timeout=1)
+        yield from bps.mv(Slit1_i400_cap, '10pF',timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(Slit1_i400_npnts, 940,timeout=1)
+        yield from bps.mv(Slit1_i400_npnts, 200,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(Slit1_i400_read_time, 0.001,timeout=1)
+        yield from bps.mv(Slit1_i400_read_time, 0.0002,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
@@ -150,7 +150,7 @@ def setup_diode_i400():
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(diode_i400_npnts, 200,timeout=1)
+        yield from bps.mv(diode_i400_npnts, 100,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
@@ -162,7 +162,7 @@ def setup_diode_i400():
     except StatusTimeoutError:
         pass
     try:
-        yield from bps.mv(diode_i400_read_time, 0.001,timeout=1)
+        yield from bps.mv(diode_i400_read_time, 0.0002,timeout=1)
     except FailedStatus:
         pass
     except StatusTimeoutError:
