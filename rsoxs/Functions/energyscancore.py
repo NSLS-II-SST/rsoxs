@@ -627,13 +627,12 @@ def new_en_scan_core(
 
 
     exps = {}
-    yield from finalize_wrapper(bp.scan_nd(goodsignals, 
+    yield from finalize_wrapper(bp.scan_nd(newdets+goodsignals, 
                 sigcycler, 
                 md=md,
                 per_step=partial(one_nd_sticky_exp_step,
                                     remember=exps,
                                     take_reading=partial(take_exposure_corrected_reading,
-                                                        lead_detector = newdets[0],
                                                         shutter = Shutter_control,
                                                         check_exposure=check_exposure))
                 ),

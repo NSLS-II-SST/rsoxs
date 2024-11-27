@@ -26,7 +26,7 @@ from sst_hw.diode import (
 )
 from bluesky.utils import Msg, short_uid as _short_uid
 
-def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, name='primary'):
+def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
     """
     Trigger and read a list of detectors and bundle readings into one Event.
 
@@ -38,17 +38,13 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
     example:
     
     yield from bp.count(default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
-                                                    lead_detector = det,
                                                     shutter = Shutter_control))
 
     Parameters
     ----------
     devices : iterable
         devices to trigger (if they have a trigger method) and then read
-        NOT INCLUDING the lead detector
-    lead_detector : device with a trigger method which should be triggered first
-        and which will open the shutter at some point
-        if not specified or left as None, this function will default to normal trigger and read
+        the first element in the list is the lead detector
     shutter : device with set and waiting enabled which can be waited for after 
         triggering the lead detector
     name : string, optional
@@ -60,9 +56,9 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
     msg : Msg
         messages to 'trigger', 'wait' and 'read'
     """
-    if lead_detector is None or shutter is None:
+    if shutter is None:
         return (yield from trigger_and_read(devices))
-
+    lead_detector = devices.pop(0)
     devices = separate_devices(devices)  # remove redundant entries
     rewindable = all_safe_rewind(devices)  # if devices can be re-triggered
 
@@ -93,20 +89,20 @@ def trigger_and_read_with_shutter(devices, lead_detector=None, shutter=None, nam
             ret.update(reading)
         yield from save()
         return ret
-    from .preprocessors import rewindable_wrapper
+
     return (yield from rewindable_wrapper(inner_trigger_and_read(),
                                           rewindable))
 
 
 
-def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_read_with_shutter, lead_detector=None, shutter=None, check_exposure=False):
+def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_read_with_shutter, shutter=None, check_exposure=False):
     # this is a replacement of trigger and read, that continues to trigger increasing or decreasing the
     # explsure time until limits are reached or neither under exposing or over exposing
     # by default this further wraps the trigger and read into trigger and read with shutter
 
     if detectors == None:
         detectors = []
-    yield from take_reading(list(detectors), lead_detector=lead_detector)
+    yield from take_reading(list(detectors), shutter = shutter)
     if(check_exposure):
         under_exposed = False
         over_exposed = False
@@ -143,12 +139,12 @@ def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_rea
                 print(f'contradictory saturated and under exposed, no change in exposure will be made')
                 break
             Shutter_open_time.set(round(new_time)).wait()
-            if hasattr(lead_detector,'cam'):
-                    lead_detector.cam.acquire_time.set(new_time/1000).wait()
             for det in detectors:
+                if hasattr(det,'cam'):
+                    det.cam.acquire_time.set(new_time/1000).wait()
                 if hasattr(det,'exposure_time'):
                     det.exposure_time.set(new_time/1000).wait()
-            yield from take_reading(list(detectors), lead_detector=lead_detector,shutter=shutter)
+            yield from take_reading(list(detectors),shutter=shutter)
             under_exposed = False
             over_exposed = False
             for det in detectors:

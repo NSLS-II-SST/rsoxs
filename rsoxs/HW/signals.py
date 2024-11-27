@@ -85,17 +85,17 @@ mono_en_int =                   ophScalar("XF:07ID1-OP{Mono:PGM1-Ax::ENERGY_MON"
 
 
 default_sigs = [Beamstop_WAXS_int,
-                Beamstop_SAXS_int,
+                #Beamstop_SAXS_int,
                 Izero_Mesh_int,
                 Sample_TEY_int,
-                DownstreamLargeDiode_int,
-                Slit1_Current_Bottom_int,
-                Slit1_Current_Top_int,
-                Slit1_Current_Inboard_int,
-                Slit1_Current_Outboard_int,
+                #DownstreamLargeDiode_int,
+                #Slit1_Current_Bottom_int,
+                #Slit1_Current_Top_int,
+                #Slit1_Current_Inboard_int,
+                #Slit1_Current_Outboard_int,
                 ring_current_int,
-                Gap_EPU60_int,
-                Phase_EPU60_int,
+                Gap_EPU60,
+                Phase_EPU60,
                 mono_en_int,
 ]
 

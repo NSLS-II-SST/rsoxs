@@ -60,10 +60,10 @@ def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
         # saxs_det.set_exptime(exposure)
         waxs_det.set_exptime(exposure)
-        Shutter_open_time.set(secs * 1000).wait()
+        Shutter_open_time.set(exposure * 1000).wait()
         for sig in default_sigs:
             if hasattr(sig,'exposure_time'):
-                sig.exposure_time.set(secs).wait()
+                sig.exposure_time.set(exposure).wait()
     else:
         print("Invalid time, exposure time not set")
 
@@ -116,8 +116,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="waxs",n_exp=1):
     #print(bp.count)
     #print(count)
     det.number_exposures = n_exp
-    yield from bp.count(default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
-                                                        lead_detector = det,
+    yield from bp.count([det]+default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
                                                         shutter = Shutter_control))
     if name is not None:
         RE.md["sample_name"] = samsave

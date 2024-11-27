@@ -601,7 +601,7 @@ def spiralsearch(
     md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
 
     yield from bp.spiral_square(
-                signals,
+                newdets + signals,
                 sam_X,
                 sam_Y,
                 x_center=x_center,
@@ -614,7 +614,6 @@ def spiralsearch(
                 per_step=partial(one_nd_sticky_exp_step,
                                     remember={},
                                     take_reading=partial(take_exposure_corrected_reading,
-                                                        lead_detector = newdets[0],
                                                         shutter = Shutter_control,
                                                         check_exposure=False))
                 )
