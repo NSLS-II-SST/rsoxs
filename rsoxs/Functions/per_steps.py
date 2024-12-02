@@ -63,6 +63,9 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
     _devices = separate_devices(_devices)  # remove redundant entries
     lead_detector = _devices.pop(0)
     rewindable = all_safe_rewind(_devices)  # if devices can be re-triggered
+    if lead_detector.cam.acquire_time.get() < 0.5:
+        return (yield from trigger_and_read([lead_detector]+devices))
+
 
     def inner_trigger_and_read():
         grp = _short_uid('trigger')

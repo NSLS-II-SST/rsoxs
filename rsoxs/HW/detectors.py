@@ -117,7 +117,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="waxs",n_exp=1):
     #print(count)
     det.number_exposures = n_exp
     yield from bp.count([det]+default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
-                                                        shutter = Shutter_control))
+                                                            shutter = Shutter_control))
     if name is not None:
         RE.md["sample_name"] = samsave
 
