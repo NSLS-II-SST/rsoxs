@@ -714,13 +714,16 @@ def resolve_spirals(bar=None):
         bar = rsoxs_config['bar']
     for samp in bar:
         if len(str(samp['bar_loc'].get('spiral_started',''))) > 0 and len(samp['bar_loc'].get('spiral_done','')) == 0:
-            h = db[samp['bar_loc']['spiral_started']]
-            ys = np.array(list(h.data('RSoXS Sample Up-Down')))
-            xs = np.array(list(h.data('RSoXS Sample Outboard-Inboard')))
-            th = np.array(list(h.data('RSoXS Sample Rotation','baseline')))[0]
-            z = np.array(list(h.data('RSoXS Sample Downstream-Upstream','baseline')))[0]
+            h = db.v2[samp['bar_loc']['spiral_started']]
+            ys = h['primary']['data']['RSoXS Sample Up-Down'].read()
+            xs = h['primary']['data']['RSoXS Sample Outboard-Inboard'].read()
+            th = h['baseline']['data']['RSoXS Sample Rotation'][0]#th = h['baseline']['data']['RSoXS Sample Rotation'].read()[0]
+            z = h['baseline']['data']['RSoXS Sample Downstream-Upstream'][0]#z = h['baseline']['data']['RSoXS Sample Downstream-Upstream'].read()[0]
+            #xs = np.array(list(h.data('RSoXS Sample Outboard-Inboard')))
+            #th = np.array(list(h.data('RSoXS Sample Rotation','baseline')))[0]
+            #z = np.array(list(h.data('RSoXS Sample Downstream-Upstream','baseline')))[0]
             if len(ys) == len(xs) and len(ys > 0):
-                im_num = input(f"sample {samp['sample_name']} scan {h['start']['scan_id']} which image number (or numbers, seperated by commas) is/are best?  ")
+                im_num = input(f"sample {samp['sample_name']} scan {h.start['scan_id']} which image number (or numbers, seperated by commas) is/are best?  ")
                 for i,im in enumerate(im_num.split(",")):
                     im = int(im)
                     if i>0:
@@ -731,7 +734,7 @@ def resolve_spirals(bar=None):
                                                 {'motor':'y','position':ys[im]},
                                                 {'motor':'th','position':th},
                                                 {'motor':'z','position':z}]
-                            newsamp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
+                            newsamp['bar_loc']['spiral_done']={"scan":h.start['uid'],
                                                 'best_num':im}
                             newsamp['sample_name']+=f'_{i}'
                             newsamp['sample_id']+=f'_{i}'
@@ -743,7 +746,7 @@ def resolve_spirals(bar=None):
                                                 {'motor':'y','position':ys[im]},
                                                 {'motor':'th','position':th},
                                                 {'motor':'z','position':z}]
-                            samp['bar_loc']['spiral_done']={"scan":h['start']['uid'],
+                            samp['bar_loc']['spiral_done']={"scan":h.start['uid'],
                                                 'best_num':im}
                             
 

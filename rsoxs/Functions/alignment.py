@@ -3,6 +3,7 @@ from operator import itemgetter
 from copy import deepcopy
 import collections
 import numpy as np
+import redis_json_dict
 
 from functools import partial
 import bluesky.plan_stubs as bps
@@ -204,9 +205,21 @@ def move_to_location(locs=get_sample_location()):
         dm7:dm7,
     }
     for order in orderlist:
+        
+        """
+        for items in locs:
+            if items["order"] == order:
+                if isinstance(items["position"], (list, redis_json_dict.redis_json_dict.ObservableSequence)): items["position"] = items["position"][0]
+                outputlist = [
+                            [switch[items["motor"]], float(items["position"])]
+                        ]
+        """
+        ## 20241202 error while running load_samp: TypeError: float() argument must be a string or a real number, not 'ObservableSequence'
+        
         outputlist = [
             [switch[items["motor"]], float(items["position"])] for items in locs if items["order"] == order
         ]
+        
         flat_list = [item for sublist in outputlist for item in sublist]
         yield from bps.mv(*flat_list)
 
@@ -583,13 +596,8 @@ def spiralsearch(
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
     
-    for det in newdets:
-        if hasattr(det,'cam'):
-            yield from bps.mv(det.cam.acquire_time, exposure) # cycler for changing each detector exposure time
-    for sig in signals:
-        if hasattr(sig,'exposure_time'):
-            yield from bps.mv(sig.exposure_time, max(0.3,exposure-0.5)) # any ophyd signal devices should have their exposure times set here
-            
+    set_exposure(exposure)
+         
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
