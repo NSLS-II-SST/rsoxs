@@ -492,6 +492,7 @@ def spiralsearch(
     pol=0,
     angle=None,
     exposure=1,
+    repeats=1,
     master_plan=None,
     enscan_type='spiral',
     dets=[],
@@ -597,6 +598,10 @@ def spiralsearch(
     yield from set_polarization(pol)
     
     set_exposure(exposure)
+    old_n_exp = {}
+    for det in newdets:
+        old_n_exp[det.name] = det.number_exposures
+        det.number_exposures = repeats
          
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
