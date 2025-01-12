@@ -639,6 +639,26 @@ def new_en_scan_core(
                 ),
         cleanup()
     )
+
+    ## The above code collects data (e.g., WAXS photodiode, I0, etc.) synchronously.  If asynchronous data collection is desired, run the code below in quotes instead.
+    ## TODO: needs checking
+    """
+     yield from finalize_wrapper(flystream_during_wrapper(
+                bp.scan_nd(newdets+goodsignals, 
+                sigcycler, 
+                md=md,
+                per_step=partial(one_nd_sticky_exp_step,
+                                    remember=exps,
+                                    take_reading=partial(take_exposure_corrected_reading,
+                                                        shutter = Shutter_control,
+                                                        check_exposure=check_exposure))
+                ),
+                [Beamstop_WAXS_int, Izero_Mesh_int], stream=False),
+        cleanup()
+    )
+    """
+
+    
     for det in newdets:
         det.number_exposures = old_n_exp[det.name]
 
