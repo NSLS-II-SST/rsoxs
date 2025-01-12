@@ -7,9 +7,12 @@ from ..Base.detectors import RSOXSGreatEyesDetector, SimGreatEyes
 from ..HW.motors import Det_S, Det_W, sam_Th, sam_X, sam_Y
 from sst_funcs.printing import boxed_text
 from ..HW.energy import en
+from ..Functions.per_steps import trigger_and_read_with_shutter
 from ..startup import RE
 from sst_funcs.printing import run_report
-
+from functools import partial
+from sst_hw.diode import Shutter_control, Shutter_open_time
+from ..HW.signals import default_sigs
 
 run_report(__file__)
 
@@ -57,6 +60,10 @@ def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
         # saxs_det.set_exptime(exposure)
         waxs_det.set_exptime(exposure)
+        Shutter_open_time.set(exposure * 1000).wait()
+        for sig in default_sigs:
+            if hasattr(sig,'exposure_time'):
+                sig.exposure_time.set(max(0.3,exposure-0.5)).wait()
     else:
         print("Invalid time, exposure time not set")
 
@@ -109,7 +116,8 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="waxs",n_exp=1):
     #print(bp.count)
     #print(count)
     det.number_exposures = n_exp
-    yield from bp.count([det], num=count)
+    yield from bp.count([det]+default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
+                                                            shutter = Shutter_control))
     if name is not None:
         RE.md["sample_name"] = samsave
 

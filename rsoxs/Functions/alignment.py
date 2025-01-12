@@ -1,22 +1,24 @@
 import bluesky.plans as bp
-from matplotlib import pyplot as plt
-import queue
-from PIL import Image
 from operator import itemgetter
 from copy import deepcopy
 import collections
 import numpy as np
-import datetime
-import warnings
+import redis_json_dict
+
+from functools import partial
 import bluesky.plan_stubs as bps
-from bluesky.utils import FailedStatus
 from ophyd import Device
-from bluesky.preprocessors import finalize_decorator
 from ..startup import RE, db,  db0, rsoxs_config #bec,
-from ..HW.motors import sam_viewer
-from ..HW.cameras import SampleViewer_cam
-from sst_hw.diode import Shutter_enable, Shutter_control
-from ..HW.signals import Beamstop_SAXS, Beamstop_WAXS, DiodeRange, Beamstop_SAXS_int,Beamstop_WAXS_int, Izero_Mesh_int,Sample_TEY_int
+from ..HW.signals import (
+    Beamstop_SAXS, 
+    Beamstop_WAXS, 
+    DiodeRange, 
+    Beamstop_SAXS_int,
+    Beamstop_WAXS_int, 
+    Izero_Mesh_int,
+    Sample_TEY_int,
+    default_sigs,
+)
 
 from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
 from sst_hw.shutters import psh10
@@ -24,6 +26,9 @@ from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, g
 from sst_funcs.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 from sst_hw.mirrors import mir4OLD
+from sst_hw.diode import (
+    Shutter_control,
+)
 from ..HW.motors import (
     sam_X,
     sam_Y,
@@ -53,9 +58,12 @@ from .configurations import (
     SAXS_liquid,
     WAXS_liquid,
 )
+from .per_steps import (
+    take_exposure_corrected_reading,
+    one_nd_sticky_exp_step
+)
 
 from .alignment_local import *
-from .flystream_wrapper import flystream_during_wrapper
 run_report(__file__)
 
 
@@ -197,9 +205,21 @@ def move_to_location(locs=get_sample_location()):
         dm7:dm7,
     }
     for order in orderlist:
+        
+        """
+        for items in locs:
+            if items["order"] == order:
+                if isinstance(items["position"], (list, redis_json_dict.redis_json_dict.ObservableSequence)): items["position"] = items["position"][0]
+                outputlist = [
+                            [switch[items["motor"]], float(items["position"])]
+                        ]
+        """
+        ## 20241202 error while running load_samp: TypeError: float() argument must be a string or a real number, not 'ObservableSequence'
+        
         outputlist = [
             [switch[items["motor"]], float(items["position"])] for items in locs if items["order"] == order
         ]
+        
         flat_list = [item for sublist in outputlist for item in sublist]
         yield from bps.mv(*flat_list)
 
@@ -472,6 +492,7 @@ def spiralsearch(
     pol=0,
     angle=None,
     exposure=1,
+    repeats=1,
     master_plan=None,
     enscan_type='spiral',
     dets=[],
@@ -530,6 +551,7 @@ def spiralsearch(
     valid = True
     validation = ""
     newdets = []
+    signals = default_sigs
     for argument in arguments:
         if isinstance(argument,np.ndarray):
             argument = list(argument)
@@ -546,9 +568,9 @@ def spiralsearch(
             except Exception:
                 valid = False
                 validation += f"detector {det} is not an ophyd device\n"
-    if len(newdets) < 1:
+    if len(newdets) != 1:
         valid = False
-        validation += "No detectors are given\n"
+        validation += "a detector number not equal to 1 was given\n"
 
     if isinstance(angle,(float,int)):
         if -155 > angle or angle > 195:
@@ -574,7 +596,13 @@ def spiralsearch(
         yield from grating_to_rsoxs()
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
-    set_exposure(exposure)  # TODO: make this yield from ...
+    
+    set_exposure(exposure)
+    old_n_exp = {}
+    for det in newdets:
+        old_n_exp[det.name] = det.number_exposures
+        det.number_exposures = repeats
+         
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
@@ -584,18 +612,24 @@ def spiralsearch(
         yield from rotate_now(angle)
     md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
 
-    yield from flystream_during_wrapper(bp.spiral_square(
-                                                        newdets,
-                                                        sam_X,
-                                                        sam_Y,
-                                                        x_center=x_center,
-                                                        y_center=y_center,
-                                                        x_range=diameter,
-                                                        y_range=diameter,
-                                                        x_num=num,
-                                                        y_num=num,
-                                                        md=md,
-                ),[Beamstop_WAXS_int, Izero_Mesh_int],stream=False)
+    yield from bp.spiral_square(
+                newdets + signals,
+                sam_X,
+                sam_Y,
+                x_center=x_center,
+                y_center=y_center,
+                x_range=diameter,
+                y_range=diameter,
+                x_num=num,
+                y_num=num,
+                md=md,
+                per_step=partial(one_nd_sticky_exp_step,
+                                    remember={},
+                                    take_reading=partial(take_exposure_corrected_reading,
+                                                        shutter = Shutter_control,
+                                                        check_exposure=False))
+                )
+                
     md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
 
 
