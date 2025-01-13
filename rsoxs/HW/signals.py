@@ -67,7 +67,6 @@ Angle_C07U42_Horizontal = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-x-Cal", name="Ang
 Angle_C07U42_Vertical = EpicsSignalRO("SR:C31-{AI}Aie7:Angle-y-Cal", name="Angle_C07U42_Vertical", kind="normal")
 Gap_C07U42 = EpicsSignalRO("SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr.RBV", name="Gap_C07U42", kind="normal")
 
-## PK: Bookmark for where I left off adding devices and signals to profile_collection package: https://github.com/NSLS-II-SST/profile_collection/blob/Issue24_Update-startup/startup/devices.toml
 # scalars (integrating detectors)
 
 Beamstop_WAXS_int =             ophScalar("XF:07ID-ES1{DMR:I400-1}:IC1_MON",        name="WAXS Beamstop",                   kind="normal")
