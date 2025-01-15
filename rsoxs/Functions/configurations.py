@@ -1,5 +1,5 @@
 import bluesky.plan_stubs as bps
-from sst_funcs.printing import run_report
+from nbs_bl.printing import run_report
 from ..HW.motors import (
     Shutter_Y,
     Izero_Y,
@@ -628,7 +628,7 @@ def WAXSNEXAFS_liquid():
             {"motor": Det_W, "position": waxs_out_pos, "order": 1},
             {"motor": Exit_Slit, "position": -3.05, "order": 2}
         ],
-        {R
+        {
             "RSoXS_Config": "WAXS",
             "RSoXS_Main_DET": "WAXS",
             "RSoXS_WAXS_SDD": 39.19,
