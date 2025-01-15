@@ -1,16 +1,6 @@
 import sys
 from pathlib import Path
 
-paths = [
-    path
-    for path in Path(
-        "/nsls2/data/sst/rsoxs/shared/config/bluesky/collection_packages"
-    ).glob("*")
-    if path.is_dir()
-]
-for path in paths:
-    sys.path.append(str(path))
-
 import os
 import re
 import nslsii
@@ -21,31 +11,12 @@ import httpx
 from bluesky.preprocessors import finalize_decorator
 from bluesky.run_engine import Msg
 import bluesky.plan_stubs as bps
-
-# RSoXS specific code
-# from rsoxs.Functions.alignment import *
-# from rsoxs.Functions.alignment_local import *
-# from rsoxs.Functions.common_procedures import *
-# from rsoxs.Functions.configurations import *
-# from rsoxs.Functions.schemas import *
-# from rsoxs.Functions.PVdictionary import *
-# from rsoxs.Functions.energyscancore import *
-# from rsoxs.Functions.rsoxs_plans import *
-# from rsoxs.Functions.fly_alignment import *
-# from rsoxs.Functions.spreadsheets import *
-# from rsoxs.HW.slackbot import rsoxs_bot
-# from rsoxs_scans.spreadsheets import *
-# from rsoxs_scans.acquisition import *
-
-from sst_funcs.printing import run_report
+from nbs_bl.run_engine import create_run_engine
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from nbs_bl.printing import run_report
+from databroker import Broker
 
 run_report(__file__)
-
-# Use caproto not pyepics.
-# os.environ['OPHYD_CONTROL_LAYER'] = 'pyepics'
-
-
-## stole below from BMM, but changed it around so it made sense to Eliot
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -54,23 +25,25 @@ except ImportError:
     def is_re_worker_active():
         return False
 
+RE = create_run_engine(setup=True)
 
 if not is_re_worker_active(): ns = get_ipython().user_ns
 else: ns = {}
-nslsii.configure_base(ns, "rsoxs", bec=False, configure_logging=True, publish_documents_with_kafka=True)
 if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
-RE = ns["RE"]
-db = ns["db"]
-sd = ns["sd"]
+db = Broker.named("rsoxs")
+md = RE.md
+# db = ns["db"]
+# sd = ns["sd"]
+sd = bl.supplemental_data
 #bec = ns["bec"]
 
-
-
-from nslsii.md_dict import RunEngineRedisDict
 import redis
 from redis_json_dict import RedisJSONDict
+from nbs_bl.status import RedisStatusDict
+from nbs_bl.queueserver import GLOBAL_USER_STATUS
 mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
-RE.md = RedisJSONDict(mdredis, prefix="rsoxs-")
+RE.md = RedisStatusDict(mdredis, prefix="rsoxs-")
+GLOBAL_USER_STATUS.add_status("USER_MD", RE.md)
 rsoxsredis = redis.Redis("info.sst.nsls2.bnl.gov",port=60737,db=1) ## RSoXS uses keys 0-3, https://nsls2.slack.com/archives/C01Q3BYKFRD/p1730137096878679
 rsoxs_config = RedisJSONDict(rsoxsredis, prefix="rsoxs-")
 
@@ -145,10 +118,6 @@ def md_validator(md):
 
 # md_validator will be called before a plan runs
 RE.md_validator = md_validator
-
-
-
-
 
 # Optional: set any metadata that rarely changes.
 RE.md["beamline_id"] = "SST-1 RSoXS"
