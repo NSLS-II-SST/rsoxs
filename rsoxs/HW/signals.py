@@ -1,15 +1,43 @@
 from ophyd import EpicsSignalRO, EpicsSignal
 from ophyd.status import StatusTimeoutError
-from sst_funcs.printing import run_report
+from nbs_bl.printing import run_report
 from sst_base.detectors.scalar import I400SingleCh, ophScalar
 from bluesky import plan_stubs as bps
 from bluesky import FailedStatus
 from datetime import datetime as datet
+from nbs_bl.hw import(
+    Beamstop_WAXS_int,
+    Beamstop_SAXS,
+    Beamstop_SAXS_int,
+    Izero_Mesh_int,
+    Sample_TEY_int,
+    DownstreamLargeDiode_int,
+    Slit1_Current_Bottom_int,
+    Slit1_Current_Top_int,
+    Slit1_Current_Inboard_int,
+    Slit1_Current_Outboard_int,
+    ring_current_int,
+    Gap_EPU60,
+    Phase_EPU60,
+    mono_en_int, 
+    diode_i400_cap,
+    Slit1_i400_enable,
+    diode_i400_enable,
+    Slit1_i400_npnts,
+    Slit1_i400_read_time,
+    diode_i400_npnts,
+    Slit1_i400_mode,
+    diode_i400_mode,
+    Slit1_i400_accum,
+    diode_i400_accum,
+    diode_i400_read_time,
+    diode_i400_PDU 
+)
 
 
 run_report(__file__)
 
-
+"""
 #signals - not used anymore
 bpm13_sum = EpicsSignalRO("XF:07ID-BI{BPM:13}Stats5:Total_RBV", name="Downstream Izero Phosphor Intensity")
 ring_current = EpicsSignalRO("SR:OPS-BI{DCCT:1}I:Real-I", name="NSLS-II Ring Current", kind="normal")
@@ -82,7 +110,7 @@ ring_current_int =              ophScalar("SR:OPS-BI{DCCT:1}I:Real-I",          
 Gap_EPU60_int =                 ophScalar("SR:C07-ID:G1A{SST1:1-Ax:Gap}-Mtr.RBV",   name="Gap_EPU60",                       kind="normal")
 Phase_EPU60_int =               ophScalar("SR:C07-ID:G1A{SST1:1-Ax:Phase}-Mtr.RBV", name="Phase_EPU60",                     kind="normal")
 mono_en_int =                   ophScalar("XF:07ID1-OP{Mono:PGM1-Ax::ENERGY_MON",   name="Energy",                          kind="normal")
-
+"""
 
 default_sigs = [Beamstop_WAXS_int,
                 #Beamstop_SAXS_int,

@@ -4,14 +4,11 @@ from bluesky.preprocessors import make_decorator
 import bluesky_darkframes
 
 from ..Base.detectors import RSOXSGreatEyesDetector, SimGreatEyes
-from ..HW.motors import Det_S, Det_W, sam_Th, sam_X, sam_Y
-from sst_funcs.printing import boxed_text
-from ..HW.energy import en
+from nbs_bl.hw import en, Shutter_control, Shutter_open_time, Det_S, Det_W, sam_Th, sam_X, sam_Y, waxs_det
+from nbs_bl.printing import boxed_text, run_report
 from ..Functions.per_steps import trigger_and_read_with_shutter
 from ..startup import RE
-from sst_funcs.printing import run_report
 from functools import partial
-from sst_hw.diode import Shutter_control, Shutter_open_time
 from ..HW.signals import default_sigs
 
 run_report(__file__)
@@ -26,11 +23,13 @@ run_report(__file__)
 # saxs_det.cam.ensure_nonblocking()
 # saxs_det.setup_cam()
 # #
+"""
 waxs_det = RSOXSGreatEyesDetector(
    "XF:07ID1-ES:1{GE:2}",
    name="Wide Angle CCD Detector",
    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam'],
 )
+"""
 waxs_det.cam.read_attrs = ['acquire_time']
 waxs_det.transform_type = 1
 waxs_det.cam.ensure_nonblocking()

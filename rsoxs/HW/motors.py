@@ -1,6 +1,7 @@
 from ophyd.sim import motor1
+from ophyd import EpicsSignal
 
-from sst_funcs.printing import run_report
+from nbs_bl.printing import run_report
 from sst_base.motors import PrettyMotorFMBO, PrettyMotor, PrettyMotorDeadbandFlyer, PrettyMotorFMBODeadbandFlyer, PrettyMotorFMBODeadband
 
 class RetryFlyerMotor(PrettyMotorFMBODeadbandFlyer):
@@ -29,6 +30,32 @@ class RetryFlyerMotor(PrettyMotorFMBODeadbandFlyer):
         return status
 
 
+
+class ShutterWait(EpicsSignal):
+    def set(self, value, *, just_wait=False, **kwargs):
+            """
+            Set the value of the Signal, or just wait for the object to change to a value, either way returning a Status object
+
+            Parameters
+            ----------
+            value : either a set value of a value to wait for
+            just_wait : boolean whether to not set anything but just wait for the value to change to this value
+            
+            Returns
+            -------
+            Status
+
+            """
+            if(just_wait):
+                wait_value = value
+                def watcher(*,old_value,value,**kwargs):
+                    if value == wait_value:
+                        return True
+                    else:
+                        return False
+                return SubscriptionStatus(self, watcher)
+            else:
+                return super().set(value, **kwargs)
 
 
 run_report(__file__)
@@ -90,4 +117,6 @@ TEMZ = PrettyMotor(
 dm7 = PrettyMotorFMBODeadbandFlyer(
     "XF:07ID2-BI{Diag:07-Ax:Y}Mtr", name="Downstream diagnostic module translation", kind="normal"
 )
+
+
 

@@ -13,12 +13,14 @@ import bluesky.plan_stubs as bps
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
 from ..startup import db, rsoxs_config #bec, 
-from ..HW.motors import sam_viewer
-from ..HW.cameras import SampleViewer_cam
-from sst_funcs.printing import run_report
+from nbs_bl.hw import(
+    sam_viewer,   
+    SampleViewer_cam
+)
+from nbs_bl.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 
-from sst_funcs.printing import boxed_text, colored
+from nbs_bl.printing import boxed_text, colored
 from .common_functions import args_to_string
 
 def sample_by_value_match(key, string, bar=None):

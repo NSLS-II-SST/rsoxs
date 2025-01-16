@@ -1,8 +1,16 @@
 import bluesky.plan_stubs as bps
 from nbs_bl.printing import run_report
-from ..HW.motors import (
+from nbs_bl.hw import (
+    mir1,
+    en,
+    mir3,
+    psh10,
+    Exit_Slit,
+    slits1,
     Shutter_Y,
     Izero_Y,
+    slits2,
+    slits3,
     Det_W,
     #Det_S,
     BeamStopS,
@@ -12,13 +20,10 @@ from ..HW.motors import (
     sam_Y,
     sam_X,
     TEMZ,
+    mir4OLD,
     dm7
 )
-from sst_hw.mirrors import mir1, mir3, mir4OLD
-from sst_hw.motors import Exit_Slit
-from sst_hw.shutters import psh10
-from ..HW.energy import en, mono_en, grating_to_1200
-from ..HW.slits import slits1, slits2, slits3
+from ..HW.energy import mono_en, grating_to_1200
 from ..startup import RE
 
 run_report(__file__)
