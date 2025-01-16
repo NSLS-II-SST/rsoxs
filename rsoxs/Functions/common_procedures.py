@@ -7,11 +7,26 @@ from bluesky.callbacks.fitting import PeakStats
 from bluesky.preprocessors import subs_wrapper
 from bluesky import preprocessors as bpp
 from bluesky.run_engine import Msg
-from ..HW.signals import (
+from nbs_bl.hw import (
+    en,
+    grating,
+    mirror2,
+    psh10,
+    Exit_Slit,
+    slits1,
     Izero_Mesh,
     Izero_Mesh_int,
+    slits2,
+    Shutter_control,
+    Shutter_enable,
+    gv27a,
+    sam_Th, 
+    sam_Y,
+    rsoxs_ll_gpwr,
+    gvll,
     Beamstop_WAXS,
     Beamstop_WAXS_int,
+    waxs_det,
     DownstreamLargeDiode_int,
     Sample_TEY,
     Sample_TEY_int,
@@ -20,33 +35,26 @@ from ..HW.signals import (
     Slit1_Current_Bottom,
     Slit1_Current_Inboard,
     Slit1_Current_Outboard,
+    MC19_disable,
+    MC20_disable,
+    MC21_disable,
+    gv28,
 )
 from ..HW.energy import (
-    en,
     mono_en,
     grating_to_1200,
     grating_to_250,
     grating_to_rsoxs,
-    grating,
-    mirror2,
     set_polarization,
     epu_gap,
     epu_phase,
+    epu_mode
 )
-from ..HW.energy import epu_mode
-from sst_hw.diode import Shutter_control, Shutter_enable
-from ..HW.slits import slits1, slits2
 from .alignment import load_configuration,load_samp
-from ..HW.detectors import set_exposure, waxs_det
-from ..HW.motors import sam_Th, sam_Y
-from sst_hw.gatevalves import gv28, gv27a, gvll
-from sst_hw.shutters import psh10
-from sst_hw.vacuum import rsoxs_ll_gpwr
-from sst_hw.motors import Exit_Slit
-from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
+from ..HW.detectors import set_exposure
 # from ..startup import bec
-from sst_funcs.printing import run_report
-from sst_funcs.gGrEqns import get_mirror_grating_angles, find_best_offsets
+from nbs_bl.printing import run_report
+from nbs_bl.gGrEqns import get_mirror_grating_angles, find_best_offsets
 from .fly_alignment import fly_max
 from .energyscancore import cdsaxs_scan
 from .rsoxs_plans import do_rsoxs
@@ -594,7 +602,7 @@ def tune_pgm(
     energy=291.65,
     pol=90,
     k=250,
-    detector=Sample_TEY_int,
+    detector=None,
     signal="RSoXS Sample Current",
     grat_off_search = 0.08,
     grating_rb_off = 0,
@@ -605,6 +613,8 @@ def tune_pgm(
     # RE(load_sample(sample_by_name(bar, 'HOPG')))
     # RE(tune_pgm(cs=[1.35,1.37,1.385,1.4,1.425,1.45],ms=[1,1,1,1,1],energy=291.65,pol=90,k=250))
     # RE(tune_pgm(cs=[1.55,1.6,1.65,1.7,1.75,1.8],ms=[1,1,1,1,1],energy=291.65,pol=90,k=1200))
+
+    detector = detector if detector else Sample_TEY_int  ## Cannot have device in function definition for gui
 
     yield from bps.mv(en.polarization, pol)
     yield from bps.mv(en, energy)

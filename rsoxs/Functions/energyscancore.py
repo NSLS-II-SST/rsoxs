@@ -30,16 +30,40 @@ from ophyd import Device, Signal
 from ophyd.status import StatusTimeoutError
 import warnings
 from copy import deepcopy
-from ..HW.energy import (
+from nbs_bl.hw import (
     en,
+    mir3,
+    Izero_Mesh,
+    Izero_Mesh_int,
+    Shutter_open_time,
+    Shutter_control,
+    Shutter_enable,
+    #Shutter_trigger,
+    #shutter_open_set
+    sam_X,
+    sam_Y,
+    sam_Z,
+    sam_Th,
+    Beamstop_WAXS,
+    waxs_det,
+    Beamstop_SAXS,
+    #saxs_det,
+    DiodeRange,
+    Sample_TEY, 
+    Beamstop_SAXS_int,
+    Beamstop_WAXS_int,
+    DownstreamLargeDiode, 
+    DownstreamLargeDiode_int, 
+    Sample_TEY_int, 
+    ring_current,
+)
+from ..HW.energy import (
     mono_en,
     epu_gap,
     grating_to_250,
     grating_to_rsoxs,
     grating_to_1200,
     set_polarization,
-)
-from ..HW.energy import (
     #Mono_Scan_Speed_ev,
     #Mono_Scan_Start,
     #Mono_Scan_Start_ev,
@@ -47,27 +71,7 @@ from ..HW.energy import (
     #Mono_Scan_Stop_ev,
     get_gap_offset,
 )
-from ..HW.motors import (
-    sam_X,
-    sam_Y,
-    sam_Z,
-    sam_Th,
-)
-from sst_hw.mirrors import mir3
-from ..HW.detectors import waxs_det#, saxs_det
 from ..HW.signals import (
-    DiodeRange,
-    Beamstop_WAXS,
-    Beamstop_SAXS,
-    Izero_Mesh,
-    Sample_TEY, 
-    Beamstop_SAXS_int,
-    Beamstop_WAXS_int,
-    DownstreamLargeDiode, 
-    DownstreamLargeDiode_int, 
-    Izero_Mesh_int,
-    Sample_TEY_int, 
-    ring_current,
     default_sigs,
 )
 from ..HW.lakeshore import tem_tempstage
@@ -76,14 +80,7 @@ from ..Functions.common_procedures import set_exposure
 from ..Functions.fly_alignment import find_optimum_motor_pos, db, return_NullStatus_decorator #bec, 
 
 from .flystream_wrapper import flystream_during_wrapper
-from sst_hw.diode import (
-    Shutter_open_time,
-    Shutter_control,
-    Shutter_enable,
-    Shutter_trigger,
-    shutter_open_set
-)
-from sst_funcs.printing import run_report
+from nbs_bl.printing import run_report
 
 
 from ..startup import rsoxs_config, RE
@@ -850,7 +847,13 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
 
 
 
-def cdsaxs_scan(det=waxs_det,angle_mot = sam_Th,shutter = Shutter_control,start_angle=50,end_angle=85,exp_time=9,md=None):
+def cdsaxs_scan(det=None,angle_mot = None,shutter = None,start_angle=50,end_angle=85,exp_time=9,md=None):
+    
+    ## Sanitize inputs that can't go directly into inputs
+    det = det if det else waxs_det 
+    angle_mot = angle_mot if angle_mot else sam_Th 
+    shutter = shutter if shutter else Shutter_control
+    
     _md = deepcopy(dict(RE.md))
     if md == None:
         md = {}

@@ -2,13 +2,15 @@ import bluesky.plan_stubs as bps
 from bluesky.preprocessors import finalize_decorator
 import datetime
 from copy import deepcopy
-from sst_funcs.printing import run_report, boxed_text
+from nbs_bl.printing import run_report, boxed_text
 from rsoxs_scans.acquisition import dryrun_bar, time_sec
 from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
-from ..HW.lakeshore import tem_tempstage
+from nbs_bl.hw import (
+    tem_tempstage,
+)
 from ..HW.signals import High_Gain_diode_i400, setup_diode_i400
 from .energyscancore import NEXAFS_fly_scan_core, new_en_scan_core, NEXAFS_step_scan_core
 from ..startup import RE, rsoxs_config
