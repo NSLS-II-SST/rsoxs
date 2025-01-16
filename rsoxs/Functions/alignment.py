@@ -3,52 +3,51 @@ from operator import itemgetter
 from copy import deepcopy
 import collections
 import numpy as np
-import redis_json_dict
 
 from functools import partial
 import bluesky.plan_stubs as bps
 from ophyd import Device
 from ..startup import RE, db,  db0, rsoxs_config #bec,
-from ..HW.signals import (
-    Beamstop_SAXS, 
-    Beamstop_WAXS, 
-    DiodeRange, 
-    Beamstop_SAXS_int,
-    Beamstop_WAXS_int, 
+from nbs_bl.hw import(
+    psh10,
+    Exit_Slit,
+    slits1,
     Izero_Mesh_int,
-    Sample_TEY_int,
-    default_sigs,
-)
-
-from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
-from sst_hw.shutters import psh10
-from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
-from sst_funcs.printing import run_report
-from ..HW.slackbot import rsoxs_bot
-from sst_hw.mirrors import mir4OLD
-from sst_hw.diode import (
+    Izero_Y,
     Shutter_control,
-)
-from ..HW.motors import (
+    Shutter_Y,
+    slits2,
+    slits3,
+    Sample_TEY_int,
     sam_X,
     sam_Y,
     sam_Th,
     sam_Z,
-    Shutter_Y,
-    Izero_Y,
-    Det_S,
-    Det_W,
-    BeamStopW,
-    BeamStopS,
     TEMX,
     TEMY,
     TEMZ,
+    Beamstop_WAXS, 
+    Beamstop_WAXS_int, 
+    BeamStopW,
+    waxs_det,
+    Det_W,
+    Beamstop_SAXS, 
+    Beamstop_SAXS_int,
+    BeamStopS,
+    DiodeRange,
+    Det_S,
+    mir4OLD,   
     dm7
 )
+## An alternative way to load devices is:
+#from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+#Beamstop_SAXS = bl["Beamstop_SAXS"] ## what follows bl is the key in devices.toml in profile_collection contained in the []
+from ..HW.signals import default_sigs
+from ..HW.detectors import set_exposure#, saxs_det
+from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
+from nbs_bl.printing import run_report, boxed_text, colored
+from ..HW.slackbot import rsoxs_bot
 from . import configurations
-from ..HW.slits import slits1, slits2, slits3
-from sst_hw.motors import Exit_Slit
-from sst_funcs.printing import boxed_text, colored
 from .common_functions import args_to_string
 from .configurations import (
     WAXSNEXAFS,
