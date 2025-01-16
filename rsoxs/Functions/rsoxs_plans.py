@@ -61,16 +61,6 @@ def run_bar(
         _description_, by default False
     group : str, optional
         _description_, by default 'all'
-
-    Returns
-    -------
-    _type_
-        _description_
-
-    Yields
-    ------
-    _type_
-        _description_
     """
     if bar == None:
         bar = rsoxs_config['bar']
