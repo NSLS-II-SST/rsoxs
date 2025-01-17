@@ -19,6 +19,30 @@ from ..HW.slackbot import rsoxs_bot
 run_report(__file__)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Below is Eliot's old code, above is simplified code
+
+## TODO: remove dictionary, never used
 actions = {
     "load_configuration",  # high level load names RSoXS configuration
     "rsoxs_scan_core",  # high level run a single RSoXS plan
@@ -36,11 +60,11 @@ actions = {
 motors = {"temp_ramp_rate": tem_tempstage.ramp_rate}
 
 
-def run_bar(
+def run_bar( ## TODO: change name to run_queue
     bar=None,
-    sort_by=["apriority"],
+    sort_by=["apriority"], ##TODO: consolidate with group and maybe call order.  Maybe turn into 2D array or ditionary or something.  So can list order of groups, then within each group sort by configuration, then sort by priority or something
     rev=[False],
-    verbose=False,
+    verbose=False, ## TODO: Make it true by default as a fail safe
     dry_run=False,
     group="all",
     repeat_previous_runs = False
@@ -73,7 +97,7 @@ def run_bar(
     queue_start_time = datetime.datetime.now()
     message = ""
     acq_uids = []
-    for queue_step in queue:
+    for queue_step in queue: ## TODO: turn queue_step into its own function called run_acquisition or something
         message += f"Starting acquisition #{queue_step['acq_index']+1} of {queue_step['total_acq']} total\n"
         message += f"which should take {time_sec(queue_step['acq_time'])} plus overhead\n"
         boxed_text("queue status", message, "red", width=120, shrink=True)
@@ -85,7 +109,7 @@ def run_bar(
         start_time = datetime.datetime.now()
 
         for step in queue_step["steps"]:
-            output = (yield from run_queue_step(step))
+            output = (yield from run_queue_step(step)) ## TODO: change the name of this function like run_substeps or something
             acq_uids.append(output)
             
         slack_message_end = queue_step.get("slack_message_end", "")
@@ -159,6 +183,7 @@ def run_queue_step(step):
 
 
 # plans for manually running a single rsoxs scan in the terminal or making your own plans
+## TODO: This is unnecessarily redundant.  Either cut this out or find a way to incorporate into the workflow
 def do_rsoxs(md=None, **kwargs):
     """
     inputs:

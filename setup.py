@@ -48,6 +48,10 @@ setup(
         'console_scripts': [
             # 'command = some.module:some_function',
         ],
+        'nbs_gui.plans': [
+            "rsoxs-step-scan=rsoxs.qt.plans.rsoxs:RSoXSStepWidget",
+            "rsoxs-region-scan=rsoxs.qt.plans.rsoxs:RSoXSRegionWidget"
+        ]
     },
     include_package_data=True,
     package_data={

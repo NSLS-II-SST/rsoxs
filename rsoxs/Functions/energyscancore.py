@@ -81,7 +81,8 @@ from ..Functions.fly_alignment import find_optimum_motor_pos, db, return_NullSta
 
 from .flystream_wrapper import flystream_during_wrapper
 from nbs_bl.printing import run_report
-
+from nbs_bl.plans.scans import nbs_list_scan, nbs_gscan
+from nbs_bl.utils import merge_func
 
 from ..startup import rsoxs_config, RE
 from bluesky.utils import ensure_generator, short_uid as _short_uid, single_gen
@@ -97,6 +98,81 @@ from .per_steps import (
 run_report(__file__)
 
 
+
+@merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
+def variable_energy_scan(*args, **kwargs):
+    yield from bps.mv(Shutter_control, 1)
+    yield from finalize_wrapper(
+        plan = nbs_gscan(en.energy, *args, **kwargs),
+        final_plan= post_scan_hardware_reset()
+    )
+
+@merge_func(variable_energy_scan, use_func_name=False, omit_params=['per_step'])
+def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
+    """
+    Step scanned RSoXS function with WAXS Detector
+
+    Parameters
+    ----------
+    n_exposures : int, optional
+        If greater than 1, take multiple exposures per step
+    """
+    old_n_exp = waxs_det.number_exposures
+    waxs_det.number_exposures = n_exposures
+    _extra_dets = [waxs_det]
+    _extra_dets.extend(extra_dets)
+    rsoxs_per_step=partial(one_nd_sticky_exp_step,
+                    take_reading=partial(take_exposure_corrected_reading,
+                                        shutter = Shutter_control,
+                                        check_exposure=False))
+    yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, **kwargs)
+    waxs_det.number_exposures = old_n_exp
+
+@merge_func(nbs_list_scan, use_func_name=False, omit_params=["*args"])
+def energy_step_scan(energies, **kwargs):
+    yield from bps.mv(Shutter_control, 1)
+    yield from finalize_wrapper(
+        plan = nbs_list_scan(en.energy, energies, **kwargs),
+        final_plan= post_scan_hardware_reset()
+    )
+
+def step_scan_energy(
+    energies=None,
+    detectors=None,
+    exposure_times=None,
+):
+## A generic energy step sweep that can be applied to both RSoXS and NEXAFS based on what detectors are provided  
+    yield from bps.mv(Shutter_control, 1) ## Open the shutter
+    """
+    yield from finalize_wrapper(
+        plan = bp.list_scan(
+            detectors=detectors,
+            en.energy, energies,
+            for detector in detectors: 
+                pass
+                # detector.exposure_time, exposure_times
+        ),
+        final_plan = post_scan_hardware_reset()
+    )
+    """
+
+
+def post_scan_hardware_reset():
+    ## Make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
+    yield from bps.mv(en.scanlock, 0)
+    yield from bps.mv(Shutter_control, 0)
+
+
+
+
+
+
+
+
+
+
+
+## Everything below is Eliot's old code.  Above is new scans.
 
 SLEEP_FOR_SHUTTER = 1
 
