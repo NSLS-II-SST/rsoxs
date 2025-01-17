@@ -10,7 +10,7 @@ from nbs_gui.plans.planParam import DynamicComboParam
 from nbs_gui.plans.nbsPlan import NBSPlanWidget
 
 
-class RSOXSParam(DynamicComboParam):
+class RSoXSParam(DynamicComboParam):
     signal_update_region = Signal(str)
 
     def __init__(self, *args, **kwargs):
@@ -50,12 +50,12 @@ class RSOXSParam(DynamicComboParam):
         return {}
 
 
-class RSOXSPlanWidget(NBSPlanWidget):
+class RSoXSPlanWidget(NBSPlanWidget):
     signal_update_rsoxs = Signal(object)
-    display_name = "RSOXS"
+    display_name = "RSoXS"
 
     def __init__(self, model, parent=None):
-        print("Initializing RSOXS")
+        print("Initializing RSoXS")
 
         super().__init__(
             model,
@@ -75,10 +75,10 @@ class RSOXSPlanWidget(NBSPlanWidget):
         )
         self.signal_update_rsoxs.connect(self.update_rsoxs)
         self.user_status.register_signal("RSOXS_PLANS", self.signal_update_rsoxs)
-        print("RSOXS Initialized")
+        print("RSoXS Initialized")
 
         # Add Load RSOXS button
-        self.load_rsoxs_button = QPushButton("Load RSOXS regions from file", self)
+        self.load_rsoxs_button = QPushButton("Load RSoXS regions from file", self)
         self.load_rsoxs_button.clicked.connect(self.load_rsoxs_file)
         self.basePlanLayout.addWidget(self.load_rsoxs_button)
 
@@ -86,7 +86,7 @@ class RSOXSPlanWidget(NBSPlanWidget):
         super().setup_widget()
 
         self.rsoxs_plans = {}
-        self.edge_selection = RSOXSParam("edge", "RSOXS Scan", "Select RSOXS Plan", parent=self)
+        self.edge_selection = RSoXSParam("edge", "RSoXS Scan", "Select RSoXS Plan", parent=self)
         self.scan_widget.add_param(self.edge_selection, 0)
         self.scan_widget.add_row(QLabel("Scan Region"), self.edge_selection.make_region_label(), 1)
         self.user_status.register_signal("RSOXS_PLANS", self.signal_update_rsoxs)
