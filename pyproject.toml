@@ -1,3 +1,34 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsoxs"
+authors = [
+    {name = "Charles Titus", email = "ctitus@bnl.gov"},
+    {name = "Priyanka Ketkar", email = "pketkar@bnl.gov"},
+    {name = "Eliot Gann", email = "egann@bnl.gov"},
+]
+description = "RSoXS Beamline Framework"
+dynamic = ["version", "dependencies"]
+url = "https://github.com/NSLS-II-SST/rsoxs"
+
+[tool.setuptools]
+packages = ["rsoxs"]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.entry-points."nbs_gui.plans"]
+rsoxs-step-scan = "rsoxs.qt.plans.rsoxs:RSoXSStepWidget"
+rsoxs-region-scan = "rsoxs.qt.plans.rsoxs:RSoXSRegionWidget"
+
+[project.entry-points."nbs_bl.plan_loaders"]
+rsoxs = "rsoxs.plans.rsoxs:load_rsoxs"
+
+
 [tool.black]
 line-length = 115
 include = '\.pyi?$'

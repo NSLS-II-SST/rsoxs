@@ -1,1 +1,4 @@
 # List required packages in this file, one per line.
+bluesky
+nbs-bl
+sst_base
