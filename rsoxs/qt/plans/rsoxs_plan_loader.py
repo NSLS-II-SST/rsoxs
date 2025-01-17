@@ -4,7 +4,7 @@ from bluesky_queueserver_api import BPlan
 from nbs_gui.plans.planLoaders import PlanLoaderWidgetBase
 
 
-class RSOXSPlanLoader(PlanLoaderWidgetBase):
+class RSoXSPlanLoader(PlanLoaderWidgetBase):
     display_name = "RSoXS Plans"
     signal_update_rsoxs = Signal(object)
     signal_update_samples = Signal(object)

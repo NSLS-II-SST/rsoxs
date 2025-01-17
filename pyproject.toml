@@ -29,7 +29,7 @@ rsoxs-custom-scan = "rsoxs.qt.plans.rsoxsCustom:RSoXSCustomWidget"
 rsoxs-scan = "rsoxs.qt.plans.rsoxsPlan:RSoXSPlanWidget"
 
 [project.entry-points."nbs_gui.plan_loaders"]
-rsoxs = "rsoxs.qt.plans.rsoxs_plan_loader:RSoXSPlanLoader"
+rsoxs-gui-loader = "rsoxs.qt.plans.rsoxs_plan_loader:RSoXSPlanLoader"
 
 [project.entry-points."nbs_bl.plan_loaders"]
 rsoxs = "rsoxs.plans.rsoxs:load_rsoxs"
