@@ -4,24 +4,10 @@ from nbs_gui.plans.xasPlan import XASPlanWidget
 from qtpy.QtCore import Signal
 from bluesky_queueserver_api import BPlan
 
-class RSoXSRegionWidget(XASPlanWidget):
 
-    display_name = "RSoXS Region Scan"
-
-    def create_plan_items(self):
-        params = self.get_params()
-        plan = params.pop("plan")
-        region = self.edge_selection.xas_plans.get(plan).get('region')
-        samples = params.pop("samples", [{}])
-        items = []
-        for s in samples:
-            item = BPlan("rsoxs_step_scan", *region, **params, **s)
-            items.append(item)
-        return items        
-
-class RSoXSStepWidget(NBSPlanWidget):
+class RSoXSCustomWidget(NBSPlanWidget):
     signal_update_motors = Signal(object)
-    display_name = "RSoXS Step Scan"
+    display_name = "RSoXS Custom Scan"
 
     def __init__(
         self,
@@ -29,7 +15,7 @@ class RSoXSStepWidget(NBSPlanWidget):
         parent=None,
         plans="rsoxs_step_scan",
     ):
-        print("Initializing RSoXS Step Scan")
+        print("Initializing RSoXS Custom Scan")
         super().__init__(
             model,
             parent,

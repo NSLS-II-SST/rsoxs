@@ -25,8 +25,11 @@ packages = ["rsoxs"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.entry-points."nbs_gui.plans"]
-rsoxs-step-scan = "rsoxs.qt.plans.rsoxs:RSoXSStepWidget"
-rsoxs-region-scan = "rsoxs.qt.plans.rsoxs:RSoXSRegionWidget"
+rsoxs-custom-scan = "rsoxs.qt.plans.rsoxsCustom:RSoXSCustomWidget"
+rsoxs-scan = "rsoxs.qt.plans.rsoxsPlan:RSoXSPlanWidget"
+
+[project.entry-points."nbs_gui.plan_loaders"]
+rsoxs = "rsoxs.qt.plans.rsoxs_plan_loader:RSoXSPlanLoader"
 
 [project.entry-points."nbs_bl.plan_loaders"]
 rsoxs = "rsoxs.plans.rsoxs:load_rsoxs"
