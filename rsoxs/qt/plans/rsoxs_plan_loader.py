@@ -64,9 +64,8 @@ class RSoXSPlanLoader(PlanLoaderWidgetBase):
                 return []
 
             plan_kwargs = {}
-            plan_kwargs["eslit"] = (
-                float(plan_data.get("Slit Size", None)) if plan_data.get("Slit Size") is not None else None
-            )
+            slit_size = plan_data.get("Slit Size")
+            plan_kwargs["eslit"] = float(slit_size) if slit_size not in [None, ""] else None
             plan_kwargs["group_name"] = plan_data.get("Group Name", None)
             plan_kwargs["comment"] = plan_data.get("Comment", None)
             plan_kwargs["repeat"] = int(plan_data.get("Repeat", 1))
