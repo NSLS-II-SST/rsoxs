@@ -1,7 +1,7 @@
 from os import path
 from setuptools import setup, find_packages
 import sys
-import versioneer
+#import versioneer
 
 
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
@@ -36,13 +36,13 @@ with open(path.join(here, "requirements.txt")) as requirements_file:
 
 setup(
     name="rsoxs",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    #version=versioneer.get_version(),
+    #cmdclass=versioneer.get_cmdclass(),
     description="sst-1 RSoXS station bluesky code",
     long_description=readme,
     author="NIST",
     author_email="egann@bnl.gov",
-    url="https://github.com/EliotGann/rsoxs",
+    url="https://github.com/NSLS-II-SST/rsoxs",
     python_requires=">={}".format(".".join(str(n) for n in min_version)),
     packages=find_packages(exclude=["docs", "tests"]),
     entry_points={

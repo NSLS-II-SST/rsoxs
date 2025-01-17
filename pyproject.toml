@@ -11,7 +11,10 @@ authors = [
 ]
 description = "RSoXS Beamline Framework"
 dynamic = ["version", "dependencies"]
-url = "https://github.com/NSLS-II-SST/rsoxs"
+requires-python = ">=3.9"
+
+[project.urls]
+homepage = "https://github.com/NSLS-II-SST/rsoxs"
 
 [tool.setuptools]
 packages = ["rsoxs"]
