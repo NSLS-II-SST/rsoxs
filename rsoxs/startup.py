@@ -35,7 +35,7 @@ RE = create_run_engine(setup=True)
 if not is_re_worker_active(): ns = get_ipython().user_ns
 else: ns = {}
 if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
-db = Broker.named("rsoxs") ## db is defined in a different way such that configure_base is not called multiple times when starting up Bluesky on the beamline computer.  This is temporary, as the ideal solution for data security is to not call db inside this package.
+db = Broker.named("rsoxs") ## db is defined in a different way such that configure_base is not called multiple times when starting up Bluesky on the beamline computer.  This is temporary, as the ideal solution for data security is to not call db inside this package.  The configure_base function will no longer be used after data security upgrades.
 md = RE.md
 # db = ns["db"]
 # sd = ns["sd"]
