@@ -17,6 +17,7 @@ from nbs_bl.printing import run_report
 from nbs_bl.detectors import *
 from nbs_bl.plans.scans import *
 from nbs_bl.plans.xas import *
+from nbs_bl.samples import *
 
 from databroker import Broker
 
