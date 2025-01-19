@@ -74,6 +74,7 @@ def energy_step_scan(energies, **kwargs):
     yield from finalize_wrapper(
         plan=nbs_list_scan(en.energy, energies, **kwargs), final_plan=post_scan_hardware_reset()
     )
+    ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 
 
 def post_scan_hardware_reset():
