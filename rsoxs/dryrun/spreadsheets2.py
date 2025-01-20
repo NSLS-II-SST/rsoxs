@@ -22,7 +22,7 @@ def load_spreadsheet(path, update_configuration = False):
     for Index, Sample in enumerate(Samples_dict):
         Sample_dict = {}
         for Index, Key in enumerate(Keys_SamplesDictionary): Sample_dict[Key] = Sample[Key]
-        ## TODO: sanitize sample parameters
+        ## TODO: sanitize sample parameters.  Make a separate function for this.
         Sample_dict["acquisitions"] = []
         Configuration.append(Sample_dict)
 
@@ -31,7 +31,7 @@ def load_spreadsheet(path, update_configuration = False):
     for Index, Acquisition in enumerate(Acquisitions_dict):
         Acquisitions_dict = {}
         for Index, Key in enumerate(Keys_AcquisitionsDictionary): Acquisitions_dict[Key] = Acquisition[Key]
-        ## TODO: sanitize acquisition parameters
+        ## TODO: sanitize acquisition parameters.  Make a separate function for this.
         for Index, Sample in enumerate(Configuration):
             if Sample["sample_id"] == Acquisitions_dict["sample_id"]: Configuration[Index]["acquisitions"].append(Acquisitions_dict)
     
