@@ -42,7 +42,7 @@ md = RE.md
 sd = bl.supplemental_data
 #bec = ns["bec"]
 
-import redis
+import redis ## In-memory (RAM) databases that persists on disk even if Bluesky is restarted
 from redis_json_dict import RedisJSONDict
 from nbs_bl.status import RedisStatusDict
 from nbs_bl.queueserver import GLOBAL_USER_STATUS

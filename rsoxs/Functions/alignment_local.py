@@ -217,6 +217,8 @@ def image_bar( path=None, front=True, bar=None):
     # because of threading in the run engine, so it needs
     # to be run seperately
     #print(imageuid)
+
+    ## TODO: possibly make a separate RunEngine for taking pictures.  Also update to make it data security compliant.  Possibly run through Jupyter notebook after feeding in spreadsheet and image rather than pointing to db.
     
 
 def locate_samples_from_image( impath, front=True, bar=None):
