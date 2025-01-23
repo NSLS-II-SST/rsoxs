@@ -5,6 +5,16 @@ from ophyd import EpicsSignalRO
 
 from sst_funcs.printing import run_report
 from sst_base.cameras import StandardProsilicaWithTIFFV33, StandardProsilica, ColorProsilicaWithTIFFV33
+from nbs_bl.hw import(
+    Side_cam,
+    DetS_cam,
+    Izero_cam,
+    Sample_cam,
+    FS7_cam,
+    FS1_cam,
+    FS6_cam,
+    SampleViewer_cam, 
+)
 
 run_report(__file__)
 
@@ -26,7 +36,7 @@ class StandardProsilicawstats(StandardProsilicaWithTIFFV33):
         super().__init__(*args, **kwargs)
 
 
-
+"""
 Side_cam = StandardProsilica("XF:07ID1-ES:1{Scr:2}", name="RSoXS Sample Area Camera")
 DetS_cam = StandardProsilica("XF:07ID1-ES:1{Scr:3}", name="WAXS Detector Area Camera")
 Izero_cam = StandardProsilicawstats("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera", read_attrs=['tiff','stats5'])
@@ -48,6 +58,7 @@ SampleViewer_cam = ColorProsilicaWithTIFFV33(
     name="Sample Imager Detector Area Camera",
     read_attrs=["tiff"],
 )
+"""
 SampleViewer_cam.cam.ensure_nonblocking()
 crosshair = Sample_cam.over1.overlay_1
 Sample_cam.over1.overlay_1.position_y.kind = "hinted"
