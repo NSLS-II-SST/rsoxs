@@ -6,10 +6,12 @@ import copy
 
 
 def pick_locations_from_spirals( ## Intended to be an updated, data-security-compliant version of resolve_spirals.  Probably will just have this function pick spots for one sample and then it can be rerun for multiple samples.  That way, not all spirals have to be resolved in one go.
+        configuration, ## Up-to-date spreadsheet with current sample locations.  TODO: maybe load sheet separately and then pick spots and then save out a new sheet
         sampleID,
+        catalog,
         scanID_Survey, ## Maybe the more generic thing to call it is a survey scan
         locationsSelected_Indices,
-        configuration ## Up-to-date spreadsheet with current sample locations.  TODO: maybe load sheet separately and then pick spots and then save out a new sheet
+        
 ):
     
     ## TODO: Consider making this a more generic function that picks a sample location from some series scan.  For spiral scans, it picks x and y location, but for an angle series, it could pick from there as well
@@ -17,7 +19,7 @@ def pick_locations_from_spirals( ## Intended to be an updated, data-security-com
 
     
     ## Load spiral scan from tiled and gather location coordinates
-    scanSurvey = Catalog[int(scanID_Survey)]
+    scanSurvey = catalog[int(scanID_Survey)]
     ## TODO: If sample_id from tiled does not equal the sample ID here, then give warning
     locations_OutboardInboard = scanSurvey["primary"]["data"]["RSoXS Sample Outboard-Inboard"].read()
     locations_DownUp = scanSurvey["primary"]["data"]["RSoXS Sample Up-Down"].read()
