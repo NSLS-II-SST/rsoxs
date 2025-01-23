@@ -8,6 +8,7 @@ from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
+from .alignment2.spiral_scans import spiral_survey
 from nbs_bl.hw import (
     tem_tempstage,
 )
@@ -169,7 +170,7 @@ def run_queue_step(step):
         return (yield from bps.mv(motors[step["kwargs"]["motor"]], step["kwargs"]["position"]))
         # use the motors look up table above to get the motor object by name
     if step["action"] == "spiral_scan_core":
-        return (yield from spiralsearch(**step["kwargs"]))
+        return (yield from spiral_survey(**step["kwargs"])) #return (yield from spiralsearch(**step["kwargs"]))
     if step["action"] == "nexafs_scan_core":
         return (yield from NEXAFS_fly_scan_core(**step["kwargs"]))
     if step["action"] == "nexafs_step_scan_core":
