@@ -5,6 +5,7 @@ from sst_base.energy import (
     base_set_polarization,
 )
 from nbs_bl.hw import (
+    psh4,
     en,
     grating,
     mirror2,
