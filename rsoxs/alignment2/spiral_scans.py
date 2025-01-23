@@ -21,18 +21,18 @@ from nbs_bl.hw import(
 ## An alternative way to load devices is:
 #from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 #Beamstop_SAXS = bl["Beamstop_SAXS"] ## what follows bl is the key in devices.toml in profile_collection contained in the []
-from ..HW.signals import default_sigs
-from ..HW.detectors import set_exposure#, saxs_det
-from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
+from rsoxs.HW.signals import default_sigs
+from rsoxs.HW.detectors import set_exposure#, saxs_det
+from rsoxs.HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
 from nbs_bl.printing import run_report, boxed_text, colored
-from ..HW.slackbot import rsoxs_bot
-from . import configurations
-from .per_steps import (
+from rsoxs.HW.slackbot import rsoxs_bot
+from rsoxs.Functions import configurations
+from rsoxs.Functions.per_steps import (
     take_exposure_corrected_reading,
     one_nd_sticky_exp_step
 )
 
-from .alignment_local import *
+from rsoxs.Functions.alignment_local import *
 run_report(__file__)
 
 ## The following imports need to be done outside Bluesky
@@ -206,6 +206,7 @@ def pick_locations_from_spirals( ## Intended to be an updated, data-security-com
     
     ## TODO: Consider making this a more generic function that picks a sample location from some series scan.  For spiral scans, it picks x and y location, but for an angle series, it could pick from there as well
     ## Can do something like try/except where I try to find the coordinate from primary but otherwise, find it from the baseline
+    ## Otherwise, this is simple enough to make a separate function for an angle series and not have unnecessary errors due to extra checking
 
     
     ## Load spiral scan from tiled and gather location coordinates
@@ -240,7 +241,6 @@ def pick_locations_from_spirals( ## Intended to be an updated, data-security-com
 
 
 ## How to use pick_locations_from_spirals
-
 """
 ## Install rsoxs codebase and pyhyper
 
