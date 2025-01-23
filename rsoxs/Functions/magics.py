@@ -304,7 +304,7 @@ del md
 
 class RSoXSPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
-        if len(RE.md["analysis_dir"]) > 0:
+        if RE.md.get("analysis_dir", None) and len(RE.md["analysis_dir"]) > 0: #if len(RE.md["analysis_dir"]) > 0: ## 20250123 - ran into error while loading sample
             RSoXStoken = (
                 Token.Prompt,
                 f"RSoXS {RE.md['analysis_dir']}",
