@@ -1,3 +1,4 @@
+"""
 from nslsii.ad33 import StatsPluginV33
 from ophyd.areadetector.base import EpicsSignalWithRBV as SignalWithRBV
 from ophyd import Component as Cpt
@@ -36,7 +37,7 @@ class StandardProsilicawstats(StandardProsilicaWithTIFFV33):
         super().__init__(*args, **kwargs)
 
 
-"""
+
 Side_cam = StandardProsilica("XF:07ID1-ES:1{Scr:2}", name="RSoXS Sample Area Camera")
 DetS_cam = StandardProsilica("XF:07ID1-ES:1{Scr:3}", name="WAXS Detector Area Camera")
 Izero_cam = StandardProsilicawstats("XF:07ID1-ES:1{Scr:1}", name="Izero YAG Camera", read_attrs=['tiff','stats5'])
@@ -58,7 +59,7 @@ SampleViewer_cam = ColorProsilicaWithTIFFV33(
     name="Sample Imager Detector Area Camera",
     read_attrs=["tiff"],
 )
-"""
+
 SampleViewer_cam.cam.ensure_nonblocking()
 crosshair = Sample_cam.over1.overlay_1
 Sample_cam.over1.overlay_1.position_y.kind = "hinted"
@@ -119,3 +120,4 @@ for camera in all_standard_pros:
 
 
 SampleViewer_cam.tiff.kind = "normal"
+"""
