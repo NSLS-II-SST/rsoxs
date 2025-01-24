@@ -19,6 +19,11 @@ from nbs_bl.plans.scans import *
 from nbs_bl.plans.xas import *
 from nbs_bl.samples import *
 
+import redis  ## In-memory (RAM) databases that persists on disk even if Bluesky is restarted
+from redis_json_dict import RedisJSONDict
+from nbs_bl.status import RedisStatusDict
+from nbs_bl.queueserver import GLOBAL_USER_STATUS
+
 from databroker import Broker
 
 run_report(__file__)
@@ -30,29 +35,43 @@ except ImportError:
     def is_re_worker_active():
         return False
 
+
 RE = create_run_engine(setup=True)
 
-if not is_re_worker_active(): ns = get_ipython().user_ns
-else: ns = {}
-if not is_re_worker_active(): get_ipython().log.setLevel("ERROR")
-db = Broker.named("rsoxs") ## db is defined in a different way such that configure_base is not called multiple times when starting up Bluesky on the beamline computer.  This is temporary, as the ideal solution for data security is to not call db inside this package.  The configure_base function will no longer be used after data security upgrades.
-md = RE.md
-# db = ns["db"]
-# sd = ns["sd"]
+if not is_re_worker_active():
+    ns = get_ipython().user_ns
+else:
+    ns = {}
+if not is_re_worker_active():
+    get_ipython().log.setLevel("ERROR")
+db = Broker.named("rsoxs")
+# db is defined manually so that configure_base
+# is not called multiple times when starting up
+# Bluesky on the beamline computer.
 sd = bl.supplemental_data
-#bec = ns["bec"]
+# bec = ns["bec"]
 
-import redis ## In-memory (RAM) databases that persists on disk even if Bluesky is restarted
-from redis_json_dict import RedisJSONDict
-from nbs_bl.status import RedisStatusDict
-from nbs_bl.queueserver import GLOBAL_USER_STATUS
-mdredis = redis.Redis("info.sst.nsls2.bnl.gov")
-RE.md = RedisStatusDict(mdredis, prefix="rsoxs-")
+redis_md_settings = bl.settings.get("redis").get("md")
+
+mdredis = redis.Redis(
+    redis_md_settings.get("host", "info.sst.nsls2.bnl.gov"),
+    port=redis_md_settings.get("port", 6379),
+    db=redis_md_settings.get("db", 0),
+)
+RE.md = RedisStatusDict(mdredis, prefix=redis_md_settings.get("prefix", ""))
+md = RE.md
 GLOBAL_USER_STATUS.add_status("USER_MD", RE.md)
-rsoxsredis = redis.Redis("info.sst.nsls2.bnl.gov",port=60737,db=1) ## RSoXS uses keys 0-3, https://nsls2.slack.com/archives/C01Q3BYKFRD/p1730137096878679
-rsoxs_config = RedisJSONDict(rsoxsredis, prefix="rsoxs-")
+
+redis_config_settings = bl.settings.get("redis").get("config")
+rsoxsredis = redis.Redis(
+    redis_config_settings.get("host", "info.sst.nsls2.bnl.gov"),
+    port=redis_config_settings.get("port", 60737),
+    db=redis_config_settings.get("db", 1),
+)
+rsoxs_config = RedisJSONDict(rsoxsredis, prefix=redis_config_settings.get("prefix", "rsoxs-"))
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
+
 
 def md_validator(md):
     """Validate RE.md before a plan runs.
@@ -65,9 +84,7 @@ def md_validator(md):
         # its value must be validated
         data_session_value = md["data_session"]
         if not isinstance(data_session_value, str):
-            raise ValueError(
-                f"RE.md['data_session']={data_session_value}', but it must be a string"
-            )
+            raise ValueError(f"RE.md['data_session']={data_session_value}', but it must be a string")
         data_session_match = data_session_re.match(data_session_value)
         if data_session_match is None:
             raise ValueError(
@@ -77,13 +94,11 @@ def md_validator(md):
         else:
             proposal_number = data_session_match.group("proposal_number")
             nslsii_api_client = httpx.Client(
-                #base_url="https://api-staging.nsls2.bnl.gov"
+                # base_url="https://api-staging.nsls2.bnl.gov"
                 base_url="https://api.nsls2.bnl.gov"
             )
             try:
-                proposal_response = nslsii_api_client.get(
-                    f"/v1/proposal/{proposal_number}"
-                )
+                proposal_response = nslsii_api_client.get(f"/v1/proposal/{proposal_number}")
                 proposal_response.raise_for_status()
                 if "error_message" in proposal_response.json():
                     raise ValueError(
@@ -121,19 +136,17 @@ def md_validator(md):
         # if there is no "data_session" key allow runs to start
         pass
 
+
 # md_validator will be called before a plan runs
 RE.md_validator = md_validator
 
 # Optional: set any metadata that rarely changes.
 RE.md["beamline_id"] = "SST-1 RSoXS"
 
+
 # Add a callback that prints scan IDs at the start of each scan.
 def print_scan_ids(name, start_doc):
-    print(
-        "Transient Scan ID: {0} @ {1}".format(
-            start_doc["scan_id"], time.strftime("%Y/%m/%d %H:%M:%S")
-        )
-    )
+    print("Transient Scan ID: {0} @ {1}".format(start_doc["scan_id"], time.strftime("%Y/%m/%d %H:%M:%S")))
     print("Persistent Unique Scan ID: '{0}'".format(start_doc["uid"]))
 
 
@@ -147,15 +160,12 @@ print(f'You are using the "{control_layer}" control layer')
 import logging
 
 logging.getLogger("caproto").setLevel("ERROR")
-#bec.disable_baseline()
+# bec.disable_baseline()
 
-#from bluesky.callbacks.zmq import Publisher
+# from bluesky.callbacks.zmq import Publisher
 
-#publisher = Publisher("localhost:5577")
-#RE.subscribe(publisher)
-
-import logging
-import bluesky.log
+# publisher = Publisher("localhost:5577")
+# RE.subscribe(publisher)
 
 logger = logging.getLogger("bluesky_darkframes")
 handler = logging.StreamHandler()
@@ -164,12 +174,9 @@ logger.addHandler(handler)
 logger.getEffectiveLevel()
 logger.setLevel("DEBUG")  # change DEBUG to INFO later on
 
-from databroker.v0 import Broker
+# bec.disable_table()
+# bec.disable_plots()
 
-db0 = Broker.named("rsoxs")
-
-#bec.disable_table()
-#bec.disable_plots()
-
-RE.md['scan_id'] = int(RE.md['scan_id'])
-
+# Why are we doing this?
+if "scan_id" in RE.md:
+    RE.md["scan_id"] = int(RE.md["scan_id"])

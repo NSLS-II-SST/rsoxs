@@ -15,26 +15,27 @@ from ophyd.areadetector import (
 from ophyd.areadetector.base import ad_group
 from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
-from sst_funcs.printing import boxed_text, colored
-from sst_hw.diode import (
+from nbs_bl.printing import boxed_text, colored, run_report
+from nbs_bl.hw import (
     Shutter_open_time,
     Shutter_control,
     Shutter_enable,
     Shutter_delay,
 )
-from sst_funcs.printing import run_report
 import warnings
 
 run_report(__file__)
 
 
 class StatsWithHist(StatsPluginV33):
-    hist_below = C(EpicsSignalRO,'HistBelow_RBV')
-    hist_above = C(EpicsSignalRO,'HistAbove_RBV')
+    hist_below = C(EpicsSignalRO, "HistBelow_RBV")
+    hist_above = C(EpicsSignalRO, "HistAbove_RBV")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.total.kind = 'hinted'
+        self.total.kind = "hinted"
         self.compute_histogram.set(1).wait()
+
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
     """Add this as a component to detectors that write TIFFs."""
@@ -55,7 +56,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
                 ("array_size_y", "ArraySizeY_RBV"),
                 ("array_size_x", "ArraySizeX_RBV"),
             ),
-            auto_monitor=True
+            auto_monitor=True,
         ),
         doc="Size of the array in the XYZ dimensions",
     )
@@ -63,7 +64,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs["wait_for_plugins"] = "Yes"
-        self.acquire_time.kind='hinted'
+        self.acquire_time.kind = "hinted"
 
     def ensure_nonblocking(self):
         self.stage_sigs["wait_for_plugins"] = "Yes"
@@ -74,6 +75,7 @@ class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
             if hasattr(cpt, "ensure_nonblocking"):
                 cpt.ensure_nonblocking()
 
+
 class BooleanSignal(Signal):
     def describe(self):
         res = super().describe()
@@ -81,6 +83,7 @@ class BooleanSignal(Signal):
         res[key]["dtype"] = "boolean"
         res[key]["dtype_str"] = "|b"
         return res
+
 
 class GreateyesTransform(TransformPlugin):
     def __init__(self, *args, **kwargs):
@@ -91,8 +94,8 @@ class GreateyesTransform(TransformPlugin):
 
 class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
-    image = C(ImagePlugin, "image1:",kind='config')
-    cam = C(GreatEyesDetCamWithVersions, "cam1:",kind='normal')
+    image = C(ImagePlugin, "image1:", kind="config")
+    cam = C(GreatEyesDetCamWithVersions, "cam1:", kind="normal")
     transform_type = 0
     number_exposures = 1
     tiff = C(
@@ -102,33 +105,33 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         read_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
         read_attrs=[],
         root="/nsls2/data/sst/assets/",
-        kind='hinted'
+        kind="hinted",
     )
 
-    stats1 = C(StatsWithHist, "Stats1:",kind='hinted')
-    stats2 = C(StatsWithHist, 'Stats2:')
-    under_exposed = C(BooleanSignal,value=False,kind='hinted',name='under_exposed')
+    stats1 = C(StatsWithHist, "Stats1:", kind="hinted")
+    stats2 = C(StatsWithHist, "Stats2:")
+    under_exposed = C(BooleanSignal, value=False, kind="hinted", name="under_exposed")
     saturation_high_threshold = 100000
-    saturation_high_pixel_count = 500 # 500 pixels reading over 200,000 means over exposed
+    saturation_high_pixel_count = 500  # 500 pixels reading over 200,000 means over exposed
     saturation_low_threshold = 500
-    saturation_low_pixel_count = 500 # 500 pixels reading under 500 means extremely over exposed
-    saturated = C(BooleanSignal,value=False,kind='hinted',name='saturated')
-    high_sat_check = [False,False]
+    saturation_low_pixel_count = 500  # 500 pixels reading under 500 means extremely over exposed
+    saturated = C(BooleanSignal, value=False, kind="hinted", name="saturated")
+    high_sat_check = [False, False]
 
     underexposure_min_value = 2000
-    underexposure_num_pixels = 950000 # 700000 pixels reading under 2000 counts means underexposed
+    underexposure_num_pixels = 950000  # 700000 pixels reading under 2000 counts means underexposed
     # stats3 = C(StatsPluginV33, 'Stats3:')
     # stats4 = C(StatsPlugin, 'Stats4:')
     # stats5 = C(StatsPlugin, 'Stats5:')
-    trans1 = C(GreateyesTransform, "Trans1:",kind='config')
-    roi1 = C(ROIPlugin, "ROI1:",kind='config')
+    trans1 = C(GreateyesTransform, "Trans1:", kind="config")
+    roi1 = C(ROIPlugin, "ROI1:", kind="config")
     # roi2 = C(ROIPlugin, 'ROI2:')
     # roi3 = C(ROIPlugin, 'ROI3:')
     # roi4 = C(ROIPlugin, 'ROI4:')
     # proc1 = C(ProcessPlugin, 'Proc1:')
     binvalue = 4
     useshutter = True
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setup_cam()
@@ -137,7 +140,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.stats1.hist_above.subscribe(self.check_saturation_high)
 
     def setup_cam(self):
-        self.stats1.kind = 'hinted'
+        self.stats1.kind = "hinted"
         self.stats1.hist_min.set(self.saturation_low_pixel_count).wait()
         self.stats2.hist_min.set(self.underexposure_min_value).wait()
         self.stats1.hist_max.set(self.saturation_high_threshold).wait()
@@ -151,8 +154,11 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         self.cam.bin_x.set(self.binvalue).wait()
         self.cam.bin_y.set(self.binvalue).wait()
         # TODO: turn on automonitor on the cam.arraysize
-        warnings.warn('Camera settings were reset and camera cooling was turned on'
-                      '\nif you did not intend to turn on the cooling, turn it off now',stacklevel=2)
+        warnings.warn(
+            "Camera settings were reset and camera cooling was turned on"
+            "\nif you did not intend to turn on the cooling, turn it off now",
+            stacklevel=2,
+        )
 
     def check_saturation_high(self, old_value, value, **kwargs):
         if value > self.saturation_high_pixel_count:
@@ -174,7 +180,6 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         else:
             self.under_exposed.set(False).wait()
 
-    
     def sim_mode_on(self):
         self.useshutter = False
         self.cam.sync.set(0).wait()
@@ -191,7 +196,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # self.cam.sync.set(1)
         # self.cam.temperature.set(-80)
         # self.cam.enable_cooling.set(1)
-        #print('staging the detector')
+        # print('staging the detector')
         if self.useshutter:
 
             Shutter_enable.set(1).wait()
@@ -206,7 +211,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
                 85,
             )
 
-        #self.stage_sigs["cam.num_images"] = self.number_exposures # if we do it this way, the dark stage will also set this?
+        # self.stage_sigs["cam.num_images"] = self.number_exposures # if we do it this way, the dark stage will also set this?
         self.cam.num_images.set(self.number_exposures).wait()
         return [self].append(super().stage(*args, **kwargs))
 
@@ -269,14 +274,16 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def cooling_off(self):
         self.cam.enable_cooling.set(0).wait()
+
     #    def setROI(self,):
     #        self.cam.
 
     def set_temp_plan(self, degc):
-        yield from bps.mv(self.cam.temperature,degc,self.cam.enable_cooling,1)
+        yield from bps.mv(self.cam.temperature, degc, self.cam.enable_cooling, 1)
 
     def cooling_off_plan(self):
-        yield from bps.mv(self.cam.enable_cooling,0)
+        yield from bps.mv(self.cam.enable_cooling, 0)
+
     #    def setROI(self,):
     #        self.cam.
 
