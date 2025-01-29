@@ -256,7 +256,7 @@ def pick_locations_from_spirals( ## Intended to be an updated, data-security-com
 ## Imports
 
 from rsoxs_scans.spreadsheets import load_samplesxlsx, save_samplesxlsx
-from rsoxs.alignment2.spiral_scans import pick_locations_from_spirals
+from rsoxs.alignment.spiral_scans import pick_locations_from_spirals
 
 import PyHyperScattering as phs
 print(f'Using PyHyper Version: {phs.__version__}')

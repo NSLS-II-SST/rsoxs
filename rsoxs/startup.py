@@ -62,7 +62,7 @@ RE.md = RedisStatusDict(mdredis, prefix=redis_md_settings.get("prefix", ""))
 md = RE.md
 GLOBAL_USER_STATUS.add_status("USER_MD", RE.md)
 
-redis_config_settings = bl.settings.get("redis").get("config")
+redis_config_settings = bl.settings.get("redis").get("config", {})
 rsoxsredis = redis.Redis(
     redis_config_settings.get("host", "info.sst.nsls2.bnl.gov"),
     port=redis_config_settings.get("port", 60737),
