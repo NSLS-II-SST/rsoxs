@@ -44,7 +44,7 @@ else:
     ns = {}
 if not is_re_worker_active():
     get_ipython().log.setLevel("ERROR")
-db = Broker.named("rsoxs")
+db = Broker.named("rsoxs") ## This can access scan information from Tiled (?)
 # db is defined manually so that configure_base
 # is not called multiple times when starting up
 # Bluesky on the beamline computer.
@@ -59,7 +59,7 @@ mdredis = redis.Redis(
     db=redis_md_settings.get("db", 0),
 )
 RE.md = RedisStatusDict(mdredis, prefix=redis_md_settings.get("prefix", ""))
-md = RE.md
+md = RE.md ## The contents from md are added into the start document for the scan metadata in Tiled.
 GLOBAL_USER_STATUS.add_status("USER_MD", RE.md)
 
 redis_config_settings = bl.settings.get("redis").get("config", {})
