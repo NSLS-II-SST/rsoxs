@@ -3,6 +3,7 @@ from ophyd import EpicsSignal
 
 from nbs_bl.printing import run_report
 from sst_base.motors import PrettyMotorFMBO, PrettyMotor, PrettyMotorDeadbandFlyer, PrettyMotorFMBODeadbandFlyer, PrettyMotorFMBODeadband
+from ophyd.status import SubscriptionStatus
 
 class RetryFlyerMotor(PrettyMotorFMBODeadbandFlyer):
     def __init__(self,*args,retries=5, **kwargs):
@@ -60,7 +61,7 @@ class ShutterWait(EpicsSignal):
 
 run_report(__file__)
 
-
+"""
 sam_viewer = PrettyMotorFMBO(
     "XF:07ID2-ES1{ImgY-Ax:1}Mtr", name="RSoXS Sample Imager", kind="hinted"
 )
@@ -117,6 +118,6 @@ TEMZ = PrettyMotor(
 dm7 = PrettyMotorFMBODeadbandFlyer(
     "XF:07ID2-BI{Diag:07-Ax:Y}Mtr", name="Downstream diagnostic module translation", kind="normal"
 )
-
+"""
 
 
