@@ -20,7 +20,7 @@ from bluesky.plan_stubs import (
 )
 from nbs_bl.hw import (
     Shutter_open_time,
-    #Shutter_control,
+    Shutter_control,
     #Shutter_enable,
     #Shutter_trigger,
     #shutter_open_set
@@ -58,6 +58,7 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
         messages to 'trigger', 'wait' and 'read'
     """
     if shutter is None:
+        print("no shutter")
         return (yield from trigger_and_read(devices))
     _devices = copy.copy(devices)
     _devices = separate_devices(_devices)  # remove redundant entries
@@ -95,7 +96,6 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
             ret.update(reading)
         yield from save()
         return ret
-
     return (yield from rewindable_wrapper(inner_trigger_and_read(),
                                           rewindable))
 
