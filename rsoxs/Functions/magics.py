@@ -3,7 +3,9 @@ from IPython.core.magic import register_line_magic
 import bluesky.plan_stubs as bps
 from IPython.terminal.prompts import Prompts, Token
 import datetime
-from ..HW.motors import (
+from nbs_bl.hw import (
+    en,
+    Exit_Slit,
     sam_Y,
     sam_Th,
     sam_Z,
@@ -17,7 +19,7 @@ from ..HW.motors import (
     Izero_Y,
     sam_viewer,
 )
-from sst_hw.motors import Exit_Slit
+
 from .configurations import all_out
 from ..HW.detectors import (
     set_exposure,
@@ -28,8 +30,8 @@ from ..HW.detectors import (
 )
 from ..Functions.alignment import sample
 from ..startup import RE
-from ..HW.energy import en, set_polarization
-from sst_funcs.printing import run_report, boxed_text
+from ..HW.energy import set_polarization
+from nbs_bl.printing import run_report, boxed_text
 
 
 run_report(__file__)
