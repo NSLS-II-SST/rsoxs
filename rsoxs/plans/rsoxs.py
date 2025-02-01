@@ -37,11 +37,14 @@ def add_to_rsoxs_list(f, key, **plan_info):
     return f
 
 
+
 @add_to_plan_list
 @merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
 def variable_energy_scan(*args, **kwargs):
     yield from bps.mv(Shutter_control, 1)
     yield from finalize_wrapper(plan=nbs_gscan(en.energy, *args, **kwargs), final_plan=post_scan_hardware_reset())
+    ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
+## Use this to run NEXAFS step scans
 
 
 @add_to_plan_list
@@ -68,16 +71,12 @@ def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
     )
     yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
+## Use this to run RSoXS step scans using the 2D detector
 
+## Example of a common use: 
+## RE(rsoxs_step_scan(*(250, 282, 1.45, 297, 0.3, 350, 1.45), dwell=2, n_exposures=1, group_name="Test"))
+## dwell is the exposure time in seconds, n_exposures is the number of repeats
 
-@add_to_plan_list
-@merge_func(nbs_list_scan, use_func_name=False, omit_params=["*args"])
-def energy_step_scan(energies, **kwargs):
-    yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(
-        plan=nbs_list_scan(en.energy, energies, **kwargs), final_plan=post_scan_hardware_reset()
-    )
-    ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 
 
 def post_scan_hardware_reset():

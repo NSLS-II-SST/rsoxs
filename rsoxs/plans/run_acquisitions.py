@@ -18,7 +18,7 @@ def run_acquisitions_single(
 
     print("Running scan: " + str(acquisition["plan_name"]))
     if dryrun == False: 
-        if acquisition["plan_name"] == nexafs_step: yield from variable_energy_scan(acquisition["energy_parameters"])
+        if acquisition["plan_name"] == "nexafs_step": yield from variable_energy_scan(acquisition["energy_parameters"])
     
 
 
