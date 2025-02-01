@@ -15,7 +15,7 @@ from nbs_bl.hw import Shutter_open_time
 from bluesky.utils import Msg, short_uid as _short_uid
 
 
-def trigger_and_read_with_shutter(devices, shutter=None, name="primary"):
+def trigger_and_read_with_shutter(devices, shutter=None, name="primary", lead_detector=None):
     """
     Trigger and read a list of detectors and bundle readings into one Event.
 
@@ -39,7 +39,8 @@ def trigger_and_read_with_shutter(devices, shutter=None, name="primary"):
     name : string, optional
         event stream name, a convenient human-friendly identifier; default
         name is 'primary'
-
+    lead_detector : device, optional
+        Primary detector that controls timing, by default None, and assumes that the first device in the list is the lead detector
     Yields
     ------
     msg : Msg
@@ -49,7 +50,10 @@ def trigger_and_read_with_shutter(devices, shutter=None, name="primary"):
         return (yield from trigger_and_read(devices))
     _devices = copy.copy(devices)
     _devices = separate_devices(_devices)  # remove redundant entries
-    lead_detector = _devices.pop(0)
+    if lead_detector is None:
+        lead_detector = _devices.pop(0)
+    if lead_detector in _devices:
+        _devices.remove(lead_detector)
     rewindable = all_safe_rewind(_devices)  # if devices can be re-triggered
     if lead_detector.cam.acquire_time.get() < 0.75:
         return (yield from trigger_and_read([lead_detector] + devices))
@@ -93,17 +97,40 @@ def trigger_and_read_with_shutter(devices, shutter=None, name="primary"):
     return (yield from rewindable_wrapper(inner_trigger_and_read(), rewindable))
 
 
-def take_exposure_corrected_reading(detectors=None, take_reading=None, shutter=None, check_exposure=False):
-    # this is a replacement of trigger and read, that continues to trigger increasing or decreasing the
-    # explsure time until limits are reached or neither under exposing or over exposing
-    # by default this further wraps the trigger and read into trigger and read with shutter
+def take_exposure_corrected_reading(
+    detectors=None, take_reading=None, shutter=None, check_exposure=False, lead_detector=None
+):
+    """Trigger and read detectors with automatic exposure time correction.
+
+    This is a replacement of trigger and read that will continue to trigger while
+    adjusting exposure time until either limits are reached or proper exposure is achieved.
+    By default this wraps trigger_and_read into trigger_and_read_with_shutter.
+
+    Parameters
+    ----------
+    detectors : list, optional
+        List of detectors to trigger and read
+    take_reading : callable, optional
+        Function to use for triggering and reading. If None, uses trigger_and_read_with_shutter
+    shutter : ophyd.Device, optional
+        Shutter device to control during reading
+    check_exposure : bool, optional
+        Whether to check and correct exposure time, by default False
+    lead_detector : ophyd.Device, optional
+        Primary detector that controls timing, by default None
+
+    Yields
+    ------
+    Msg
+        Bluesky messages for triggering and reading detectors
+    """
 
     if detectors == None:
         detectors = []
     take_reading = (
         take_reading if take_reading else trigger_and_read_with_shutter
     )  ## This line was added such that there are no functions directly inputted into the function heading.
-    yield from take_reading(list(detectors), shutter=shutter)
+    yield from take_reading(list(detectors), shutter=shutter, lead_detector=lead_detector)
     if check_exposure:
         under_exposed = False
         over_exposed = False

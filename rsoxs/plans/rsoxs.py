@@ -61,7 +61,9 @@ def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
     _extra_dets.extend(extra_dets)
     rsoxs_per_step = partial(
         one_nd_sticky_exp_step,
-        take_reading=partial(take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False),
+        take_reading=partial(
+            take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
+        ),
     )
     yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, **kwargs)
     waxs_det.number_exposures = old_n_exp
