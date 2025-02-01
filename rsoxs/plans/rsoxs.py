@@ -46,7 +46,7 @@ def variable_energy_scan(*args, **kwargs):
 
 @add_to_plan_list
 @merge_func(variable_energy_scan, use_func_name=False, omit_params=["per_step"])
-def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
+def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
     """
     Step scanned RSoXS function with WAXS Detector
 
@@ -57,6 +57,7 @@ def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
     """
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
+    yield from bps.abs_set(waxs_det.acquire_time, dwell)
     _extra_dets = [waxs_det]
     _extra_dets.extend(extra_dets)
     rsoxs_per_step = partial(
@@ -65,7 +66,7 @@ def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, **kwargs)
+    yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
 
 
