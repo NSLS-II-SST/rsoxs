@@ -391,8 +391,8 @@ def fly_find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-1
             open_shutter=True,
             peaklist=peaklist,
         )
-        maxlocs.append(peaklist[-1]["WAXS Beamstop"]["RSoXS Sample Up-Down"])
-        yield from bps.mv(sam_Y, peaklist[-1]["WAXS Beamstop"]["RSoXS Sample Up-Down"])
+        maxlocs.append(peaklist[-1]["WAXS Beamstop"]["manipulator_y"])
+        yield from bps.mv(sam_Y, peaklist[-1]["WAXS Beamstop"]["manipulator_y"])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
             yield from bps.mv(Shutter_control, 1)
@@ -407,7 +407,7 @@ def fly_find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-1
                 open_shutter=True,
                 peaklist=peaklist,
             )
-            maxlocs.append(peaklist[-1]["WAXS Beamstop"]["RSoXS Sample Outboard-Inboard"])
+            maxlocs.append(peaklist[-1]["WAXS Beamstop"]["manipulator_x"])
     print(maxlocs)  # [af2y,af2xm90,af2x0,af2x90,af2x180,af1y,af1xm90,af1x0,af1x90,af1x180]
     accept = input(f"Do you want to apply this correction (y,n)?")
     if accept in ["y", "Y", "yes"]:
