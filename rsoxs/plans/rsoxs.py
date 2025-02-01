@@ -57,7 +57,7 @@ def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
     """
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
-    yield from bps.abs_set(waxs_det.acquire_time, dwell)
+    yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
     _extra_dets = [waxs_det]
     _extra_dets.extend(extra_dets)
     rsoxs_per_step = partial(
