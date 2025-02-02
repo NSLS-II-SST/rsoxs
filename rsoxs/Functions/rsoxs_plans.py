@@ -148,10 +148,13 @@ def run_queue_step(step):
     else:
         print(f"\n----- starting queue step {step['queue_step']+1} in acquisition # {step['acq_index']+1}-----\n")
     print(step["description"])
+    """
+    ## Causing issues during early 2025-1 testing, so disabling for now.
     if step["action"] == "diode_low":
         return (yield from High_Gain_diode_i400())
     if step["action"] == "diode_high":
         return (yield from setup_diode_i400())
+    """
     if step["action"] == "load_configuration":
         return (yield from load_configuration(step["kwargs"]["configuration"]))
     if step["action"] == "load_sample":
@@ -170,7 +173,7 @@ def run_queue_step(step):
         return (yield from bps.mv(motors[step["kwargs"]["motor"]], step["kwargs"]["position"]))
         # use the motors look up table above to get the motor object by name
     if step["action"] == "spiral_scan_core":
-        return (yield from spiral_survey(**step["kwargs"])) #return (yield from spiralsearch(**step["kwargs"]))
+        return (yield from spiralsearch(**step["kwargs"])) #return (yield from spiralsearch(**step["kwargs"]))
     if step["action"] == "nexafs_scan_core":
         return (yield from NEXAFS_fly_scan_core(**step["kwargs"]))
     if step["action"] == "nexafs_step_scan_core":
