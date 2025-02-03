@@ -8,7 +8,6 @@ from rsoxs_scans.spreadsheets import save_samplesxlsx, load_samplesxlsx
 from rsoxs_scans.rsoxs import dryrun_rsoxs_plan
 from rsoxs_scans.nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .alignment import load_sample, load_configuration, move_to_location, spiralsearch, rotate_sample
-from rsoxs.alignment.spiral_scans import spiral_survey
 from nbs_bl.hw import (
     tem_tempstage,
 )

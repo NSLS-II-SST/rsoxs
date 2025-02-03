@@ -647,8 +647,8 @@ def tune_pgm(
             open_shutter=True,
             rb_offset=grating_rb_off
         )
-        grating_measured.append(peaklist[0][signal]["Mono Grating"] - grating_rb_off )
-        mirror_measured.append(mirror2.read()["Mono Mirror"]["value"] - mirror_rb_off)
+        grating_measured.append(peaklist[0][signal]["Mono Grating angle"] - grating_rb_off )
+        mirror_measured.append(mirror2.read()["Mono Mirror angle"]["value"] - mirror_rb_off)
         energy_measured.append(291.65)
         m_measured.append(m_order)
     print(f"mirror positions: {mirror_measured}")
