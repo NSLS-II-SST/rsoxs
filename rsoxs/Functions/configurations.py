@@ -34,7 +34,7 @@ bs_waxs_in_pos = 69.6
 
 
 
-# TODO lots of metadata manipulation here, and
+# TODO: Maybe make a larger dictionary or toml file with all of the configurations so that way I can automatically generate a list of these configurations that I can feed into the allowed configurations in rsoxs_scans
 
 
 ## 20250131 - sets exit slit to narrow aperture so don't accidentally forget

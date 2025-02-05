@@ -1,3 +1,5 @@
+## TODO: would like to change the name of this file to scans.py, but when I change the name and propagate everywhere, I still run into an error ModuleNotFoundError: No module named "rsoxs.plans.rsoxs"
+
 import bluesky.plan_stubs as bps
 from bluesky.preprocessors import finalize_wrapper
 from functools import partial
@@ -17,6 +19,7 @@ from nbs_bl.queueserver import GLOBAL_USER_STATUS
 from nbs_bl.help import _add_to_import_list, add_to_plan_list, add_to_func_list
 
 from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step
+from .mdConstructor import mdToUpdateConstructor
 
 try:
     import tomllib
@@ -42,9 +45,14 @@ def add_to_rsoxs_list(f, key, **plan_info):
 @add_to_plan_list
 @merge_func(nbs_count, use_func_name=False, omit_params=["*"])
 def timeScan(*args, **kwargs):
+    
+    md_ToUpdate = mdToUpdateConstructor(extraMD={
+        "scanType": "timeScan"
+    })
+
     yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(plan=nbs_count(*args, **kwargs), final_plan=post_scan_hardware_reset())
-    ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
+    yield from finalize_wrapper(plan=nbs_count(md=md_ToUpdate, *args, **kwargs), final_plan=post_scan_hardware_reset())
+## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Use this to run counting scans
 ## Example use:
 ## RE(timeScan(num=10, delay=0, dwell=2))

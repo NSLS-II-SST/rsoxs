@@ -10,7 +10,7 @@ from rsoxs_scans.defaultParameters import *
 def sanitizeAcquisition(
        acquisition 
 ):
-    ## TODO: some of this sanitizaiton should happen while importing the spreadsheet
+    ## TODO: some of this sanitizaiton should happen while importing the spreadsheet.  But the same sanitization should apply even if I were to feed in a dictionary directly into bsui.
 
     if isinstance(acquisition["energyListParameters"], str): acquisition["energyListParameters"] = energyListParameters[acquisition["energyListParameters"]]
 
