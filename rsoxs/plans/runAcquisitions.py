@@ -4,7 +4,7 @@ from rsoxs.Functions.alignment import load_configuration, load_samp, rotate_now
 from rsoxs.HW.energy import set_polarization
 from rsoxs.plans.rsoxs import timeScan, spiralScan, energyScan, energyScan_with2DDetector
 from rsoxs.HW.detectors import snapshot
-from rsoxs_scans.defaultParameters import *
+from rsoxs_scans.defaultEnergyParameters import *
 
 
 def sanitizeAcquisition(
