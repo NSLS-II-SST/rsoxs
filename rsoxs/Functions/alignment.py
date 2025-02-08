@@ -45,7 +45,7 @@ from .common_functions import args_to_string
 from .configurations import (
     WAXSNEXAFS,
     WAXS,
-    SAXS,
+    #SAXS,
     SAXSNEXAFS,
     SAXS_liquid,
     WAXS_liquid,

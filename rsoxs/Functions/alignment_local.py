@@ -46,6 +46,8 @@ def list_samples(bar=None):
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
         text += "\n {} {}".format(index, sample["sample_name"])
+        """
+        ## PK: commenting this out because I have changed acquisition parameters
         acqs = bar[index]["acquisitions"]
         for acq in acqs:
             text += "\n   {} of {} in {} config, priority {}".format(
@@ -54,6 +56,7 @@ def list_samples(bar=None):
                 acq["configuration"],
                 acq["priority"],
             )
+        """
     boxed_text("Samples on bar", text, "lightblue", shrink=False)
 
 

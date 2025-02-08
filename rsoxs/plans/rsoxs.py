@@ -45,7 +45,15 @@ def add_to_rsoxs_list(f, key, **plan_info):
 @add_to_plan_list
 @merge_func(nbs_count, use_func_name=False, omit_params=["*"])
 def timeScan(*args, **kwargs):
-    
+    """
+    Counting scans intended to measure variations in signals over time while no motors are being moved.
+
+    Parameters
+    ----------
+    num : int, optional
+        Number of datapoints to collect
+    """
+
     md_ToUpdate = mdToUpdateConstructor(extraMD={
         "scanType": "timeScan"
     })
@@ -53,7 +61,6 @@ def timeScan(*args, **kwargs):
     yield from bps.mv(Shutter_control, 1)
     yield from finalize_wrapper(plan=nbs_count(md=md_ToUpdate, *args, **kwargs), final_plan=post_scan_hardware_reset())
 ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
-## Use this to run counting scans
 ## Example use:
 ## RE(timeScan(num=10, delay=0, dwell=2))
 ## num is number of data points,delay is time between datapoints, dwell is exposure time per point
@@ -63,14 +70,12 @@ def timeScan(*args, **kwargs):
 @add_to_plan_list
 @merge_func(timeScan, use_func_name=False) 
 def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
-    """
-    Step scanned RSoXS function with WAXS Detector
+    
 
-    Parameters
-    ----------
-    n_exposures : int, optional
-        If greater than 1, take multiple exposures per step
-    """
+    md_ToUpdate = mdToUpdateConstructor(extraMD={
+        "scanType": "timeScan"
+    })
+
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
     yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
@@ -82,7 +87,7 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from timeScan(*args, extra_dets=_extra_dets, per_shot=rsoxs_per_step, dwell=dwell, **kwargs)
+    yield from timeScan(md=md_ToUpdate, *args, extra_dets=_extra_dets, per_shot=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 
@@ -92,15 +97,23 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
 @add_to_plan_list
 @merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
 def energyScan(*args, **kwargs):
+    
+    ## TODO: allow function to take in string for energyListParameters and then translate string into tuple using default energy parameters list
+
+    md_ToUpdate = mdToUpdateConstructor(extraMD={
+        "scanType": "nexafs"
+    })
+    
     yield from bps.mv(Shutter_control, 1)
     yield from finalize_wrapper(plan=nbs_gscan(en.energy, *args, **kwargs), final_plan=post_scan_hardware_reset())
     ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Use this to run NEXAFS step scans
+## TODO: add the ability to run the scan up then down that list of energies.  Lucas would want that, and it would provide a good sanity check in many cases.
 
 
 @add_to_plan_list
 @merge_func(energyScan, use_func_name=False, omit_params=["per_step"]) ## TODO: Is per_step actually supposed to be omitted?  It ends up being used in the energy scan.  Is that the cause of the camera artifacts?
-def energyScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
+def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
     """
     Count scanned RSoXS function with WAXS Detector
 
@@ -109,6 +122,11 @@ def energyScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
     n_exposures : int, optional
         If greater than 1, take multiple exposures per step
     """
+
+    md_ToUpdate = mdToUpdateConstructor(extraMD={
+        "scanType": "rsoxs_step"
+    })
+
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
     yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
@@ -120,7 +138,7 @@ def energyScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from energyScan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
+    yield from energyScan(md=md_ToUpdate, *args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 
@@ -131,8 +149,12 @@ def energyScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
 
 @add_to_plan_list
 @merge_func(nbs_spiral_square, use_func_name=False, omit_params=["*"])
-def spiralScan(*args, extra_dets=[], diameter=1.8, stepsize=0.3, dwell=1, n_exposures=1, energy=270, polarization=0, **kwargs):
+def spiralScan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwell=1, n_exposures=1, energy=270, polarization=0, **kwargs):
     
+    md_ToUpdate = mdToUpdateConstructor(extraMD={
+        "scanType": "spiralScan"
+    })
+
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
     yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
@@ -150,14 +172,15 @@ def spiralScan(*args, extra_dets=[], diameter=1.8, stepsize=0.3, dwell=1, n_expo
                                                         y_motor = sam_Y,
                                                         x_center = sam_X.user_setpoint.get(),
                                                         y_center = sam_Y.user_setpoint.get(),
-                                                        x_range = diameter,
-                                                        y_range = diameter,
-                                                        x_num = round(diameter/stepsize) + 1,
-                                                        y_num = round(diameter/stepsize) + 1,
+                                                        x_range = widthX,
+                                                        y_range = widthY,
+                                                        x_num = round(widthX/stepsize) + 1,
+                                                        y_num = round(widthY/stepsize) + 1,
                                                         per_step = rsoxs_per_step,
                                                         extra_dets = _extra_dets,
                                                         energy=energy,
-                                                        polarization=polarization
+                                                        polarization=polarization,
+                                                        md=md_ToUpdate, 
                                                         ), 
                                 final_plan=post_scan_hardware_reset())
 ## spiral scans for to find good spot on sample
@@ -245,3 +268,7 @@ def load_rsoxs(filename):
 
     # Return the generated plans dictionary in case it's needed
     return generated_plans
+
+
+
+## <functionName>? prints out the source code in Bluesky

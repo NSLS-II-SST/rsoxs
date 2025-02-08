@@ -37,6 +37,22 @@ bs_waxs_in_pos = 69.6
 # TODO: Maybe make a larger dictionary or toml file with all of the configurations so that way I can automatically generate a list of these configurations that I can feed into the allowed configurations in rsoxs_scans
 
 
+## Save mirror alignment here, TODO: need to update
+## TODO: have it print positions?  Could be a separate function and then cna just call it here
+def mirrorConfiguration_RSoXS():# TODO positions names are all lowercase now
+    yield from bps.mv(mir3.Pitch, 8.04)
+    yield from bps.sleep(3)
+    yield from bps.mv(mir3.X, 27.9)
+    yield from bps.sleep(3)
+    yield from bps.mv(mir3.Y, 18.00)
+    yield from bps.sleep(3)
+    yield from bps.mv(mir3.Z, 0)
+    yield from bps.sleep(3)
+    yield from bps.mv(mir3.Roll, 0)
+    yield from bps.sleep(3)
+    yield from bps.mv(mir3.Yaw, 1)
+    yield from bps.sleep(3)
+
 ## 20250131 - sets exit slit to narrow aperture so don't accidentally forget
 ## Also moves I0 out of the way so that scattering from the mesh is not seen
 def WAXS_OpenBeamImages():
@@ -230,19 +246,7 @@ def slits_in_WAXS():
 
 #TODO do we want these functions anymore?
 
-def mirror3_NEXAFSpos():# TODO positions names are all lowercase now
-    yield from bps.mv(mir3.Pitch, 8.04)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.X, 27.9)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Y, 18.00)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Z, 0)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Roll, 0)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Yaw, 1)
-    yield from bps.sleep(3)
+
 
 
 def mirror_pos_NEXAFS():# TODO positions names are all lowercase now
@@ -314,42 +318,7 @@ def mirror1_NEXAFSpos():
 
 
 
-def SAXS():
-    return [
-        [
-            {"motor": TEMZ, "position": 1, "order": 0},
-            {"motor": slits1.vsize, "position": 0.02, "order": 0},
-            {"motor": slits1.vcenter, "position": -0.55, "order": 0},
-            {"motor": slits1.hsize, "position": 0.04, "order": 0},
-            {"motor": slits1.hcenter, "position": -0.18, "order": 0},
-            {"motor": slits2.vsize, "position":  0.21, "order": 0},
-            {"motor": slits2.vcenter, "position": -0.873, "order": 0},
-            {"motor": slits2.hsize, "position": 0.4, "order": 0},
-            {"motor": slits2.hcenter, "position": -0.1, "order": 0},
-            {"motor": slits3.vsize, "position": 1, "order": 0},
-            {"motor": slits3.vcenter, "position": -0.45, "order": 0},
-            {"motor": slits3.hsize, "position": 1, "order": 0},
-            {"motor": slits3.hcenter, "position": 0.15, "order": 0},
-            {"motor": Shutter_Y, "position": 2.2, "order": 0},
-            {"motor": Izero_Y, "position": -31, "order": 0},
-            {"motor": Det_W, "position":waxs_out_pos, "order": 0},
-            # {"motor": Det_S, "position": -15, "order": 0},
-            {"motor": BeamStopS, "position": 68, "order": 0},
-            {"motor": BeamStopW, "position": 3, "order": 1},
-            {"motor": Exit_Slit, "position": -3.05, "order": 2},
-        ],
-        {
-            "RSoXS_Config": "SAXS",
-            "RSoXS_Main_DET": "SAXS",
-            "SAXS_Mask": [(473, 472), (510, 471), (515, 1024), (476, 1024)],
-            "RSoXS_WAXS_SDD": None,
-            "RSoXS_WAXS_BCX": None,
-            "RSoXS_WAXS_BCY": None,
-            "RSoXS_SAXS_SDD": 516,
-            "RSoXS_SAXS_BCX": 493.4,
-            "RSoXS_SAXS_BCY": 514.4,
-        },
-    ]
+
 
 
 def SAXSNEXAFS():
