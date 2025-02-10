@@ -10,7 +10,7 @@ from ..startup import rsoxs_config
 from nbs_bl.hw import (
     en,
 )
-from rsoxs_scans.configurationLoadSaveSanitize.py import (
+from rsoxs_scans.configurationLoadSaveSanitize import (
     gatherAcquisitionsFromConfiguration, 
     sanitizeAcquisition, 
     sortAcquisitionsQueue,
@@ -32,7 +32,7 @@ def runAcquisitions_Queue(
     ## TODO: Not sure if I need to sanitize again here, but might be safer
     ## TODO: Can only sort by "priority" at the moment, not by anything else
     queue = sortAcquisitionsQueue(acquisitions, sortBy=sortBy) 
-
+    
     print("Starting queue")
 
     for indexAcquisition, acquisition in enumerate(queue):
@@ -42,16 +42,7 @@ def runAcquisitions_Queue(
 
     ## TODO: get time estimates for individual acquisitions and the full queue.  Import datetime and can print timestamps for when things actually completed.
 
-"""
-def sanitizeAcquisition(
-       acquisition 
-):
-    ## TODO: some of this sanitizaiton should happen while importing the spreadsheet.  But the same sanitization should apply even if I were to feed in a dictionary directly into bsui.
 
-    if isinstance(acquisition["energyListParameters"], str): acquisition["energyListParameters"] = energyListParameters[acquisition["energyListParameters"]]
-
-    return acquisition
-"""
 
 def runAcquisitions_Single(
         acquisition,
@@ -62,7 +53,7 @@ def runAcquisitions_Single(
     acquisition = sanitizeAcquisition(acquisition) ## This would be run before if a spreadsheet were loaded, but now it will ensure the acquisition is sanitized in case the acquisition is run in the terminal
     
     parameter = "configurationInstrument"
-    if not np.isnan(acquisition[parameter]):
+    if acquisition[parameter] is not None:
         print("\n\n Loading instrument configuration: " + str(acquisition[parameter]))
         if dryrun == False: yield from load_configuration(acquisition[parameter])
 
@@ -70,25 +61,27 @@ def runAcquisitions_Single(
     ## But there are issues at the moment with setup_diode_i400() and most people don't use this, so leave it for now
 
     parameter = "sample_id"
-    if not np.isnan(acquisition[parameter]):
+    if acquisition[parameter] is not None:
         print("Loading sample: " + str(acquisition[parameter]))
+        ## TODO: comment when I don't have beam
         if dryrun == False: yield from load_samp(acquisition[parameter]) ## TODO: what is the difference between load_sample (loads from dict) and load_samp(loads from id or number)?  Can they be consolidated?
 
     ## TODO: set temperature if needed, but this is lowest priority
 
     for indexAngle, sampleAngle in enumerate(acquisition["sampleAngles"]):
         print("Rotating to angle: " + str(sampleAngle))
+        ## TODO: Requires spots to be picked from image, so I have to comment when I don't have beam
         if dryrun == False: yield from rotate_now(sampleAngle) ## TODO: What is the difference between rotate_sample and rotate_now?
         
         ## Handle scans without energy variation
         if acquisition["scanType"] == ("time" or "spiral"):
             ## If a timeScan or spiral is being run when I don't have beam (during shutdown or when another station is using beam), I don't want to make any changes to the energy or polarization
             ## This assumes I only have one polarization or energy listed for a timeScan.  If I had more, makes sense to run NEXAFS scan instead.
-            if not np.isnan(acquisition["polarizations"]):
+            if acquisition["polarizations"] is not None:
                 polarization = acquisition["polarizations"][0]
                 print("Setting polarization: " + str(polarization))
                 if dryrun == False: yield from set_polarization(polarization)
-            if not np.isnan(acquisition["energyListParameters"]):
+            if acquisition["energyListParameters"] is not None:
                 energy = acquisition["energyListParameters"]
                 print("Setting energy: " + str(energy))
                 if dryrun == False: yield from bps.mv(en, energy)
@@ -98,7 +91,7 @@ def runAcquisitions_Single(
                 rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
                 if acquisition["scanType"] == "time":
                     yield from timeScan(
-                        n_exposures=acquisition["exposuresPerEnergy"], 
+                        num=acquisition["exposuresPerEnergy"], 
                         dwell=acquisition["exposureTime"]
                         )
                 if acquisition["scanType"] == "spiral": 
@@ -111,7 +104,6 @@ def runAcquisitions_Single(
                         )
                 acquisition["acquireStatus"] = "Finished"
                 rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
-        
         if acquisition["scanType"] == ("nexafs" or "rsoxs"):
             for indexPolarization, polarization in enumerate(acquisition["polarizations"]):
                 print("Setting polarization: " + str(polarization))
