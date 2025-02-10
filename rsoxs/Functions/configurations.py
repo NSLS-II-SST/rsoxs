@@ -39,19 +39,37 @@ bs_waxs_in_pos = 69.6
 
 ## Save mirror alignment here, TODO: need to update positions
 ## TODO: have it print positions?  Could be a separate function and then cna just call it here
-def mirrorConfiguration_RSoXS():# TODO positions names are all lowercase now
-    yield from bps.mv(mir3.Pitch, 8.04)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.X, 27.9)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Y, 18.00)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Z, 0)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Roll, 0)
-    yield from bps.sleep(3)
-    yield from bps.mv(mir3.Yaw, 1)
-    yield from bps.sleep(3)
+def viewMirrorConfiguration():
+    print(mir1.x.read())
+    print(mir1.y.read())
+    print(mir1.z.read())
+    print(mir1.pitch.read())
+    print(mir1.roll.read())
+    print(mir1.yaw.read())
+
+    print(mir3.x.read())
+    print(mir3.y.read())
+    print(mir3.z.read())
+    print(mir3.pitch.read())
+    print(mir3.roll.read())
+    print(mir3.yaw.read())
+
+def mirrorConfiguration_RSoXS():
+    yield from bps.mv(mir1.x, -0.55)
+    yield from bps.mv(mir1.y, -18)
+    yield from bps.mv(mir1.z, 0)
+    yield from bps.mv(mir1.pitch, 0.45)
+    yield from bps.mv(mir1.roll, 0)
+    yield from bps.mv(mir1.yaw, 0)
+
+    yield from bps.mv(mir3.x, 22.1)
+    yield from bps.mv(mir3.y, 18)
+    yield from bps.mv(mir3.z, 0)
+    yield from bps.mv(mir3.pitch, 7.93)
+    yield from bps.mv(mir3.roll, 0)
+    yield from bps.mv(mir3.yaw, 0)
+
+
 
 ## Intended to allow me to run test scans when I don't have beam
 def allRetracted():

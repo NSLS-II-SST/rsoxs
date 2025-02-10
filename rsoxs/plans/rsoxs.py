@@ -106,7 +106,7 @@ def energyScan(energyParameters, *args, **kwargs):
     })
     
     yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *energyParameters, *args, **kwargs), final_plan=post_scan_hardware_reset())
+    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *energyParameters, md=md_ToUpdate, *args, **kwargs), final_plan=post_scan_hardware_reset())
     ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Use this to run NEXAFS step scans
 ## TODO: add the ability to run the scan up then down that list of energies.  Lucas would want that, and it would provide a good sanity check in many cases.
@@ -163,6 +163,7 @@ def spiralScan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwell
     _extra_dets.extend(extra_dets)
     rsoxs_per_step = partial(
         one_nd_sticky_exp_step,
+        #remember={},
         take_reading=partial(
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),

@@ -1,11 +1,12 @@
 
+import copy
 from rsoxs_scans.configurationLoadSaveSanitize import loadConfigurationSpreadsheet_Local, saveConfigurationSpreadsheet_Local
 from ..startup import rsoxs_config
 
 
 def loadSheet(filePath):
     configuration = loadConfigurationSpreadsheet_Local(filePath)
-    rsoxs_config["bar"] = configuration
+    rsoxs_config["bar"] = copy.deepcopy(configuration)
     print("Replaced persistent configuration with configuration loaded from file path: " + str(filePath))
     return
 
