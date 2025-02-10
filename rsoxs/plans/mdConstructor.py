@@ -16,5 +16,6 @@ def mdToUpdateConstructor(extraMD={}):
     if "energyScan" in md_ToUpdate["scanType"]: md_ToUpdate["plan_name"] = md_ToUpdate["scanType"]
     else: md_ToUpdate["plan_name"] = md_ToUpdate["scanType"]
 
+    ## TODO: probably want to completely redefine RE.md so that it is pulling from rsoxs_config because it was not automatically updating.
 
     return md_ToUpdate

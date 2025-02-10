@@ -7,28 +7,37 @@ from rsoxs.HW.energy import set_polarization
 from rsoxs.plans.rsoxs import timeScan, spiralScan, energyScan, energyScan_with2DDetector
 from rsoxs.HW.detectors import snapshot
 from ..startup import rsoxs_config
-from rsoxs_scans.configurationLoadSaveSanitize.py import gatherAcquisitionsFromConfiguration, sanitizeAcquisition
+from nbs_bl.hw import (
+    en,
+)
+from rsoxs_scans.configurationLoadSaveSanitize.py import (
+    gatherAcquisitionsFromConfiguration, 
+    sanitizeAcquisition, 
+    sortAcquisitionsQueue,
+    updateConfigurationWithAcquisition,
+)
 from rsoxs_scans.defaultEnergyParameters import *
+
+import bluesky.plan_stubs as bps
 
 
 
 def runAcquisitions_Queue(
-        configuration = rsoxs_config["bar"], ## List of acquisition dictionaries
+        configuration = rsoxs_config["bar"],
         dryrun = True,
-        sortBy = {}
+        sortBy = ["priority"], ## TODO: Not sure yet how to give it a list of groups in a particular order.  Maybe a list within a list.
         ):
     ## Run a series of single acquisitions
 
     acquisitions = gatherAcquisitionsFromConfiguration(configuration)
     ## TODO: Not sure if I need to sanitize again here, but might be safer
-    queue = acquisitions ## TODO: not ready yet, but make a function in rsoxs_local for sorting by priority, group, configuration, etc.
-    
+    ## TODO: Can only sort by "priority" at the moment, not by anything else
+    queue = sortAcquisitionsQueue(acquisitions, sortBy=sortBy) 
+
     print("Starting queue")
 
     for indexAcquisition, acquisition in enumerate(queue):
         yield from runAcquisitions_Single(acquisition=acquisition, dryrun=dryrun)
-        queue[indexAcquisition]["acquireStatus"] = "Finished"
-        ## TODO: Save updated status in rsoxs_config so that when I save sheet, these statuses get saved
 
     print("\n\nFinished queue")
 
@@ -49,9 +58,10 @@ def runAcquisitions_Single(
         acquisition,
         dryrun = True
 ):
-    
+    ## The acquisition is sanitized again in case it were not run from a spreadsheet
+    ## But for now, still requires that a full configuration be set up for the sample
     acquisition = sanitizeAcquisition(acquisition) ## This would be run before if a spreadsheet were loaded, but now it will ensure the acquisition is sanitized in case the acquisition is run in the terminal
-
+    
     parameter = "configurationInstrument"
     if not np.isnan(acquisition[parameter]):
         print("\n\n Loading instrument configuration: " + str(acquisition[parameter]))
@@ -79,10 +89,14 @@ def runAcquisitions_Single(
                 polarization = acquisition["polarizations"][0]
                 print("Setting polarization: " + str(polarization))
                 if dryrun == False: yield from set_polarization(polarization)
-            ## TODO: do the same for energy
+            if not np.isnan(acquisition["energyListParameters"]):
+                energy = acquisition["energyListParameters"]
+                print("Setting energy: " + str(energy))
+                if dryrun == False: yield from bps.mv(en, energy)
             print("Running scan: " + str(acquisition["scanType"]))
-            acquisition["acquireStatus"] = "Started"
             if dryrun == False:
+                acquisition["acquireStatus"] = "Started" ## Add timestamp
+                rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
                 if acquisition["scanType"] == "time":
                     yield from timeScan(
                         n_exposures=acquisition["exposuresPerEnergy"], 
@@ -96,6 +110,8 @@ def runAcquisitions_Single(
                         n_exposures=acquisition["exposuresPerEnergy"], 
                         dwell=acquisition["exposureTime"]
                         )
+                acquisition["acquireStatus"] = "Finished"
+                rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
         
         if acquisition["scanType"] == ("nexafs" or "rsoxs"):
             for indexPolarization, polarization in enumerate(acquisition["polarizations"]):
@@ -105,6 +121,7 @@ def runAcquisitions_Single(
                 
                 print("Running scan: " + str(acquisition["scanType"]) + " with " + str(acquisition["energyListParameters"]) + " energy list")
                 acquisition["acquireStatus"] = "Started"
+                rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
                 if dryrun == False: 
                     ## TODO: there might be a way to gather the majority of these parameters into a list and feed them in that way?
                     if acquisition["scanType"] == "nexafs": 
@@ -126,8 +143,8 @@ def runAcquisitions_Single(
                             group_name=acquisition["groupName"]
                             )
 
-                    
-                    ## TODO: Mark scan as done in spreadsheet
+                    acquisition["acquireStatus"] = "Finished"
+                    rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
                     ## TODO: Save a log of timestamps, maybe in the config and then save in the spreadsheet
 
 
