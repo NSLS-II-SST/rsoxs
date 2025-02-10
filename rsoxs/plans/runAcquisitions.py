@@ -16,7 +16,6 @@ from rsoxs_scans.configurationLoadSaveSanitize.py import (
     sortAcquisitionsQueue,
     updateConfigurationWithAcquisition,
 )
-from rsoxs_scans.defaultEnergyParameters import *
 
 import bluesky.plan_stubs as bps
 
@@ -126,7 +125,7 @@ def runAcquisitions_Single(
                     ## TODO: there might be a way to gather the majority of these parameters into a list and feed them in that way?
                     if acquisition["scanType"] == "nexafs": 
                         yield from energyScan(
-                            *acquisition["energyListParameters"], 
+                            energyParameters=acquisition["energyListParameters"], 
                             dwell=acquisition["exposureTime"], 
                             group_name=acquisition["groupName"]
                             )
@@ -137,7 +136,7 @@ def runAcquisitions_Single(
                         yield from snapshot(secs=acquisition["exposureTime"])
 
                         yield from energyScan_with2DDetector(
-                            *acquisition["energyListParameters"], 
+                            energyParameters=acquisition["energyListParameters"], 
                             dwell=acquisition["exposureTime"], 
                             n_exposures=acquisition["exposuresPerEnergy"], 
                             group_name=acquisition["groupName"]

@@ -18,6 +18,7 @@ from nbs_bl.utils import merge_func
 from nbs_bl.queueserver import GLOBAL_USER_STATUS
 from nbs_bl.help import _add_to_import_list, add_to_plan_list, add_to_func_list
 
+from rsoxs_scans.defaultEnergyParameters import energyListParameters
 from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step
 from .mdConstructor import mdToUpdateConstructor
 
@@ -96,16 +97,16 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
 
 @add_to_plan_list
 @merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
-def energyScan(*args, **kwargs):
+def energyScan(energyParameters, *args, **kwargs):
     
-    ## TODO: allow function to take in string for energyListParameters and then translate string into tuple using default energy parameters list
+    if isinstance(energyParameters, str): energyParameters = energyListParameters[energyParameters]
 
     md_ToUpdate = mdToUpdateConstructor(extraMD={
         "scanType": "nexafs"
     })
     
     yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *args, **kwargs), final_plan=post_scan_hardware_reset())
+    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *energyParameters, *args, **kwargs), final_plan=post_scan_hardware_reset())
     ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Use this to run NEXAFS step scans
 ## TODO: add the ability to run the scan up then down that list of energies.  Lucas would want that, and it would provide a good sanity check in many cases.
