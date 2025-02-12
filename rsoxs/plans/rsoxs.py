@@ -97,12 +97,12 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
 
 @add_to_plan_list
 @merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
-def energyScan(energyParameters, *args, **kwargs):
+def energyScan(energyParameters, *args, scanType="nexafs", **kwargs):
     
     if isinstance(energyParameters, str): energyParameters = energyListParameters[energyParameters]
 
     md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "nexafs"
+        "scanType": scanType
     })
     
     yield from bps.mv(Shutter_control, 1)
@@ -124,9 +124,6 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
         If greater than 1, take multiple exposures per step
     """
 
-    md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "rsoxs_step"
-    })
 
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
@@ -139,7 +136,7 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from energyScan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, md=md_ToUpdate, **kwargs)
+    yield from energyScan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 
