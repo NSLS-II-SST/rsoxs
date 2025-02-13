@@ -71,24 +71,19 @@ def mirrorConfiguration_RSoXS():
 
 
 
-## Intended to allow me to run test scans when I don't have beam
-def allRetracted():
+## Intended to allow me to run test scans when I don't have beam.  Does not move any hardware that could interfere with others' experiments.
+def noBeam():
     return [
         [
-            {"motor": TEMZ, "position": 1, "order": 0},
             {"motor": slits1.vsize, "position": 10, "order": 0},
             {"motor": slits1.hsize, "position": 10, "order": 0},
             {"motor": slits2.vsize, "position":  10, "order": 0},
             {"motor": slits2.hsize, "position": 10, "order": 0},
             {"motor": slits3.vsize, "position": 10, "order": 0},
             {"motor": slits3.hsize, "position": 10, "order": 0},
-            {"motor": Shutter_Y, "position": 44, "order": 0},
-            {"motor": Izero_Y, "position": 144, "order": 0},
-            {"motor": Det_W, "position": waxs_out_pos, "order": 1},
-            {"motor": BeamStopW, "position": 3, "order": 1},
         ],
         {
-            "RSoXS_Config": "allRetracted",
+            "RSoXS_Config": "noBeam",
             "RSoXS_Main_DET": "WAXS",
             "RSoXS_WAXS_SDD": 39.19,
             "RSoXS_WAXS_BCX": 467.5,

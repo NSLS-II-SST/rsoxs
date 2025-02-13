@@ -60,7 +60,7 @@ def timeScan(*args, **kwargs):
     })
 
     yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(plan=nbs_count(md=md_ToUpdate, *args, **kwargs), final_plan=post_scan_hardware_reset())
+    yield from finalize_wrapper(plan=nbs_count(*args, **kwargs, md=md_ToUpdate), final_plan=post_scan_hardware_reset())
 ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Example use:
 ## RE(timeScan(num=10, delay=0, dwell=2))
@@ -88,7 +88,7 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from timeScan(md=md_ToUpdate, *args, extra_dets=_extra_dets, per_shot=rsoxs_per_step, dwell=dwell, **kwargs)
+    yield from timeScan(*args, extra_dets=_extra_dets, per_shot=rsoxs_per_step, dwell=dwell, md=md_ToUpdate, **kwargs)
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 
@@ -97,16 +97,16 @@ def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwar
 
 @add_to_plan_list
 @merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
-def energyScan(energyParameters, *args, **kwargs):
+def energyScan(energyParameters, *args, scanType="nexafs", **kwargs):
     
     if isinstance(energyParameters, str): energyParameters = energyListParameters[energyParameters]
 
     md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "nexafs"
+        "scanType": scanType
     })
     
     yield from bps.mv(Shutter_control, 1)
-    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *energyParameters, md=md_ToUpdate, *args, **kwargs), final_plan=post_scan_hardware_reset())
+    yield from finalize_wrapper(plan=nbs_gscan(en.energy, *energyParameters, *args, md=md_ToUpdate, **kwargs), final_plan=post_scan_hardware_reset())
     ## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
 ## Use this to run NEXAFS step scans
 ## TODO: add the ability to run the scan up then down that list of energies.  Lucas would want that, and it would provide a good sanity check in many cases.
@@ -124,9 +124,6 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
         If greater than 1, take multiple exposures per step
     """
 
-    md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "rsoxs_step"
-    })
 
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
@@ -139,7 +136,7 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
             take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
         ),
     )
-    yield from energyScan(md=md_ToUpdate, *args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
+    yield from energyScan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 

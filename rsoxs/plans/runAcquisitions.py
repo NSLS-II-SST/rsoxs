@@ -120,7 +120,8 @@ def runAcquisitions_Single(
                         yield from energyScan(
                             energyParameters=acquisition["energyListParameters"], 
                             dwell=acquisition["exposureTime"], 
-                            group_name=acquisition["groupName"]
+                            group_name=acquisition["groupName"],
+                            scanType="nexafs"
                             )
                     
                     if acquisition["scanType"] == "rsoxs": 
@@ -132,7 +133,8 @@ def runAcquisitions_Single(
                             energyParameters=acquisition["energyListParameters"], 
                             dwell=acquisition["exposureTime"], 
                             n_exposures=acquisition["exposuresPerEnergy"], 
-                            group_name=acquisition["groupName"]
+                            group_name=acquisition["groupName"],
+                            scanType="rsoxs"
                             )
 
                     acquisition["acquireStatus"] = "Finished"

@@ -229,7 +229,7 @@ def load_configuration(config, sim_mode=False):
     if sim_mode:
         return f"moved to {config} configuration"
     yield from move_to_location(get_location_from_config(config))
-    RE.md.update(get_md_from_config(config))
+    RE.md.update(get_md_from_config(config)) ## This is where contents from rsoxs_config["bar"] are getting put into RE.md.
 
 
 def get_sample_dict(acq=[], locations=None):
