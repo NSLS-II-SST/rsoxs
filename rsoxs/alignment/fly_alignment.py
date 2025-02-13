@@ -15,6 +15,7 @@ def rsoxs_fly_max(
     range_ratio=10,
     open_shutter=True,
     snake=False,
+    peaklist=[], ## PK: adding to match Eliot's code
     end_on_max=True,
     md=None,
     rb_offset=0,
@@ -139,4 +140,5 @@ def rsoxs_fly_max(
     if end_on_max:
         yield from bps.mv(motor, signal_dict[max_channel[0]][motor_signal] - rb_offset)
     # bec.disable_plots
+    peaklist.append(signal_dict) ## PK: adding to match Eliot's code
     return signal_dict
