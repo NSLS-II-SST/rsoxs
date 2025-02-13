@@ -29,7 +29,7 @@ waxs_det = RSOXSGreatEyesDetector(
    name="Wide Angle CCD Detector",
    read_attrs=['tiff', 'stats1.total', 'saturated','under_exposed','cam'],
 )
-"""
+
 waxs_det.cam.read_attrs = ["acquire_time"]
 waxs_det.transform_type = 1
 waxs_det.cam.ensure_nonblocking()
@@ -37,7 +37,7 @@ waxs_det.setup_cam()
 
 # saxs_det.stats1.name = "SAXS fullframe"
 waxs_det.stats1.name = "WAXS fullframe"
-
+"""
 
 # to simulate, use this line, and comment out the relevent detector above
 # saxs_det = SimGreatEyes(name="Simulated SAXS camera")

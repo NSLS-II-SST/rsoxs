@@ -1,10 +1,11 @@
-from nbs_bl.plans.flyscan_base import fly_scan
+from nbs_bl.plans.maximizers import fly_max
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
 from nbs_bl.hw import Shutter_control, Shutter_enable
+import numpy as np
 
 
-def fly_max(
+def rsoxs_fly_max(
     detectors,
     motor,
     start,
@@ -14,10 +15,8 @@ def fly_max(
     range_ratio=10,
     open_shutter=True,
     snake=False,
-    time_offsets=time_offset_defaults,
     end_on_max=True,
     md=None,
-    motor_signal=None,
     rb_offset=0,
     **kwargs,
 ):
@@ -95,7 +94,7 @@ def fly_max(
         pass
     else:
         _md["hints"].setdefault("dimensions", dimensions)
-
+    motor_signal = motor.name
     max_val = max((start, stop))
     min_val = min((start, stop))
     direction = 1
@@ -111,13 +110,21 @@ def fly_max(
         if open_shutter:
             yield from bps.mv(Shutter_enable, 0)
             yield from bps.mv(Shutter_control, 1)
-        yield from finalize_wrapper(
-            fly_scan(detectors, motor, start, stop, velocity, md=_md, **kwargs), _cleanup()
+        signal_dict = yield from finalize_wrapper(
+            fly_max(
+                detectors,
+                motor,
+                start,
+                stop,
+                velocity,
+                md=_md,
+                max_channel=max_channel,
+                end_on_max=False,
+                **kwargs,
+            ),
+            _cleanup(),
         )
-        yield from bps.sleep(5)
-        signal_dict = find_optimum_motor_pos(
-            db, -1, motor_name=motor_signal, signal_names=max_channel, time_offsets=time_offsets
-        )
+        print(signal_dict)
         print(f"maximum signal of {max_channel[0]} found at {signal_dict[max_channel[0]][motor_signal]}")
         low_side = max((min_val, signal_dict[max_channel[0]][motor_signal] - (range / (2 * range_ratio))))
         high_side = min((max_val, signal_dict[max_channel[0]][motor_signal] + (range / (2 * range_ratio))))
@@ -131,9 +138,5 @@ def fly_max(
             stop = low_side
     if end_on_max:
         yield from bps.mv(motor, signal_dict[max_channel[0]][motor_signal] - rb_offset)
-
-    for detector in detectors:
-        detector.kind = "normal"
-    motor.kind = "normal"
     # bec.disable_plots
     return signal_dict
