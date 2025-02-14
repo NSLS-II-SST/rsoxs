@@ -34,6 +34,8 @@ rsoxs-gui-loader = "rsoxs.qt.plans.rsoxs_plan_loader:RSoXSPlanLoader"
 [project.entry-points."nbs_bl.plan_loaders"]
 rsoxs = "rsoxs.plans.rsoxs:load_rsoxs"
 
+[project.entry-points."nbs_bl.plan_decorators"]
+rsoxs_waxs = "rsoxs.plans.scan_decorators:rsoxs_waxs_decorator"
 
 [tool.black]
 line-length = 115
