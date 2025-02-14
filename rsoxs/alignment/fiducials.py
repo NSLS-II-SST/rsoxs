@@ -13,14 +13,14 @@ from ..Functions.alignment import load_configuration, rsoxs_config, correct_bar
 
 
 ## For now, mostly pasting Eliot's fly_find-fiducials, but updating the fly_max function that is used for testing purposes
-def fly_find_fiducials2(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-187.5, y2=2):
+def find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-187.5, y2=2):
     thoffset = 0
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
     startxss = [f2, f1]
     yield from bps.mv(Shutter_enable, 0)
     yield from bps.mv(Shutter_control, 0)
-    yield from load_configuration("WAXSNEXAFS")
+    yield from load_configuration("WAXSNEXAFS") ## Don't want to harm camera while rotating sample bar
     Beamstop_WAXS_int.kind = "hinted"
     # bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
@@ -34,6 +34,7 @@ def fly_find_fiducials2(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-
             starty - 1,
             starty + 1,
             velocities=[0.2],
+            period = 0.5, ## Gives similar point density as Eliot's old fiducial scans.
             open_shutter=True,
             peaklist=peaklist,
         )
@@ -49,6 +50,7 @@ def fly_find_fiducials2(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-
                 startx - 0.5 * xrange,
                 startx + 0.5 * xrange,
                 velocities=[0.2],
+                period = 0.5,
                 open_shutter=True,
                 peaklist=peaklist,
             )

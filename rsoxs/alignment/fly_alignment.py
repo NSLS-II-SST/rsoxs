@@ -70,6 +70,8 @@ def rsoxs_fly_max(
         additional arguments to pass to fly_scan
 
     """
+    ## Jamie's nbs_bl fly_max function has a variable called period, which controls how fast detectors read.  1s by default, but reducing period will increase point density.
+
     if max_channel is None:
         max_channel = [detectors[0].name]
     _md = {
