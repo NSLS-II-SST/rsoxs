@@ -6,11 +6,13 @@ from functools import partial
 from nbs_bl.hw import (
     en,
     Shutter_control,
+    Shutter_open_time,
     sam_X,
     sam_Y,
     waxs_det,
 )
 
+from nbs_bl.beamline import GLOBAL_BEAMLINE
 from nbs_bl.printing import run_report
 from nbs_bl.plans.scans import nbs_count, nbs_gscan, nbs_spiral_square
 from nbs_bl.plans.preprocessors import wrap_metadata
@@ -19,7 +21,7 @@ from nbs_bl.queueserver import GLOBAL_USER_STATUS
 from nbs_bl.help import _add_to_import_list, add_to_plan_list, add_to_func_list
 
 from rsoxs_scans.defaultEnergyParameters import energyListParameters
-from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step
+from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step, trigger_and_read_with_shutter
 from .mdConstructor import mdToUpdateConstructor
 
 try:
@@ -72,23 +74,29 @@ def timeScan(*args, **kwargs):
 @merge_func(timeScan, use_func_name=False) 
 def timeScan_withWAXSCamera(*args, extra_dets=[], n_exposures=1, dwell=1, **kwargs):
     
-
-    md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "timeScan"
-    })
+    ## TODO: Works without beam, but test the next time I have beam to make sure that images look correct and that there is not light on top of the beamstop
+    ## Eliot's set_exposure function
+    if dwell > 0.001 and dwell < 1000:
+        waxs_det.set_exptime(dwell)
+        Shutter_open_time.set(dwell * 1000).wait()
+        for det in GLOBAL_BEAMLINE.detectors.active:
+            if hasattr(det,'exposure_time'):
+                det.exposure_time.set(max(0.3,dwell-0.5)).wait() ## Intended to only count signal when shutter is open, but will not go below exposure time = 0.3
+    else:
+        print("Invalid time, exposure time not set")
 
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
-    yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
+    #yield from bps.abs_set(waxs_det.cam.acquire_time, dwell) ## Taken care of in set_exposure but technically fine to uncomment.  Not sure what is the difference.between acquire_time and set_exptime
     _extra_dets = [waxs_det]
     _extra_dets.extend(extra_dets)
-    rsoxs_per_step = partial(
-        one_nd_sticky_exp_step,
-        take_reading=partial(
-            take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
-        ),
-    )
-    yield from timeScan(*args, extra_dets=_extra_dets, per_shot=rsoxs_per_step, dwell=dwell, md=md_ToUpdate, **kwargs)
+    rsoxs_per_shot = partial(
+        trigger_and_read_with_shutter, 
+        shutter=Shutter_control,
+        lead_detector=waxs_det
+        )
+    yield from timeScan(*args, extra_dets=_extra_dets, per_shot=rsoxs_per_shot, dwell=None, **kwargs)
+    ## dwell=None ensures that nbs_bl does not set a default 1.0 s exposure
     waxs_det.number_exposures = old_n_exp
 ## Use this to run RSoXS step scans using the 2D detector
 
@@ -123,17 +131,35 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
     n_exposures : int, optional
         If greater than 1, take multiple exposures per step
     """
+    """
+    ## Eliot's set_exposure function
+    ## If using this, comment out the acquire_time part below and remove dwell=dwell in the final yield statement
+    ## SEems like timescan and energy scan have different format for per_step vs. per_shot, but haven't understood fully
+    ## For now, running snapwaxs before this seems to make it work
+    ## TODO: When I next have beam, test this function
+    if dwell > 0.001 and dwell < 1000:
+        waxs_det.set_exptime(dwell)
+        Shutter_open_time.set(dwell * 1000).wait()
+        for det in GLOBAL_BEAMLINE.detectors.active:
+            if hasattr(det,'exposure_time'):
+                det.exposure_time.set(max(0.3,dwell-0.5)).wait()
+    else:
+        print("Invalid time, exposure time not set")
 
+    """
 
     old_n_exp = waxs_det.number_exposures
     waxs_det.number_exposures = n_exposures
-    yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
+    yield from bps.abs_set(waxs_det.cam.acquire_time, dwell) ## Probably taken care of by set_exposure above
     _extra_dets = [waxs_det]
     _extra_dets.extend(extra_dets)
     rsoxs_per_step = partial(
         one_nd_sticky_exp_step,
         take_reading=partial(
-            take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
+            take_exposure_corrected_reading, 
+            shutter=Shutter_control, 
+            check_exposure=False, 
+            lead_detector=waxs_det
         ),
     )
     yield from energyScan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, dwell=dwell, **kwargs)
