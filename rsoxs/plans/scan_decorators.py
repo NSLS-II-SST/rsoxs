@@ -17,7 +17,7 @@ def post_scan_hardware_reset():
 
 def rsoxs_waxs_decorator(func):
     """
-    A decorator that sets up scans for RSoXS. Adds the ability to use the WAXS detector, and open or close the shutter.
+    A decorator that sets up scans for RSoXS. Adds the ability to use the Greateyes detector, and open or close the shutter.
 
     Parameters
     ----------
@@ -31,12 +31,12 @@ def rsoxs_waxs_decorator(func):
     """
 
     @merge_func(func)
-    def _inner(*args, use_waxs=False, extra_dets=[], dwell=1, n_exposures=1, open_shutter=True, **kwargs):
+    def _inner(*args, use_2d_detector=False, extra_dets=[], dwell=1, n_exposures=1, open_shutter=True, **kwargs):
         """
         Parameters
         ----------
-        use_waxs : bool
-            Whether to use the WAXS detector
+        use_2d_detector : bool
+            Whether to use the Greateyes 2D detector for WAXS/SAXS
         open_shutter : bool
             Whether to open the shutter for the scan. If True, the shutter will be opened before the scan and closed after the scan.
             If False, the shutter will be closed for the duration of the scan. Does not apply to scans using the WAXS detector,
@@ -46,7 +46,7 @@ def rsoxs_waxs_decorator(func):
         _extra_dets = []
         _extra_dets.extend(extra_dets)
 
-        if use_waxs:
+        if use_2d_detector:
             if dwell > 0.001 and dwell < 1000:
                 waxs_det.set_exptime(dwell)
                 Shutter_open_time.set(dwell * 1000).wait()
