@@ -14,6 +14,7 @@ import bluesky.plan_stubs as bps
 from nbs_bl.run_engine import create_run_engine
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.printing import run_report
+from nbs_bl.help import print_builtins
 from nbs_bl.detectors import *
 from nbs_bl.plans.scans import *
 from nbs_bl.plans.xas import *
