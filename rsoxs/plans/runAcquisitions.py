@@ -2,7 +2,12 @@
 import numpy as np
 import copy
 
-from rsoxs.Functions.alignment import load_configuration, load_samp, rotate_now
+from rsoxs.configuration_setup.configurations_instrument import load_configuration
+from rsoxs.Functions.alignment import (
+    #load_configuration, 
+    load_samp, 
+    rotate_now
+    )
 from rsoxs.HW.energy import set_polarization
 from rsoxs.plans.rsoxs import timeScan, spiralScan, energyScan, energyScan_with2DDetector
 from rsoxs.HW.detectors import snapshot
@@ -55,7 +60,7 @@ def runAcquisitions_Single(
     parameter = "configurationInstrument"
     if acquisition[parameter] is not None:
         print("\n\n Loading instrument configuration: " + str(acquisition[parameter]))
-        if dryrun == False: yield from load_configuration(acquisition[parameter])
+        if dryrun == False: yield from load_configuration(acquisition[parameter])  
 
     ## TODO: set up diodes to high or low gain
     ## But there are issues at the moment with setup_diode_i400() and most people don't use this, so leave it for now

@@ -20,7 +20,7 @@ from nbs_bl.hw import (
     sam_viewer,
 )
 
-from .configurations import all_out
+from rsoxs.configuration_setup.configurations_instrument import all_out #from .configurations import all_out
 from ..HW.detectors import (
     set_exposure,
     # saxs_det,

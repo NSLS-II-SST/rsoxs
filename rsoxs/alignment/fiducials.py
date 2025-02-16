@@ -9,7 +9,12 @@ from nbs_bl.hw import (
     sam_Z,
     Beamstop_WAXS_int,
 )
-from ..Functions.alignment import load_configuration, rsoxs_config, correct_bar
+from rsoxs.configuration_setup.configurations_instrument import load_configuration
+from ..Functions.alignment import (
+    #load_configuration, 
+    rsoxs_config, 
+    correct_bar
+    )
 
 
 ## For now, mostly pasting Eliot's fly_find-fiducials, but updating the fly_max function that is used for testing purposes

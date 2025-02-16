@@ -221,7 +221,7 @@ def get_md_from_config(config):
     return config_func()[1]
 
 
-def load_configuration(config, sim_mode=False):
+def load_configuration_old(config, sim_mode=False):
     """
     :param config: string containing a name of a configuration
     :return:

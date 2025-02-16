@@ -72,6 +72,7 @@ def mirrorConfiguration_RSoXS():
 
 
 ## Intended to allow me to run test scans when I don't have beam.  Does not move any hardware that could interfere with others' experiments.
+## TODO: Need to deal with RSoXS_Main_DET md.  
 def noBeam():
     return [
         [
