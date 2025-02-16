@@ -72,7 +72,7 @@ def move_motors(configuration_name):
     configuration_setpoints_sorted = sorted(configuration_setpoints, key=lambda x: x["order"])
     
     ## Then move in that order
-    for order in np.arange(0, int(configuration_setpoints_sorted[-1]["order"]), 1):
+    for order in np.arange(0, int(configuration_setpoints_sorted[-1]["order"] + 1), 1):
         move_list = []
         for indexMotor, motor in enumerate(configuration_setpoints_sorted):
             if motor["order"] == order: move_list.extend([motor["motor"], motor["position"]])
