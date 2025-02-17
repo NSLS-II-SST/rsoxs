@@ -51,7 +51,7 @@ def load_configuration(configuration_name):
     
     else:
         mdToUpdate = {
-            "RSoXS_Config": "WAXS_OpenBeamImages",
+            "RSoXS_Config": configuration_name,
             "RSoXS_Main_DET": "WAXS",
             "RSoXS_WAXS_SDD": 39.19,
             "RSoXS_WAXS_BCX": 467.5,

@@ -45,6 +45,165 @@ def add_to_rsoxs_list(f, key, **plan_info):
     return f
 
 
+## Main difference between Bluesky list_scan and scan_nd is that scan_nd has a cycler that can run the scan for all combinations of parameters (e.g., energy, polarization, positions, temperatures).  But for most cases here, it is simpler to use nested for loops, which accomplishes the same purpose.
+
+## count (time) scans. 
+## Example use:  
+## RE(nbs_count(num=10, use_2D_detector=False, delay=0, dwell=2)) ## Doesn't take images
+## num is number of data points,delay is time between datapoints, dwell is exposure time per point
+## RE(nbs_count(num=10, use_2D_detector=True, delay=0, dwell=2)) ## Takes images
+
+
+
+
+
+@add_to_plan_list
+@merge_func(nbs_spiral_square, use_func_name=False, omit_params=["*"])
+def spiral_scan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwell=1, n_exposures=1, energy=270, polarization=0, **kwargs):
+    
+    
+
+    ## TODO: Works without beam, but test the next time I have beam to make sure that images look correct and that there is not light on top of the beamstop
+    ## Eliot's set_exposure function
+    if dwell > 0.001 and dwell < 1000:
+        waxs_det.set_exptime(dwell)
+        Shutter_open_time.set(dwell * 1000).wait()
+        for det in GLOBAL_BEAMLINE.detectors.active:
+            if hasattr(det,'exposure_time'):
+                det.exposure_time.set(max(0.3,dwell-0.5)).wait() ## Intended to only count signal when shutter is open, but will not go below exposure time = 0.3
+    else:
+        print("Invalid time, exposure time not set")
+
+
+    old_n_exp = waxs_det.number_exposures
+    waxs_det.number_exposures = n_exposures
+    #yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
+    _extra_dets = [waxs_det]
+    _extra_dets.extend(extra_dets)
+    rsoxs_per_step = partial(
+        one_nd_sticky_exp_step,
+        #remember={},
+        take_reading=partial(
+            take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
+        ),
+    )
+
+    yield from finalize_wrapper(plan=nbs_spiral_square(
+                                                        x_motor = sam_X,
+                                                        y_motor = sam_Y,
+                                                        x_center = sam_X.user_setpoint.get(),
+                                                        y_center = sam_Y.user_setpoint.get(),
+                                                        x_range = widthX,
+                                                        y_range = widthY,
+                                                        x_num = round(widthX/stepsize) + 1,
+                                                        y_num = round(widthY/stepsize) + 1,
+                                                        per_step = rsoxs_per_step,
+                                                        extra_dets = _extra_dets,
+                                                        energy=energy,
+                                                        polarization=polarization,
+                                                        ), 
+                                final_plan=post_scan_hardware_reset())
+## spiral scans for to find good spot on sample
+
+
+
+def post_scan_hardware_reset():
+    ## Make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
+    yield from bps.mv(en.scanlock, 0)
+    yield from bps.mv(Shutter_control, 0)
+
+
+def _wrap_rsoxs(element, edge):
+    def decorator(func):
+        return wrap_metadata({"element": element, "edge": edge, "scantype": "rsoxs"})(func)
+
+    return decorator
+
+
+def _rsoxs_factory(energy_grid, element, edge, key):
+    @_wrap_rsoxs(element, edge)
+    @wrap_metadata({"plan_name": key})
+    @merge_func(rsoxs_step_scan, omit_params=["args"])
+    def inner(**kwargs):
+        """Parameters
+        ----------
+        repeat : int
+            Number of times to repeat the scan
+        **kwargs :
+            Arguments to be passed to tes_gscan
+
+        """
+
+        yield from rsoxs_step_scan(*energy_grid, **kwargs)
+
+    d = f"Perform an in-place RSoXS scan for {element} with energy pattern {energy_grid} \n"
+    inner.__doc__ = d + inner.__doc__
+
+    inner.__qualname__ = key
+    inner.__name__ = key
+    inner._edge = edge
+    inner._short_doc = f"Do RSoXS for {element} from {energy_grid[0]} to {energy_grid[-2]}"
+    return inner
+
+
+@add_to_func_list
+def load_rsoxs(filename):
+    """
+    Load RSoXS plans from a TOML file and inject them into the IPython user namespace.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the TOML file containing XAS plan definitions
+    """
+    try:
+        # Get IPython's user namespace
+        ip = get_ipython()
+        user_ns = ip.user_ns
+    except (NameError, AttributeError):
+        # Not running in IPython, just return the generated functions
+        user_ns = None
+
+    generated_plans = {}
+    with open(filename, "rb") as f:
+        regions = tomllib.load(f)
+        for _key, value in regions.items():
+            if "xas" in _key:
+                key = _key.replace("xas", "rsoxs")
+            else:
+                key = _key
+            name = value.get("name", key)
+            region = value.get("region")
+            element = value.get("element", "")
+            edge = value.get("edge", "")
+            rsoxs_func = _rsoxs_factory(region, element, edge, key)
+            add_to_rsoxs_list(rsoxs_func, key, name=name, element=element, edge=edge, region=region)
+
+            # Store the function
+            generated_plans[key] = rsoxs_func
+
+            # If we're in IPython, inject into user namespace
+            if user_ns is not None:
+                user_ns[key] = rsoxs_func
+
+    # Return the generated plans dictionary in case it's needed
+    return generated_plans
+
+
+
+## <functionName>? prints out the source code in Bluesky
+
+
+
+
+
+
+
+
+
+
+## TODO: Delete everything below here after code has been tested.  No longer using these.
+## ***********************************************************************************************************
 @add_to_plan_list
 @merge_func(nbs_count, use_func_name=False, omit_params=["*"])
 def timeScan(*args, **kwargs):
@@ -171,129 +330,4 @@ def energyScan_with2DDetector(*args, extra_dets=[], n_exposures=1, dwell=1, **kw
 ## dwell is the exposure time in seconds, n_exposures is the number of repeats
 
 
-@add_to_plan_list
-@merge_func(nbs_spiral_square, use_func_name=False, omit_params=["*"])
-def spiralScan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwell=1, n_exposures=1, energy=270, polarization=0, **kwargs):
-    
-    md_ToUpdate = mdToUpdateConstructor(extraMD={
-        "scanType": "spiralScan"
-    })
-
-    old_n_exp = waxs_det.number_exposures
-    waxs_det.number_exposures = n_exposures
-    yield from bps.abs_set(waxs_det.cam.acquire_time, dwell)
-    _extra_dets = [waxs_det]
-    _extra_dets.extend(extra_dets)
-    rsoxs_per_step = partial(
-        one_nd_sticky_exp_step,
-        #remember={},
-        take_reading=partial(
-            take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False, lead_detector=waxs_det
-        ),
-    )
-
-    yield from finalize_wrapper(plan=nbs_spiral_square(
-                                                        x_motor = sam_X,
-                                                        y_motor = sam_Y,
-                                                        x_center = sam_X.user_setpoint.get(),
-                                                        y_center = sam_Y.user_setpoint.get(),
-                                                        x_range = widthX,
-                                                        y_range = widthY,
-                                                        x_num = round(widthX/stepsize) + 1,
-                                                        y_num = round(widthY/stepsize) + 1,
-                                                        per_step = rsoxs_per_step,
-                                                        extra_dets = _extra_dets,
-                                                        energy=energy,
-                                                        polarization=polarization,
-                                                        md=md_ToUpdate, 
-                                                        ), 
-                                final_plan=post_scan_hardware_reset())
-## spiral scans for to find good spot on sample
-
-
-
-def post_scan_hardware_reset():
-    ## Make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
-    yield from bps.mv(en.scanlock, 0)
-    yield from bps.mv(Shutter_control, 0)
-
-
-def _wrap_rsoxs(element, edge):
-    def decorator(func):
-        return wrap_metadata({"element": element, "edge": edge, "scantype": "rsoxs"})(func)
-
-    return decorator
-
-
-def _rsoxs_factory(energy_grid, element, edge, key):
-    @_wrap_rsoxs(element, edge)
-    @wrap_metadata({"plan_name": key})
-    @merge_func(rsoxs_step_scan, omit_params=["args"])
-    def inner(**kwargs):
-        """Parameters
-        ----------
-        repeat : int
-            Number of times to repeat the scan
-        **kwargs :
-            Arguments to be passed to tes_gscan
-
-        """
-
-        yield from rsoxs_step_scan(*energy_grid, **kwargs)
-
-    d = f"Perform an in-place RSoXS scan for {element} with energy pattern {energy_grid} \n"
-    inner.__doc__ = d + inner.__doc__
-
-    inner.__qualname__ = key
-    inner.__name__ = key
-    inner._edge = edge
-    inner._short_doc = f"Do RSoXS for {element} from {energy_grid[0]} to {energy_grid[-2]}"
-    return inner
-
-
-@add_to_func_list
-def load_rsoxs(filename):
-    """
-    Load RSoXS plans from a TOML file and inject them into the IPython user namespace.
-
-    Parameters
-    ----------
-    filename : str
-        Path to the TOML file containing XAS plan definitions
-    """
-    try:
-        # Get IPython's user namespace
-        ip = get_ipython()
-        user_ns = ip.user_ns
-    except (NameError, AttributeError):
-        # Not running in IPython, just return the generated functions
-        user_ns = None
-
-    generated_plans = {}
-    with open(filename, "rb") as f:
-        regions = tomllib.load(f)
-        for _key, value in regions.items():
-            if "xas" in _key:
-                key = _key.replace("xas", "rsoxs")
-            else:
-                key = _key
-            name = value.get("name", key)
-            region = value.get("region")
-            element = value.get("element", "")
-            edge = value.get("edge", "")
-            rsoxs_func = _rsoxs_factory(region, element, edge, key)
-            add_to_rsoxs_list(rsoxs_func, key, name=name, element=element, edge=edge, region=region)
-
-            # Store the function
-            generated_plans[key] = rsoxs_func
-
-            # If we're in IPython, inject into user namespace
-            if user_ns is not None:
-                user_ns[key] = rsoxs_func
-
-    # Return the generated plans dictionary in case it's needed
-    return generated_plans
-
-
-
-## <functionName>? prints out the source code in Bluesky
+## ***********************************************************************************************************
