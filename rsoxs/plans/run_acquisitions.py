@@ -30,14 +30,17 @@ from nbs_bl.samples import add_current_position_as_sample
 
 
 def runAcquisitions_Queue(
-        configuration = rsoxs_config["bar"],
+        configuration = copy.deepcopy(rsoxs_config["bar"]),
         dryrun = True,
         sortBy = ["priority"], ## TODO: Not sure yet how to give it a list of groups in a particular order.  Maybe a list within a list.
         ):
     ## Run a series of single acquisitions
 
+    ## For some reason, the configuration variable has to be set here.  If it is set in the input, it shows prior configuration, not the current one.
+    ## TODO: Understand why
+    configuration = copy.deepcopy(rsoxs_config["bar"])
+
     acquisitions = gatherAcquisitionsFromConfiguration(configuration)
-    ## TODO: Not sure if I need to sanitize again here, but might be safer
     ## TODO: Can only sort by "priority" at the moment, not by anything else
     queue = sortAcquisitionsQueue(acquisitions, sortBy=sortBy) 
     
@@ -56,6 +59,9 @@ def runAcquisitions_Single(
         acquisition,
         dryrun = True
 ):
+    
+    updateAcquireStatusDuringDryRun = True ## Hardcoded variable for troubleshooting.  False during normal operation, but True during troubleshooting.
+    
     ## The acquisition is sanitized again in case it were not run from a spreadsheet
     ## But for now, still requires that a full configuration be set up for the sample
     acquisition = sanitizeAcquisition(acquisition) ## This would be run before if a spreadsheet were loaded, but now it will ensure the acquisition is sanitized in case the acquisition is run in the terminal
@@ -99,8 +105,9 @@ def runAcquisitions_Single(
                 if loadPolarization: yield from set_polarization(polarization)
             
             print("Running scan: " + str(acquisition["scan_type"]))
-            acquisition["acquire_status"] = "Started" ## TODO: Add timestamp
-            rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
+            if dryrun == False or updateAcquireStatusDuringDryRun == True:
+                acquisition["acquire_status"] = "Started" ## TODO: Add timestamp
+                rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
             if dryrun == False:
                 if "time" in acquisition["scan_type"]:
                     if acquisition["scan_type"]=="time": use_2D_detector = False
@@ -144,8 +151,9 @@ def runAcquisitions_Single(
                             sample=acquisition["sample_id"],
                             )
             
-            if dryrun==False: acquisition["acquire_status"] = "Finished" ## TODO: Add timestamp
-            rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
+            if dryrun == False or updateAcquireStatusDuringDryRun == True:
+                acquisition["acquire_status"] = "Finished" ## TODO: Add timestamp
+                rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
 
 
 
