@@ -29,7 +29,7 @@ from nbs_bl.samples import add_current_position_as_sample
 
 
 
-def runAcquisitions_Queue(
+def run_acquisitions_queue(
         configuration = copy.deepcopy(rsoxs_config["bar"]),
         dryrun = True,
         sortBy = ["priority"], ## TODO: Not sure yet how to give it a list of groups in a particular order.  Maybe a list within a list.
@@ -47,7 +47,7 @@ def runAcquisitions_Queue(
     print("Starting queue")
 
     for indexAcquisition, acquisition in enumerate(queue):
-        yield from runAcquisitions_Single(acquisition=acquisition, dryrun=dryrun)
+        yield from run_acquisitions_single(acquisition=acquisition, dryrun=dryrun)
 
     print("\n\nFinished queue")
 
@@ -55,12 +55,12 @@ def runAcquisitions_Queue(
 
 
 
-def runAcquisitions_Single(
+def run_acquisitions_single(
         acquisition,
         dryrun = True
 ):
     
-    updateAcquireStatusDuringDryRun = True ## Hardcoded variable for troubleshooting.  False during normal operation, but True during troubleshooting.
+    updateAcquireStatusDuringDryRun = False ## Hardcoded variable for troubleshooting.  False during normal operation, but True during troubleshooting.
     
     ## The acquisition is sanitized again in case it were not run from a spreadsheet
     ## But for now, still requires that a full configuration be set up for the sample
@@ -88,7 +88,7 @@ def runAcquisitions_Single(
     for indexAngle, sampleAngle in enumerate(acquisition["sample_angles"]):
         print("Rotating to angle: " + str(sampleAngle))
         ## TODO: Requires spots to be picked from image, so I have to comment when I don't have beam
-        #if dryrun == False: yield from rotate_now(sampleAngle) ## TODO: What is the difference between rotate_sample and rotate_now?
+        if dryrun == False: yield from rotate_now(sampleAngle) ## TODO: What is the difference between rotate_sample and rotate_now?
         
         loadPolarization = False
         if acquisition["polarizations"] is None: 
