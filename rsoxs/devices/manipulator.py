@@ -2,7 +2,7 @@ from nbs_bl.devices import Manipulator4AxBase
 from sst_base.motors import PrettyMotorFMBODeadbandFlyer
 from ophyd import Component as Cpt
 from nbs_bl.geometry.bars import AbsoluteBar
-from rsoxs_scans.configurationLoadSaveSanitize import loadConfigurationSpreadsheet_Local
+from rsoxs_scans.configuration_load_save_sanitize import load_configuration_spreadsheet_local
 
 
 class RSoXSBar(AbsoluteBar):
@@ -10,7 +10,7 @@ class RSoXSBar(AbsoluteBar):
         super().__init__(*args, **kwargs)
 
     def read_sample_file(self, filename):
-        configuration = loadConfigurationSpreadsheet_Local(filename)
+        configuration = load_configuration_spreadsheet_local(filename)
         bar_dict = {}
         for sample_dict in configuration:
             sample_id = sample_dict.pop("sample_id")

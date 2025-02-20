@@ -17,7 +17,7 @@ from ..startup import rsoxs_config
 from nbs_bl.hw import (
     en,
 )
-from rsoxs_scans.configurationLoadSaveSanitize import (
+from rsoxs_scans.configuration_load_save_sanitize import (
     gatherAcquisitionsFromConfiguration, 
     sanitizeAcquisition, 
     sortAcquisitionsQueue,
@@ -37,7 +37,7 @@ def run_acquisitions_queue(
     ## Run a series of single acquisitions
 
     ## For some reason, the configuration variable has to be set here.  If it is set in the input, it shows prior configuration, not the current one.
-    ## TODO: Understand why
+    ## TODO: Understand why 
     configuration = copy.deepcopy(rsoxs_config["bar"])
 
     acquisitions = gatherAcquisitionsFromConfiguration(configuration)
