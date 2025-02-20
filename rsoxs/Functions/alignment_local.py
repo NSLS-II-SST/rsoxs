@@ -215,6 +215,27 @@ def image_bar( path=None, front=True, bar=None):
         bp.list_scan([SampleViewer_cam], sam_viewer, ypos),
         {'stop': [BarPlotter(path=path, front=front, bar=bar)]}
     )
+    ## Acquisition parameters in Phoebus: ######################
+    ## Exposure time = 0.05 s ## Likely the first parameter to be adjusted if image is too bright or dim
+    ## Acquire Period: 1 s
+    ## Num Images: 1
+    ## Exp/Image: 1
+    ## Image Mode: Single
+    ## Trigger Mode: Fixed Rate
+    ## areaDetector Plugins --> Expert (AD detail) --> Prosilica
+    ## Binning x = 1, y = 1
+    ## Region start x = 0, y = 0
+    ## Region size x = 2464, y = 2056
+    ## Gain: 0
+    ## Data type: UInt8
+    ## Color mode: RGB1 ## May need to switch this to something else then back to RGB1 for colors to show up
+    ## Bayer convert: None
+    ## Shutter mode: None
+    ## Wait for plugins: Yes
+    ## Image counter: 0
+    ## Array callbacks: Enable
+    ## Buffer & memory polling: 1
+    
     # print('Run locate_samples_from_image() to find your positions interactively')
     # all the rest of this function won't work correctly 
     # because of threading in the run engine, so it needs
