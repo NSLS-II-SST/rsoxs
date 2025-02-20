@@ -1,6 +1,7 @@
 ##
 import numpy as np
 import copy
+import datetime
 
 from rsoxs.configuration_setup.configurations_instrument import load_configuration
 from rsoxs.Functions.alignment import (
@@ -106,7 +107,8 @@ def run_acquisitions_single(
             
             print("Running scan: " + str(acquisition["scan_type"]))
             if dryrun == False or updateAcquireStatusDuringDryRun == True:
-                acquisition["acquire_status"] = "Started" ## TODO: Add timestamp
+                timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                acquisition["acquire_status"] = "Started " + str(timeStamp)
                 rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
             if dryrun == False:
                 if "time" in acquisition["scan_type"]:
@@ -152,7 +154,8 @@ def run_acquisitions_single(
                             )
             
             if dryrun == False or updateAcquireStatusDuringDryRun == True:
-                acquisition["acquire_status"] = "Finished" ## TODO: Add timestamp
+                timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                acquisition["acquire_status"] = "Finished " + str(timeStamp) ## TODO: Add timestamp
                 rsoxs_config["bar"] = updateConfigurationWithAcquisition(rsoxs_config["bar"], acquisition)
 
 
