@@ -99,7 +99,7 @@ def spiral_scan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwel
                                                         y_num = round(widthY/stepsize) + 1,
                                                         #per_step = rsoxs_per_step, ## Otherwise complains about multiple values received
                                                         use_2d_detector=True,
-                                                        extra_dets = _extra_dets,
+                                                        extra_dets = _extra_dets, ## TODO: probably this line can get deleted since Jamie updated his scans to use_2d_detector?
                                                         energy=energy,
                                                         polarization=polarization,
                                                         **kwargs
