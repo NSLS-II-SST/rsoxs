@@ -33,7 +33,7 @@ from nbs_bl.samples import add_current_position_as_sample
 def run_acquisitions_queue(
         configuration = copy.deepcopy(rsoxs_config["bar"]),
         dryrun = True,
-        sortBy = ["priority"], ## TODO: Not sure yet how to give it a list of groups in a particular order.  Maybe a list within a list.
+        sort_by = ["priority"], ## TODO: Not sure yet how to give it a list of groups in a particular order.  Maybe a list within a list.
         ):
     ## Run a series of single acquisitions
 
@@ -43,7 +43,7 @@ def run_acquisitions_queue(
 
     acquisitions = gatherAcquisitionsFromConfiguration(configuration)
     ## TODO: Can only sort by "priority" at the moment, not by anything else
-    queue = sortAcquisitionsQueue(acquisitions, sortBy=sortBy) 
+    queue = sortAcquisitionsQueue(acquisitions, sortBy=sort_by) 
     
     print("Starting queue")
 

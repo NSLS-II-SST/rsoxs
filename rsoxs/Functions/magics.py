@@ -28,6 +28,7 @@ from ..HW.detectors import (
     snapshot,
     exposure,
 )
+from nbs_bl.plans.scans import nbs_count
 from ..Functions.alignment import sample
 from ..startup import RE
 from ..HW.energy import set_polarization
@@ -241,10 +242,10 @@ def snap(line):
     try:
         secs = float(line)
     except:
-        RE(snapshot())
+        RE(nbs_count(num=1, use_2d_detector=True, delay=0, dwell=1)) #RE(snapshot())
     else:
         if secs > 0 and secs < 10:
-            RE(snapshot(secs))
+            RE(nbs_count(num=1, use_2d_detector=True, delay=0, dwell=secs)) #RE(snapshot(secs))
 
 
 del snap

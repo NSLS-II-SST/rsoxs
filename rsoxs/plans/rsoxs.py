@@ -49,9 +49,9 @@ def add_to_rsoxs_list(f, key, **plan_info):
 
 ## count (time) scans. 
 ## Example use:  
-## RE(nbs_count(num=10, use_2D_detector=False, delay=0, dwell=2)) ## Doesn't take images
+## RE(nbs_count(num=10, use_2d_detector=False, delay=0, dwell=2)) ## Doesn't take images
 ## num is number of data points,delay is time between datapoints, dwell is exposure time per point
-## RE(nbs_count(num=10, use_2D_detector=True, delay=0, dwell=2)) ## Takes images
+## RE(nbs_count(num=10, use_2d_detector=True, delay=0, dwell=2)) ## Takes images
 
 
 
