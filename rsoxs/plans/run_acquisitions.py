@@ -129,7 +129,7 @@ def run_acquisitions_single(
                         energy = acquisition["energy_list_parameters"]
                         print("Setting energy: " + str(energy))
                         if dryrun == False: yield from bps.mv(en, energy)
-                    #yield from snapshot(secs=acquisition["exposure_time"]) ## TODO: Got fixed for energy scans, but not for spirals
+                    ## TODO: could I just run waxs_spiral_mode() over here and then after spiral_scan finishes, run waxs_normal_mode()?  Eliot may have mentioned something about not being able to do this inside the Run Engine or within spreadsheet, but maybe get this clarified during data security?
                     yield from spiral_scan(
                         stepsize=acquisition["spiral_dimensions"][0], 
                         widthX=acquisition["spiral_dimensions"][1], 
