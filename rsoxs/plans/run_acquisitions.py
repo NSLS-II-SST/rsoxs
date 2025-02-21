@@ -129,6 +129,7 @@ def run_acquisitions_single(
                         energy = acquisition["energy_list_parameters"]
                         print("Setting energy: " + str(energy))
                         if dryrun == False: yield from bps.mv(en, energy)
+                    #yield from snapshot(secs=acquisition["exposure_time"]) ## TODO: Got fixed for energy scans, but not for spirals
                     yield from spiral_scan(
                         stepsize=acquisition["spiral_dimensions"][0], 
                         widthX=acquisition["spiral_dimensions"][1], 
@@ -136,6 +137,7 @@ def run_acquisitions_single(
                         n_exposures=acquisition["exposures_per_energy"], 
                         dwell=acquisition["exposure_time"],
                         sample=acquisition["sample_id"],
+                        md = {"sample_id": acquisition["sample_id"]}, ## TODO: figure out why sample name not updated here
                         )
 
                 if acquisition["scan_type"] in ("nexafs", "rsoxs"):
@@ -143,7 +145,7 @@ def run_acquisitions_single(
                     if acquisition["scan_type"]=="rsoxs": use_2D_detector = True
                     energyParameters = acquisition["energy_list_parameters"]
                     if isinstance(energyParameters, str): energyParameters = energyListParameters[energyParameters]
-                    #yield from snapshot(secs=acquisition["exposureTime"])
+                    #yield from snapshot(secs=acquisition["exposure_time"])
                     yield from nbs_energy_scan(
                             *energyParameters,
                             use_2d_detector=use_2D_detector, 

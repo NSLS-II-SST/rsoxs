@@ -97,10 +97,12 @@ def spiral_scan(*args, extra_dets=[], stepsize=0.3, widthX=1.8, widthY=1.8, dwel
                                                         y_range = widthY,
                                                         x_num = round(widthX/stepsize) + 1,
                                                         y_num = round(widthY/stepsize) + 1,
-                                                        per_step = rsoxs_per_step,
+                                                        #per_step = rsoxs_per_step, ## Otherwise complains about multiple values received
+                                                        use_2d_detector=True,
                                                         extra_dets = _extra_dets,
                                                         energy=energy,
                                                         polarization=polarization,
+                                                        **kwargs
                                                         ), 
                                 final_plan=post_scan_hardware_reset())
 ## spiral scans for to find good spot on sample

@@ -271,9 +271,12 @@ def snapwaxs(line):
         secs = float(line)
     except:
         RE(snapshot(detn="waxs"))
+        #RE(nbs_count(num=1, use_2d_detector=True, delay=0, dwell=1)) 
     else:
         if secs > 0 and secs < 10:
             RE(snapshot(secs, detn="waxs"))
+            #RE(nbs_count(num=1, use_2d_detector=True, delay=0, dwell=secs)) 
+            ## TODO: migrate to nbs_count once it registers teh correct sample
 
 
 del snapwaxs
