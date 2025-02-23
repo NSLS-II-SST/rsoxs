@@ -137,7 +137,7 @@ def run_acquisitions_single(
                         n_exposures=acquisition["exposures_per_energy"], 
                         dwell=acquisition["exposure_time"],
                         sample=acquisition["sample_id"],
-                        md = {"sample_id": acquisition["sample_id"]}, ## TODO: figure out why sample name not updated here
+                        #md = {"sample_id": acquisition["sample_id"]}, ## Add this back in if sample name does not automatically update
                         )
 
                 if acquisition["scan_type"] in ("nexafs", "rsoxs"):

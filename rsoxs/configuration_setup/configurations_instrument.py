@@ -186,6 +186,28 @@ default_configurations = {
         {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
         {"motor": Exit_Slit, "position": -3.05, "order": 2},
     ],
+
+
+    "WAXS_LowFlux": [
+        {"motor": TEMZ, "position": 1, "order": 0},
+        {"motor": slits1.vsize, "position": 0.02, "order": 0},
+        {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+        {"motor": slits1.hsize, "position": 0.04, "order": 0},
+        {"motor": slits1.hcenter, "position": -0.18, "order": 0},
+        {"motor": slits2.vsize, "position":  0.21, "order": 0},
+        {"motor": slits2.vcenter, "position": -0.873, "order": 0},
+        {"motor": slits2.hsize, "position": 0.4, "order": 0},
+        {"motor": slits2.hcenter, "position": -0.1, "order": 0},
+        {"motor": slits3.vsize, "position": 1, "order": 0},
+        {"motor": slits3.vcenter, "position": -0.45, "order": 0},
+        {"motor": slits3.hsize, "position": 1, "order": 0},
+        {"motor": slits3.hcenter, "position": 0.15, "order": 0},
+        {"motor": Shutter_Y, "position": 2.2, "order": 0},
+        {"motor": Izero_Y, "position": -31, "order": 0},
+        {"motor": Det_W, "position": position_CameraWAXS_InBeamPath, "order": 1},
+        {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
+        {"motor": Exit_Slit, "position": -0.05, "order": 2},
+    ],
     
 }
 

@@ -54,6 +54,13 @@ def add_to_rsoxs_list(f, key, **plan_info):
 ## RE(nbs_count(num=10, use_2d_detector=True, delay=0, dwell=2)) ## Takes images
 
 
+## energy scans
+## Example use:
+## RE(nbs_energy_scan(250, 350, 10, use_2d_detector=False))
+## TODO: It is not easy to run a single energy point for multiple exposures because the _make_gscan_points always makes an energy list with length of at least 2.  Main issue is that a time scan's xarray gets organized differently from the energy scan
+## TODO: also the energy scans with repeat exposures don't have a time stamp for all repeat exposures, only the first one?
+
+
 
 
 
