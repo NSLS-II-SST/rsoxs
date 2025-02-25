@@ -210,11 +210,13 @@ def image_bar( path=None, front=True, bar=None):
     loc_Q = queue.Queue(1)
     ypos = np.arange(-100, 110, 25)
     
-
+    yield from bp.list_scan([SampleViewer_cam], sam_viewer, ypos)
+    """
     yield from bpp.subs_wrapper(
         bp.list_scan([SampleViewer_cam], sam_viewer, ypos),
-        {'stop': [BarPlotter(path=path, front=front, bar=bar)]}
+        #{'stop': [BarPlotter(path=path, front=front, bar=bar)]} ## PK: Using Eliot's code through data security and commenting this out so that it does not attempt to access db.  TODO: rewrite these functions and reorganize into new folder.
     )
+    """
     ## Acquisition parameters in Phoebus: ######################
     ## Exposure time = 0.05 s ## Likely the first parameter to be adjusted if image is too bright or dim
     ## Acquire Period: 1 s
