@@ -80,7 +80,9 @@ def run_acquisitions_single(
         print("Loading sample: " + str(acquisition[parameter]))
         ## TODO: comment when I don't have beam
         if dryrun == False: 
-            yield from load_samp(acquisition[parameter]) ## TODO: what is the difference between load_sample (loads from dict) and load_samp(loads from id or number)?  Can they be consolidated?
+            ## Don't move motors if I don't have beam.
+            if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
+            else: yield from load_samp(acquisition[parameter]) ## TODO: what is the difference between load_sample (loads from dict) and load_samp(loads from id or number)?  Can they be consolidated?
             add_current_position_as_sample(name=acquisition[parameter], sample_id=acquisition[parameter]) ## Probably temporary until we figure have this as part of load_samp
         
 
@@ -89,21 +91,17 @@ def run_acquisitions_single(
     for indexAngle, sampleAngle in enumerate(acquisition["sample_angles"]):
         print("Rotating to angle: " + str(sampleAngle))
         ## TODO: Requires spots to be picked from image, so I have to comment when I don't have beam
-        if dryrun == False: yield from rotate_now(sampleAngle) ## TODO: What is the difference between rotate_sample and rotate_now?
+        if dryrun == False: 
+            if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
+            else: yield from rotate_now(sampleAngle) ## TODO: What is the difference between rotate_sample and rotate_now?
         
-        loadPolarization = False
-        if acquisition["polarizations"] is None: 
-            ## If a timeScan or spiral is being run when I don't have beam (during shutdown or when another station is using beam), I don't want to make any changes to the energy or polarization.
-            ## TODO: Actually, make this even smarter.  If RSoXS station does not have control or if cannot write EPU Epics PV, then do this
-            loadPolarization = False
-            polarizations = ["Not loading polarization.  Instead, using current polarization: "]
-        else:
-            loadPolarization = True
-            polarizations = copy.deepcopy(acquisition["polarizations"])
-        for indexPolarization, polarization in enumerate(polarizations):
+        for indexPolarization, polarization in enumerate(acquisition["polarizations"]):
             print("Setting polarization: " + str(polarization))
             if dryrun == False: 
-                if loadPolarization: yield from set_polarization(polarization)
+                ## If a timeScan or spiral is being run when I don't have beam (during shutdown or when another station is using beam), I don't want to make any changes to the energy or polarization.
+                ## TODO: Actually, make this even smarter.  If RSoXS station does not have control or if cannot write EPU Epics PV, then do this
+                if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
+                else: yield from set_polarization(polarization)
             
             print("Running scan: " + str(acquisition["scan_type"]))
             if dryrun == False or updateAcquireStatusDuringDryRun == True:
@@ -114,10 +112,11 @@ def run_acquisitions_single(
                 if "time" in acquisition["scan_type"]:
                     if acquisition["scan_type"]=="time": use_2D_detector = False
                     if acquisition["scan_type"]=="time2D": use_2D_detector = True
-                    if acquisition["energy_list_parameters"] is not None:
-                        energy = acquisition["energy_list_parameters"]
-                        print("Setting energy: " + str(energy))
-                        if dryrun == False: yield from bps.mv(en, energy)
+                    energy = acquisition["energy_list_parameters"]
+                    print("Setting energy: " + str(energy))
+                    if dryrun == False: 
+                        if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
+                        else: yield from bps.mv(en, energy)
                     yield from nbs_count(num=acquisition["exposures_per_energy"], 
                                          use_2d_detector=use_2D_detector, 
                                          dwell=acquisition["exposure_time"],
@@ -125,10 +124,11 @@ def run_acquisitions_single(
                                          )
                 
                 if acquisition["scan_type"] == "spiral":
-                    if acquisition["energy_list_parameters"] is not None:
-                        energy = acquisition["energy_list_parameters"]
-                        print("Setting energy: " + str(energy))
-                        if dryrun == False: yield from bps.mv(en, energy)
+                    energy = acquisition["energy_list_parameters"]
+                    print("Setting energy: " + str(energy))
+                    if dryrun == False: 
+                        if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
+                        else: yield from bps.mv(en, energy)
                     ## TODO: could I just run waxs_spiral_mode() over here and then after spiral_scan finishes, run waxs_normal_mode()?  Eliot may have mentioned something about not being able to do this inside the Run Engine or within spreadsheet, but maybe get this clarified during data security?
                     yield from spiral_scan(
                         stepsize=acquisition["spiral_dimensions"][0], 
@@ -137,7 +137,6 @@ def run_acquisitions_single(
                         n_exposures=acquisition["exposures_per_energy"], 
                         dwell=acquisition["exposure_time"],
                         sample=acquisition["sample_id"],
-                        #md = {"sample_id": acquisition["sample_id"]}, ## Add this back in if sample name does not automatically update
                         )
 
                 if acquisition["scan_type"] in ("nexafs", "rsoxs"):
