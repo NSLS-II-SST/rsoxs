@@ -78,7 +78,6 @@ def run_acquisitions_single(
     parameter = "sample_id"
     if acquisition[parameter] is not None:
         print("Loading sample: " + str(acquisition[parameter]))
-        ## TODO: comment when I don't have beam
         if dryrun == False: 
             ## Don't move motors if I don't have beam.
             if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
