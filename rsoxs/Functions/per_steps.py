@@ -18,12 +18,12 @@ from bluesky.plan_stubs import (
     save,
     unstage,
 )
-from sst_hw.diode import (
+from nbs_bl.hw import (
     Shutter_open_time,
     Shutter_control,
-    Shutter_enable,
-    Shutter_trigger,
-    shutter_open_set
+    #Shutter_enable,
+    #Shutter_trigger,
+    #shutter_open_set
 )
 from bluesky.utils import Msg, short_uid as _short_uid
 
@@ -58,6 +58,7 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
         messages to 'trigger', 'wait' and 'read'
     """
     if shutter is None:
+        print("no shutter")
         return (yield from trigger_and_read(devices))
     _devices = copy.copy(devices)
     _devices = separate_devices(_devices)  # remove redundant entries
@@ -95,19 +96,19 @@ def trigger_and_read_with_shutter(devices, shutter=None, name='primary'):
             ret.update(reading)
         yield from save()
         return ret
-
     return (yield from rewindable_wrapper(inner_trigger_and_read(),
                                           rewindable))
 
 
 
-def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_read_with_shutter, shutter=None, check_exposure=False):
+def take_exposure_corrected_reading(detectors=None, take_reading=None, shutter=None, check_exposure=False):
     # this is a replacement of trigger and read, that continues to trigger increasing or decreasing the
     # explsure time until limits are reached or neither under exposing or over exposing
     # by default this further wraps the trigger and read into trigger and read with shutter
 
     if detectors == None:
         detectors = []
+    take_reading = take_reading if take_reading else trigger_and_read_with_shutter  ## This line was added such that there are no functions directly inputted into the function heading.
     yield from take_reading(list(detectors), shutter = shutter)
     if(check_exposure):
         under_exposed = False
@@ -164,7 +165,7 @@ def take_exposure_corrected_reading(detectors=None, take_reading=trigger_and_rea
                     over_exposed = True
 
 
-def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_read_with_shutter,remember=None):
+def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=None,remember=None):
     """
     Inner loop of an N-dimensional step scan
 
@@ -192,7 +193,11 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=trigger_and_
     yield Msg("checkpoint")
     if remember == None:
         remember = {}
+    
     motors = step.keys()
+
+    take_reading = take_reading if take_reading else trigger_and_read_with_shutter
+
     yield from move_per_step(step, pos_cache)
     input_time = Shutter_open_time.get()
     if 'last_correction' in remember:

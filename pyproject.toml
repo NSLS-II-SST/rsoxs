@@ -1,3 +1,42 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsoxs"
+authors = [
+    {name = "Charles Titus", email = "ctitus@bnl.gov"},
+    {name = "Priyanka Ketkar", email = "pketkar@bnl.gov"},
+    {name = "Eliot Gann", email = "egann@bnl.gov"},
+]
+description = "RSoXS Beamline Framework"
+dynamic = ["version", "dependencies"]
+requires-python = ">=3.9"
+
+[project.urls]
+homepage = "https://github.com/NSLS-II-SST/rsoxs"
+
+[tool.setuptools]
+packages = ["rsoxs"]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.entry-points."nbs_gui.plans"]
+rsoxs-custom-scan = "rsoxs.qt.plans.rsoxsCustom:RSoXSCustomWidget"
+rsoxs-scan = "rsoxs.qt.plans.rsoxsPlan:RSoXSPlanWidget"
+
+[project.entry-points."nbs_gui.plan_loaders"]
+rsoxs-gui-loader = "rsoxs.qt.plans.rsoxs_plan_loader:RSoXSPlanLoader"
+
+[project.entry-points."nbs_bl.plan_loaders"]
+rsoxs = "rsoxs.plans.rsoxs:load_rsoxs"
+
+[project.entry-points."nbs_bl.plan_decorators"]
+rsoxs_waxs = "rsoxs.plans.scan_decorators:rsoxs_waxs_decorator"
+
 [tool.black]
 line-length = 115
 include = '\.pyi?$'

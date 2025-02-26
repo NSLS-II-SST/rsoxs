@@ -3,67 +3,57 @@ from operator import itemgetter
 from copy import deepcopy
 import collections
 import numpy as np
-import redis_json_dict
 
 from functools import partial
 import bluesky.plan_stubs as bps
 from ophyd import Device
-from ..startup import RE, db,  db0, rsoxs_config #bec,
-from ..HW.signals import (
-    Beamstop_SAXS, 
-    Beamstop_WAXS, 
-    DiodeRange, 
-    Beamstop_SAXS_int,
-    Beamstop_WAXS_int, 
-    Izero_Mesh_int,
-    Sample_TEY_int,
-    default_sigs,
-)
-
-from ..HW.detectors import waxs_det,  set_exposure#, saxs_det
-from sst_hw.shutters import psh10
-from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
-from sst_funcs.printing import run_report
-from ..HW.slackbot import rsoxs_bot
-from sst_hw.mirrors import mir4OLD
-from sst_hw.diode import (
+from ..startup import RE, db, rsoxs_config  # bec,
+from nbs_bl.hw import (
+    psh10,
+    Exit_Slit,
+    slits1,
+    Izero_Y,
     Shutter_control,
-)
-from ..HW.motors import (
+    Shutter_Y,
+    slits2,
+    slits3,
     sam_X,
     sam_Y,
     sam_Th,
     sam_Z,
-    Shutter_Y,
-    Izero_Y,
-    Det_S,
-    Det_W,
-    BeamStopW,
-    BeamStopS,
     TEMX,
     TEMY,
     TEMZ,
-    dm7
+    BeamStopW,
+    Det_W,
+    Beamstop_SAXS,
+    BeamStopS,
+    Det_S,
+    dm7,
 )
+
+## An alternative way to load devices is:
+# from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+# Beamstop_SAXS = bl["Beamstop_SAXS"] ## what follows bl is the key in devices.toml in profile_collection contained in the []
+from ..HW.signals import default_sigs
+from ..HW.detectors import set_exposure  # , saxs_det
+from ..HW.energy import en, set_polarization, grating_to_1200, grating_to_250, grating_to_rsoxs
+from nbs_bl.printing import run_report, boxed_text, colored
+from ..HW.slackbot import rsoxs_bot
 from . import configurations
-from ..HW.slits import slits1, slits2, slits3
-from sst_hw.motors import Exit_Slit
-from sst_funcs.printing import boxed_text, colored
 from .common_functions import args_to_string
 from .configurations import (
     WAXSNEXAFS,
     WAXS,
-    SAXS,
+    #SAXS,
     SAXSNEXAFS,
     SAXS_liquid,
     WAXS_liquid,
 )
-from .per_steps import (
-    take_exposure_corrected_reading,
-    one_nd_sticky_exp_step
-)
+from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step
 
 from .alignment_local import *
+
 run_report(__file__)
 
 
@@ -129,7 +119,6 @@ def sample():
     boxed_text(title, text, "red", 80, shrink=False)
 
 
-
 def get_location(motor_list):
     locs = []
     for motor in motor_list:
@@ -138,7 +127,7 @@ def get_location(motor_list):
 
 
 def sample_set_location(num):
-    sample_dict = rsoxs_config['bar'][num]
+    sample_dict = rsoxs_config["bar"][num]
     sample_dict["location"] = get_sample_location()  # set the location metadata
     # sample_recenter_sample(
     #     sample_dict
@@ -156,13 +145,13 @@ def get_sample_location():
     return locs
 
 
-def duplicate_sample(samp_num,name_suffix):
-     newsamp =deepcopy(samp_dict_from_id_or_num(samp_num))
-     newsamp['location'] = get_sample_location()
-     newsamp['sample_name']+=f'_{name_suffix}'
-     newsamp['sample_id']+=f'_{name_suffix}'
-     rsoxs_config['bar'].append(newsamp)
-     
+def duplicate_sample(samp_num, name_suffix):
+    newsamp = deepcopy(samp_dict_from_id_or_num(samp_num))
+    newsamp["location"] = get_sample_location()
+    newsamp["sample_name"] += f"_{name_suffix}"
+    newsamp["sample_id"] += f"_{name_suffix}"
+    rsoxs_config["bar"].append(newsamp)
+
 
 def move_to_location(locs=get_sample_location()):
     for item in locs:
@@ -180,7 +169,7 @@ def move_to_location(locs=get_sample_location()):
         sam_Z: sam_Z,
         sam_Th: sam_Th,
         TEMZ: TEMZ,
-        'TEMZ': TEMZ,
+        "TEMZ": TEMZ,
         slits1.vsize: slits1.vsize,
         slits1.hsize: slits1.hsize,
         slits2.vsize: slits2.vsize,
@@ -200,12 +189,10 @@ def move_to_location(locs=get_sample_location()):
         BeamStopS: BeamStopS,
         BeamStopW: BeamStopW,
         Exit_Slit: Exit_Slit,
-        mir4OLD.x:mir4OLD.x,
-        mir4OLD.y:mir4OLD.y,
-        dm7:dm7,
+        dm7: dm7,
     }
     for order in orderlist:
-        
+
         """
         for items in locs:
             if items["order"] == order:
@@ -215,11 +202,11 @@ def move_to_location(locs=get_sample_location()):
                         ]
         """
         ## 20241202 error while running load_samp: TypeError: float() argument must be a string or a real number, not 'ObservableSequence'
-        
+
         outputlist = [
             [switch[items["motor"]], float(items["position"])] for items in locs if items["order"] == order
         ]
-        
+
         flat_list = [item for sublist in outputlist for item in sublist]
         yield from bps.mv(*flat_list)
 
@@ -234,7 +221,7 @@ def get_md_from_config(config):
     return config_func()[1]
 
 
-def load_configuration(config, sim_mode=False):
+def load_configuration_old(config, sim_mode=False):
     """
     :param config: string containing a name of a configuration
     :return:
@@ -242,7 +229,7 @@ def load_configuration(config, sim_mode=False):
     if sim_mode:
         return f"moved to {config} configuration"
     yield from move_to_location(get_location_from_config(config))
-    RE.md.update(get_md_from_config(config))
+    RE.md.update(get_md_from_config(config)) ## This is where contents from rsoxs_config["bar"] are getting put into RE.md.
 
 
 def get_sample_dict(acq=[], locations=None):
@@ -301,7 +288,6 @@ def get_sample_dict(acq=[], locations=None):
     }
 
 
-
 def load_sample(sam_dict, sim_mode=False):
     """
     move to a sample location and load the metadata with the sample information
@@ -313,7 +299,8 @@ def load_sample(sam_dict, sim_mode=False):
         return f"move to {sam_dict['sample_name']}"
     RE.md.update(sam_dict)
     yield from move_to_location(locs=sam_dict["location"])
-    
+
+
 def load_samp(num_or_id, sim_mode=False):
     """
     move to a sample location and load the metadata with the sample information from persistant sample list by index or sample_id
@@ -439,7 +426,7 @@ def newsample():
             sam_Th.user_readback.get(),
         )
     )
-    if loc is not "":
+    if loc != "":
         locs = []
         xval = input("X ({:.2f}): ".format(sam_X.user_readback.get()))
         if xval != "":
@@ -468,11 +455,8 @@ def newsample():
         return get_sample_dict(acq=[])  # uses current location by default
 
 
-
 def alignment_rel_scan(det, motor, start_rel, end_rel, steps):
     savemd = RE.md.deepcopy()
-
-
 
 
 # Spiral searches
@@ -484,7 +468,6 @@ def samxscan():
     yield from psh10.close()
 
 
-
 def spiralsearch(
     diameter=0.6,
     stepsize=0.2,
@@ -494,7 +477,7 @@ def spiralsearch(
     exposure=1,
     repeats=1,
     master_plan=None,
-    enscan_type='spiral',
+    enscan_type="spiral",
     dets=[],
     sim_mode=False,
     grating=None,
@@ -543,24 +526,22 @@ def spiralsearch(
     """
     if md is None:
         md = RE.md
-    if len(str(md.get('bar_loc',{}).get('spiral_started','')))>0 and not force:
+    if len(str(md.get("bar_loc", {}).get("spiral_started", ""))) > 0 and not force:
         print(f"spiral for {md['sample_name']} was already started, either force, or remove to run spiral again")
         yield from bps.null()
-        return ''
+        return ""
     arguments = dict(locals())
     valid = True
     validation = ""
     newdets = []
     signals = default_sigs
     for argument in arguments:
-        if isinstance(argument,np.ndarray):
+        if isinstance(argument, np.ndarray):
             argument = list(argument)
     del arguments["md"]  # no recursion here!
     md.setdefault("acq_history", [])
-    md["acq_history"].append(
-        {"plan_name": "spiralsearch", "arguments": arguments}
-    )
-    md.update({"plan_name": enscan_type, "master_plan": master_plan,'plan_args' :arguments })
+    md["acq_history"].append({"plan_name": "spiralsearch", "arguments": arguments})
+    md.update({"plan_name": enscan_type, "master_plan": master_plan, "plan_args": arguments})
     for det in dets:
         if not isinstance(det, Device):
             try:
@@ -572,7 +553,7 @@ def spiralsearch(
         valid = False
         validation += "a detector number not equal to 1 was given\n"
 
-    if isinstance(angle,(float,int)):
+    if isinstance(angle, (float, int)):
         if -155 > angle or angle > 195:
             valid = False
             validation += f"angle of {angle} is out of range\n"
@@ -596,44 +577,41 @@ def spiralsearch(
         yield from grating_to_rsoxs()
     yield from bps.mv(en, energy)
     yield from set_polarization(pol)
-    
+
     set_exposure(exposure)
     old_n_exp = {}
     for det in newdets:
         old_n_exp[det.name] = det.number_exposures
         det.number_exposures = repeats
-         
+
     x_center = sam_X.user_setpoint.get()
     y_center = sam_Y.user_setpoint.get()
     num = round(diameter / stepsize) + 1
 
-    if isinstance(angle,(float,int)):
+    if isinstance(angle, (float, int)):
         print(f"moving angle to {angle}")
         yield from rotate_now(angle)
-    md['bar_loc']['spiral_started'] = RE.md['scan_id']+1
+    md["bar_loc"]["spiral_started"] = RE.md["scan_id"] + 1
 
     yield from bp.spiral_square(
-                newdets + signals,
-                sam_X,
-                sam_Y,
-                x_center=x_center,
-                y_center=y_center,
-                x_range=diameter,
-                y_range=diameter,
-                x_num=num,
-                y_num=num,
-                md=md,
-                per_step=partial(one_nd_sticky_exp_step,
-                                    remember={},
-                                    take_reading=partial(take_exposure_corrected_reading,
-                                                        shutter = Shutter_control,
-                                                        check_exposure=False))
-                )
-                
-    md['bar_loc']['spiral_started'] = db[-1]['start']['uid']
+        newdets + signals,
+        sam_X,
+        sam_Y,
+        x_center=x_center,
+        y_center=y_center,
+        x_range=diameter,
+        y_range=diameter,
+        x_num=num,
+        y_num=num,
+        md=md,
+        per_step=partial(
+            one_nd_sticky_exp_step,
+            remember={},
+            take_reading=partial(take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False),
+        ),
+    )
 
-
-
+    md["bar_loc"]["spiral_started"] = db[-1]["start"]["uid"]
 
 
 def rotate_now(theta, force=False):
@@ -644,20 +622,25 @@ def rotate_now(theta, force=False):
         yield from load_sample(samp)
 
 
-def jog_samp_zoff(id_or_num,jog_val,write_default=True,move=True):
+def jog_samp_zoff(id_or_num, jog_val, write_default=True, move=True):
     # jogs the zoffset of a sample by some mm and optionally moves to the new position
     samp = samp_dict_from_id_or_num(id_or_num)
     if jog_val < -5 or jog_val > 5:
-        raise ValueError('invalid jog value with magnitude > 5 was entered, start with something small')
-    if 'bar_loc' in samp:
-        if 'zoff' in samp['bar_loc']:
-            samp['bar_loc']['zoff'] += jog_val
+        raise ValueError("invalid jog value with magnitude > 5 was entered, start with something small")
+    if "bar_loc" in samp:
+        if "zoff" in samp["bar_loc"]:
+            samp["bar_loc"]["zoff"] += jog_val
             if write_default:
-                rotate_sample(samp) # this will write the new rotated positions into the position (without moving anything)
-            if(move):
+                rotate_sample(
+                    samp
+                )  # this will write the new rotated positions into the position (without moving anything)
+            if move:
                 RE(load_samp(id_or_num))
         else:
-            raise ValueError(f'the sample {samp["sample_name"]} does not appear to have a zoff yet, have you corrected positions?')
+            raise ValueError(
+                f'the sample {samp["sample_name"]} does not appear to have a zoff yet, have you corrected positions?'
+            )
     else:
-        raise ValueError(f'the sample {samp["sample_name"]} does not appear to have a bar_loc field yet, have you imaged the sample positions?')
-
+        raise ValueError(
+            f'the sample {samp["sample_name"]} does not appear to have a bar_loc field yet, have you imaged the sample positions?'
+        )

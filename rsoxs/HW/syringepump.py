@@ -1,5 +1,5 @@
 from sst_funcs.printing import run_report
-from ..Base.syringepump import Syringe_Pump
+from ..devices.syringepump import Syringe_Pump
 
 run_report(__file__)
 

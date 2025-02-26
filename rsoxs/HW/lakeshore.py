@@ -10,7 +10,7 @@ from ophyd import (
 from ophyd.status import MoveStatus
 from ophyd.mixins import EpicsSignalPositioner
 from collections import deque
-from sst_funcs.printing import run_report
+from nbs_bl.printing import run_report
 
 run_report(__file__)
 

@@ -30,16 +30,40 @@ from ophyd import Device, Signal
 from ophyd.status import StatusTimeoutError
 import warnings
 from copy import deepcopy
-from ..HW.energy import (
+from nbs_bl.hw import (
     en,
+    mir3,
+    Izero_Mesh,
+    Izero_Mesh_int,
+    Shutter_open_time,
+    Shutter_control,
+    Shutter_enable,
+    #Shutter_trigger,
+    #shutter_open_set
+    sam_X,
+    sam_Y,
+    sam_Z,
+    sam_Th,
+    Beamstop_WAXS,
+    waxs_det,
+    Beamstop_SAXS,
+    #saxs_det,
+    DiodeRange,
+    Sample_TEY, 
+    Beamstop_SAXS_int,
+    Beamstop_WAXS_int,
+    DownstreamLargeDiode, 
+    DownstreamLargeDiode_int, 
+    Sample_TEY_int, 
+    ring_current,
+)
+from ..HW.energy import (
     mono_en,
     epu_gap,
     grating_to_250,
     grating_to_rsoxs,
     grating_to_1200,
     set_polarization,
-)
-from ..HW.energy import (
     #Mono_Scan_Speed_ev,
     #Mono_Scan_Start,
     #Mono_Scan_Start_ev,
@@ -47,27 +71,7 @@ from ..HW.energy import (
     #Mono_Scan_Stop_ev,
     get_gap_offset,
 )
-from ..HW.motors import (
-    sam_X,
-    sam_Y,
-    sam_Z,
-    sam_Th,
-)
-from sst_hw.mirrors import mir3
-from ..HW.detectors import waxs_det#, saxs_det
 from ..HW.signals import (
-    DiodeRange,
-    Beamstop_WAXS,
-    Beamstop_SAXS,
-    Izero_Mesh,
-    Sample_TEY, 
-    Beamstop_SAXS_int,
-    Beamstop_WAXS_int,
-    DownstreamLargeDiode, 
-    DownstreamLargeDiode_int, 
-    Izero_Mesh_int,
-    Sample_TEY_int, 
-    ring_current,
     default_sigs,
 )
 from ..HW.lakeshore import tem_tempstage
@@ -76,15 +80,9 @@ from ..Functions.common_procedures import set_exposure
 from ..Functions.fly_alignment import find_optimum_motor_pos, db, return_NullStatus_decorator #bec, 
 
 from .flystream_wrapper import flystream_during_wrapper
-from sst_hw.diode import (
-    Shutter_open_time,
-    Shutter_control,
-    Shutter_enable,
-    Shutter_trigger,
-    shutter_open_set
-)
-from sst_funcs.printing import run_report
-
+from nbs_bl.printing import run_report
+from nbs_bl.plans.scans import nbs_list_scan, nbs_gscan
+from nbs_bl.utils import merge_func
 
 from ..startup import rsoxs_config, RE
 from bluesky.utils import ensure_generator, short_uid as _short_uid, single_gen
@@ -100,6 +98,81 @@ from .per_steps import (
 run_report(__file__)
 
 
+
+@merge_func(nbs_gscan, use_func_name=False, omit_params=["motor"])
+def variable_energy_scan(*args, **kwargs):
+    yield from bps.mv(Shutter_control, 1)
+    yield from finalize_wrapper(
+        plan = nbs_gscan(en.energy, *args, **kwargs),
+        final_plan= post_scan_hardware_reset()
+    )
+
+@merge_func(variable_energy_scan, use_func_name=False, omit_params=['per_step'])
+def rsoxs_step_scan(*args, extra_dets=[], n_exposures=1, **kwargs):
+    """
+    Step scanned RSoXS function with WAXS Detector
+
+    Parameters
+    ----------
+    n_exposures : int, optional
+        If greater than 1, take multiple exposures per step
+    """
+    old_n_exp = waxs_det.number_exposures
+    waxs_det.number_exposures = n_exposures
+    _extra_dets = [waxs_det]
+    _extra_dets.extend(extra_dets)
+    rsoxs_per_step=partial(one_nd_sticky_exp_step,
+                    take_reading=partial(take_exposure_corrected_reading,
+                                        shutter = Shutter_control,
+                                        check_exposure=False))
+    yield from variable_energy_scan(*args, extra_dets=_extra_dets, per_step=rsoxs_per_step, **kwargs)
+    waxs_det.number_exposures = old_n_exp
+
+@merge_func(nbs_list_scan, use_func_name=False, omit_params=["*args"])
+def energy_step_scan(energies, **kwargs):
+    yield from bps.mv(Shutter_control, 1)
+    yield from finalize_wrapper(
+        plan = nbs_list_scan(en.energy, energies, **kwargs),
+        final_plan= post_scan_hardware_reset()
+    )
+
+def step_scan_energy(
+    energies=None,
+    detectors=None,
+    exposure_times=None,
+):
+## A generic energy step sweep that can be applied to both RSoXS and NEXAFS based on what detectors are provided  
+    yield from bps.mv(Shutter_control, 1) ## Open the shutter
+    """
+    yield from finalize_wrapper(
+        plan = bp.list_scan(
+            detectors=detectors,
+            en.energy, energies,
+            for detector in detectors: 
+                pass
+                # detector.exposure_time, exposure_times
+        ),
+        final_plan = post_scan_hardware_reset()
+    )
+    """
+
+
+def post_scan_hardware_reset():
+    ## Make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
+    yield from bps.mv(en.scanlock, 0)
+    yield from bps.mv(Shutter_control, 0)
+
+
+
+
+
+
+
+
+
+
+
+## Everything below is Eliot's old code.  Above is new scans.
 
 SLEEP_FOR_SHUTTER = 1
 
@@ -850,7 +923,13 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
 
 
 
-def cdsaxs_scan(det=waxs_det,angle_mot = sam_Th,shutter = Shutter_control,start_angle=50,end_angle=85,exp_time=9,md=None):
+def cdsaxs_scan(det=None,angle_mot = None,shutter = None,start_angle=50,end_angle=85,exp_time=9,md=None):
+    
+    ## Sanitize inputs that can't go directly into inputs
+    det = det if det else waxs_det 
+    angle_mot = angle_mot if angle_mot else sam_Th 
+    shutter = shutter if shutter else Shutter_control
+    
     _md = deepcopy(dict(RE.md))
     if md == None:
         md = {}

@@ -5,12 +5,17 @@ import logging
 global no_notifications_until
 from ..startup import RE
 from ..HW.slackbot import rsoxs_bot
-from ..HW.motors import sam_X, sam_Y, sam_Th,sam_Z, BeamStopS, BeamStopW,Det_S,Det_W, Izero_Y, Shutter_Y
-from sst_hw.motors import gratingx, mirror2x, mirror2, grating
-from ..HW.slits import slits1, slits2, slits3
-from sst_funcs.printing import run_report
-from sst_hw.diode import MC19_disable, MC20_disable, MC21_disable
-
+from nbs_bl.hw import sam_X, sam_Y, sam_Th,sam_Z, BeamStopS, BeamStopW,Det_S,Det_W, Izero_Y, Shutter_Y
+from nbs_bl.hw import gratingx, mirror2x, mirror2, grating ## TODO: these should be contained in the energy object, so might not be necessary
+from nbs_bl.hw import(
+    slits1,
+    slits2,
+    slits3,
+    MC19_disable, 
+    MC20_disable, 
+    MC21_disable
+)
+from nbs_bl.printing import run_report
 
 run_report(__file__)
 

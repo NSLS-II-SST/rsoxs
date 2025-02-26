@@ -13,12 +13,14 @@ import bluesky.plan_stubs as bps
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
 from ..startup import db, rsoxs_config #bec, 
-from ..HW.motors import sam_viewer
-from ..HW.cameras import SampleViewer_cam
-from sst_funcs.printing import run_report
+from nbs_bl.hw import(
+    sam_viewer,   
+    SampleViewer_cam
+)
+from nbs_bl.printing import run_report
 from ..HW.slackbot import rsoxs_bot
 
-from sst_funcs.printing import boxed_text, colored
+from nbs_bl.printing import boxed_text, colored
 from .common_functions import args_to_string
 
 def sample_by_value_match(key, string, bar=None):
@@ -44,6 +46,8 @@ def list_samples(bar=None):
     text = "  i  Sample Name"
     for index, sample in enumerate(bar):
         text += "\n {} {}".format(index, sample["sample_name"])
+        """
+        ## PK: commenting this out because I have changed acquisition parameters
         acqs = bar[index]["acquisitions"]
         for acq in acqs:
             text += "\n   {} of {} in {} config, priority {}".format(
@@ -52,6 +56,7 @@ def list_samples(bar=None):
                 acq["configuration"],
                 acq["priority"],
             )
+        """
     boxed_text("Samples on bar", text, "lightblue", shrink=False)
 
 
@@ -205,16 +210,41 @@ def image_bar( path=None, front=True, bar=None):
     loc_Q = queue.Queue(1)
     ypos = np.arange(-100, 110, 25)
     
-
+    yield from bp.list_scan([SampleViewer_cam], sam_viewer, ypos)
+    """
     yield from bpp.subs_wrapper(
         bp.list_scan([SampleViewer_cam], sam_viewer, ypos),
-        {'stop': [BarPlotter(path=path, front=front, bar=bar)]}
+        #{'stop': [BarPlotter(path=path, front=front, bar=bar)]} ## PK: Using Eliot's code through data security and commenting this out so that it does not attempt to access db.  TODO: rewrite these functions and reorganize into new folder.
     )
+    """
+    ## Acquisition parameters in Phoebus: ######################
+    ## Exposure time = 0.05 s ## Likely the first parameter to be adjusted if image is too bright or dim
+    ## Acquire Period: 1 s
+    ## Num Images: 1
+    ## Exp/Image: 1
+    ## Image Mode: Single
+    ## Trigger Mode: Fixed Rate
+    ## areaDetector Plugins --> Expert (AD detail) --> Prosilica
+    ## Binning x = 1, y = 1
+    ## Region start x = 0, y = 0
+    ## Region size x = 2464, y = 2056
+    ## Gain: 0
+    ## Data type: UInt8
+    ## Color mode: RGB1 ## May need to switch this to something else then back to RGB1 for colors to show up
+    ## Bayer convert: None
+    ## Shutter mode: None
+    ## Wait for plugins: Yes
+    ## Image counter: 0
+    ## Array callbacks: Enable
+    ## Buffer & memory polling: 1
+    
     # print('Run locate_samples_from_image() to find your positions interactively')
     # all the rest of this function won't work correctly 
     # because of threading in the run engine, so it needs
     # to be run seperately
     #print(imageuid)
+
+    ## TODO: possibly make a separate RunEngine for taking pictures.  Also update to make it data security compliant.  Possibly run through Jupyter notebook after feeding in spreadsheet and image rather than pointing to db.
     
 
 def locate_samples_from_image( impath, front=True, bar=None):
