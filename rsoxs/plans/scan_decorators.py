@@ -41,6 +41,8 @@ def rsoxs_waxs_decorator(func):
             Whether to open the shutter for the scan. If True, the shutter will be opened before the scan and closed after the scan.
             If False, the shutter will be closed for the duration of the scan. Does not apply to scans using the WAXS detector,
             which have their own shutter control.
+        n_exposures : int, optional
+            Number of exposures for the Greateyes detector to take per step
         """
         print("RSoXS decorator applied to scan")
         _extra_dets = []
