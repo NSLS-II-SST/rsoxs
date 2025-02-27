@@ -22,9 +22,21 @@ from nbs_bl.hw import (
     Shutter_enable,
     Shutter_delay,
 )
+from redis_json_dict import RedisJSONDict
+import redis
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+
 import warnings
 
 run_report(__file__)
+
+redis_md_settings = bl.settings.get("redis").get("md")
+mdredis = redis.Redis(
+    redis_md_settings.get("host", "info.sst.nsls2.bnl.gov"),
+    port=redis_md_settings.get("port", 6379),
+    db=redis_md_settings.get("db", 0),
+)
+md_redis = RedisJSONDict(mdredis, prefix=redis_md_settings.get("prefix", ""))
 
 
 class StatsWithHist(StatsPluginV33):
@@ -101,10 +113,10 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     tiff = C(
         TIFFPluginWithFileStore,
         "TIFF1:",
-        write_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
-        read_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
+        write_path_template=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/%Y/%m/%d/", ## Where images saved locally
+        read_path_template=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/%Y/%m/%d/",
         read_attrs=[],
-        root="/nsls2/data/sst/assets/",
+        root=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/",
         kind="hinted",
     )
 
