@@ -13,7 +13,6 @@ from ophyd.areadetector import (
     TransformPlugin,
 )
 from ophyd.areadetector.base import ad_group
-from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
 from nbs_bl.printing import boxed_text, colored, run_report
 from nbs_bl.hw import (
@@ -22,21 +21,11 @@ from nbs_bl.hw import (
     Shutter_enable,
     Shutter_delay,
 )
-from redis_json_dict import RedisJSONDict
-import redis
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
-
+from sst_base.cameras import TIFFPluginWithProposalDirectory
 import warnings
 
 run_report(__file__)
-
-redis_md_settings = bl.settings.get("redis").get("md")
-mdredis = redis.Redis(
-    redis_md_settings.get("host", "info.sst.nsls2.bnl.gov"),
-    port=redis_md_settings.get("port", 6379),
-    db=redis_md_settings.get("db", 0),
-)
-md_redis = RedisJSONDict(mdredis, prefix=redis_md_settings.get("prefix", ""))
 
 
 class StatsWithHist(StatsPluginV33):
@@ -47,13 +36,6 @@ class StatsWithHist(StatsPluginV33):
         super().__init__(*args, **kwargs)
         self.total.kind = "hinted"
         self.compute_histogram.set(1).wait()
-
-
-class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
-    """Add this as a component to detectors that write TIFFs."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
@@ -111,12 +93,12 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     transform_type = 0
     number_exposures = 1
     tiff = C(
-        TIFFPluginWithFileStore,
+        TIFFPluginWithProposalDirectory,
         "TIFF1:",
-        write_path_template=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/%Y/%m/%d/", ## Where images saved locally
-        read_path_template=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/%Y/%m/%d/",
+        md=bl.md,
+        camera_name="waxs-1",
+        write_template="%Y/%m/%d/",
         read_attrs=[],
-        root=f"/nsls2/data/sst/proposals/{md_redis['cycle']}/{md_redis['data_session']}/assets/waxs-1/",
         kind="hinted",
     )
 
