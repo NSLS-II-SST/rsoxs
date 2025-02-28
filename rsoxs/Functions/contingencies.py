@@ -5,7 +5,7 @@ import logging
 global no_notifications_until
 from ..startup import RE
 from ..HW.slackbot import rsoxs_bot
-from nbs_bl.hw import sam_X, sam_Y, sam_Th,sam_Z, BeamStopS, BeamStopW,Det_S,Det_W, Izero_Y, Shutter_Y
+from nbs_bl.hw import sam_X, sam_Y, sam_Th,sam_Z, BeamStopS, BeamStopW, Det_S, Det_W, izero_y, shutter_y
 from nbs_bl.hw import gratingx, mirror2x, mirror2, grating ## TODO: these should be contained in the energy object, so might not be necessary
 from nbs_bl.hw import(
     slits1,
@@ -82,8 +82,8 @@ def amp_fault_clear_19():
         slits1.bottom.enable,1,
         slits1.inboard.enable,1,
         slits1.outboard.enable,1,
-        Shutter_Y.enable,1,
-        Izero_Y.enable,1,
+        shutter_y.enable,1,
+        izero_y.enable,1,
     )
     # wait a second
     yield from bps.sleep(5)

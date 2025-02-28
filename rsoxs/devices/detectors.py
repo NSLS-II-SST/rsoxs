@@ -16,10 +16,10 @@ from ophyd.areadetector.base import ad_group
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
 from nbs_bl.printing import boxed_text, colored, run_report
 from nbs_bl.hw import (
-    Shutter_open_time,
-    Shutter_control,
-    Shutter_enable,
-    Shutter_delay,
+    shutter_open_time,
+    shutter_control,
+    shutter_enable,
+    shutter_delay,
 )
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from sst_base.cameras import TIFFPluginWithProposalDirectory
@@ -97,7 +97,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         "TIFF1:",
         md=bl.md,
         camera_name="waxs-1",
-        write_template="%Y/%m/%d/",
+        date_template="%Y/%m/%d/",
         read_attrs=[],
         kind="hinted",
     )
@@ -193,8 +193,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # print('staging the detector')
         if self.useshutter:
 
-            Shutter_enable.set(1).wait()
-            Shutter_delay.set(0).wait()
+            shutter_enable.set(1).wait()
+            shutter_delay.set(0).wait()
         if abs(self.cam.temperature_actual.get() - self.cam.temperature.get()) > 2.0:
 
             boxed_text(
@@ -241,7 +241,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def unstage(self, *args, **kwargs):
         if self.useshutter:
-            Shutter_enable.set(0).wait()
+            shutter_enable.set(0).wait()
         else:
             print("not turning on shutter because detector is in simulation mode")
         self.cam.num_images.set(1).wait()
@@ -359,7 +359,7 @@ class SyncedDetectors(Device):
     def set_exposure(self, seconds):
         self.waxs.set_exptime_detonly(seconds)
         self.saxs.set_exptime_detonly(seconds)
-        Shutter_open_time.set(seconds * 1000).wait()
+        shutter_open_time.set(seconds * 1000).wait()
         self.waxs.trans1.type.put(1)
         self.saxs.trans1.type.put(3)
 
@@ -398,13 +398,13 @@ class SyncedDetectors(Device):
         self.cooling_state()
 
     def open_shutter(self):
-        Shutter_control.set(1).wait()
+        shutter_control.set(1).wait()
 
     def close_shutter(self):
-        Shutter_control.set(0).wait()
+        shutter_control.set(0).wait()
 
     def shutter(self):
-        Shutter_control.get()
+        shutter_control.get()
 
 
 from ophyd.sim import SynSignalWithRegistry, SynSignal

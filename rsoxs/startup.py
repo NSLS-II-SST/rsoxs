@@ -45,7 +45,7 @@ else:
     ns = {}
 if not is_re_worker_active():
     get_ipython().log.setLevel("ERROR")
-db = Broker.named("rsoxs")  ## This can access scan information from Tiled (?)
+# db = Broker.named("rsoxs")  ## This can access scan information from Tiled (?)
 # db is defined manually so that configure_base
 # is not called multiple times when starting up
 # Bluesky on the beamline computer.

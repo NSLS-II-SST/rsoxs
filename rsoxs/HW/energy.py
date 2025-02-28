@@ -9,7 +9,7 @@ from nbs_bl.hw import (
     en,
     grating,
     mirror2,
-    Shutter_control,
+    shutter_control,
     Sample_TEY,
     sam_Th,
     sam_X,
@@ -172,9 +172,9 @@ def grating_to_1200(hopgx=None,hopgy=None,hopgtheta=None):
         # yield from bps.sleep(1)
         # yield from bps.mv(en, 291.65)
         # yield from bps.mv(en.polarization, 0)
-        # yield from bps.mv(Shutter_control,1)
+        # yield from bps.mv(shutter_control,1)
         # yield from bp.rel_scan([Sample_TEY],grating,-0.05,.05,mirror2,-0.05,.05,201)
-        # yield from bps.mv(Shutter_control,0)
+        # yield from bps.mv(shutter_control,0)
         # yield from bps.mv(sam_X,xsave,sam_Y,ysave,sam_Th,thsave)
         # yield from bps.sleep(5)
         # newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
@@ -228,9 +228,9 @@ def grating_to_rsoxs(hopgx=None,hopgy=None,hopgtheta=None):
 #     yield from bps.mv(en, 291.65)
 #     yield from bps.sleep(1)
 #     yield from bps.mv(en, 291.65)
-#     yield from bps.mv(Shutter_control,1)
+#     yield from bps.mv(shutter_control,1)
 #     yield from bp.rel_scan([Sample_TEY],grating,-0.5,.5,mirror2,-0.5,.5,201)
-#     yield from bps.mv(Shutter_control,0)
+#     yield from bps.mv(shutter_control,0)
 #     yield from bps.sleep(5)
 #     newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]
 #     if -0.45 < newoffset < 0.45 :
@@ -240,9 +240,9 @@ def grating_to_rsoxs(hopgx=None,hopgy=None,hopgtheta=None):
 #     yield from bps.mv(en, 291.65)
 #     yield from bps.sleep(1)
 #     yield from bps.mv(en, 291.65)
-#     yield from bps.mv(Shutter_control,1)
+#     yield from bps.mv(shutter_control,1)
 #     yield from bp.rel_scan([Sample_TEY],grating,-0.02,.02,mirror2,-0.02,.02,101)
-#     yield from bps.mv(Shutter_control,0)
+#     yield from bps.mv(shutter_control,0)
 #     yield from bps.mv(sam_X,xsave,sam_Y,ysave,sam_Th,thsave)
 #     yield from bps.sleep(5)
 #     newoffset = en.monoen.grating.get()[0] - bec.peaks.max['RSoXS Sample Current'][0]

@@ -18,7 +18,7 @@ from ..Functions.contingencies import (
 )
 from nbs_bl.hw import (
     ring_current,
-    FEsh1, 
+    fesh, 
     psh4,
     sst_control,
     gvll, 
@@ -71,7 +71,7 @@ suspend_shutter4 = SuspendBoolHigh(
 )
 
 suspend_shutter1 = SuspendBoolHigh(
-    FEsh1.state,
+    fesh.state,
     sleep=30,
     tripped_message="Front End Shutter Closed, waiting for it to open",
     pre_plan=beamdown_notice,
@@ -89,7 +89,7 @@ suspend_gate_valve = SuspendBoolLow(
 
 
 suspend_current = SuspendFloor(
-    ring_current,
+    ring_current.target,
     resume_thresh=350,
     suspend_thresh=250,
     sleep=30,

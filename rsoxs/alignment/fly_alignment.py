@@ -1,7 +1,7 @@
 from nbs_bl.plans.maximizers import fly_max
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
-from nbs_bl.hw import Shutter_control, Shutter_enable
+from nbs_bl.hw import shutter_control, shutter_enable
 import numpy as np
 
 
@@ -103,7 +103,7 @@ def rsoxs_fly_max(
     direction = 1
 
     def _cleanup():
-        yield from bps.mv(Shutter_control, 0)
+        yield from bps.mv(shutter_control, 0)
 
     for velocity in velocities:
         range = np.abs(start - stop)
@@ -111,8 +111,8 @@ def rsoxs_fly_max(
         stop -= rb_offset
         print(f"starting scan from {start} to {stop} at {velocity}")
         if open_shutter:
-            yield from bps.mv(Shutter_enable, 0)
-            yield from bps.mv(Shutter_control, 1)
+            yield from bps.mv(shutter_enable, 0)
+            yield from bps.mv(shutter_control, 1)
         signal_dict = yield from finalize_wrapper(
             fly_max(
                 detectors,

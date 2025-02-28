@@ -11,7 +11,7 @@ from bluesky.plan_stubs import (
     create,
     save,
 )
-from nbs_bl.hw import Shutter_open_time
+from nbs_bl.hw import shutter_open_time
 from bluesky.utils import Msg, short_uid as _short_uid
 
 
@@ -27,7 +27,7 @@ def trigger_and_read_with_shutter(devices, shutter=None, name="primary", lead_de
     example:
 
     yield from bp.count(default_sigs, num=count,per_shot = partial(trigger_and_read_with_shutter,
-                                                    shutter = Shutter_control))
+                                                    shutter = shutter_control))
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def take_exposure_corrected_reading(
                 over_exposed = True
         while under_exposed or over_exposed:
             yield Msg("checkpoint")
-            old_time = Shutter_open_time.get()
+            old_time = shutter_open_time.get()
             if under_exposed and not over_exposed:
                 if old_time < 200:
                     new_time = old_time * 10
@@ -166,7 +166,7 @@ def take_exposure_corrected_reading(
             else:
                 print(f"contradictory saturated and under exposed, no change in exposure will be made")
                 break
-            Shutter_open_time.set(round(new_time)).wait()
+            shutter_open_time.set(round(new_time)).wait()
             for det in detectors:
                 if hasattr(det, "cam"):
                     det.cam.acquire_time.set(new_time / 1000).wait()
@@ -220,18 +220,18 @@ def one_nd_sticky_exp_step(detectors, step, pos_cache, take_reading=None, rememb
     take_reading = take_reading if take_reading else trigger_and_read_with_shutter
 
     yield from move_per_step(step, pos_cache)
-    input_time = Shutter_open_time.get()
+    input_time = shutter_open_time.get()
     if "last_correction" in remember:
         new_time = input_time
         if remember["last_correction"] != 1 and 0.0005 < remember["last_correction"] < 50000:
             new_time = round(input_time * remember["last_correction"])
         if 2 < new_time < 10000:
             # print(f"last exposure correction was {remember['last_correction']}, so applying that to {input_time}ms gives an exposure time of {new_time}ms")
-            yield from bps.mov(Shutter_open_time, new_time)
+            yield from bps.mov(shutter_open_time, new_time)
             for detector in detectors:
                 if hasattr(detector, "cam"):
                     yield from bps.mv(detector.cam.acquire_time, new_time / 1000)
 
     yield from take_reading(list(detectors) + list(motors))
-    output_time = Shutter_open_time.get()
+    output_time = shutter_open_time.get()
     remember["last_correction"] = float(output_time) / float(input_time)

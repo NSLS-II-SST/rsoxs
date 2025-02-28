@@ -12,29 +12,22 @@ from nbs_bl.hw import (
     grating,
     mirror2,
     psh10,
-    Exit_Slit,
+    slitsc,
     slits1,
-    Izero_Mesh,
-    Izero_Mesh_int,
+    izero_mesh,
     slits2,
-    Shutter_control,
-    Shutter_enable,
+    shutter_control,
+    shutter_enable,
     gv27a,
     sam_Th, 
     sam_Y,
     rsoxs_ll_gpwr,
     gvll,
-    Beamstop_WAXS,
-    Beamstop_WAXS_int,
+    beamstop_waxs,
     waxs_det,
     DownstreamLargeDiode_int,
     Sample_TEY,
     Sample_TEY_int,
-    Beamstop_SAXS,
-    Slit1_Current_Top,
-    Slit1_Current_Bottom,
-    Slit1_Current_Inboard,
-    Slit1_Current_Outboard,
     MC19_disable,
     MC20_disable,
     MC21_disable,
@@ -79,7 +72,7 @@ def buildeputable(
     ensout = []
     heights = []
     heightsbs = []
-    #Izero_Mesh.kind = "hinted"
+    #izero_mesh.kind = "hinted"
     #Beamstop_SAXS.kind = "hinted"
     mono_en.kind = "hinted"
     epu_gap.kind = "hinted"
@@ -115,8 +108,8 @@ def buildeputable(
     flip=False
     for energy in ens:
         #yield from bps.mv(epu_gap, max(14000, startinggap - 500 * widfract))
-        #yield from bps.mv(Shutter_enable, 0)
-        #yield from bps.mv(Shutter_control, 1)
+        #yield from bps.mv(shutter_enable, 0)
+        #yield from bps.mv(shutter_control, 1)
         if not flip:
             startgap = min(99500, max(14000, startinggap - 500 * widfract))
             endgap = min(100000, max(15000, startinggap + 2500 * widfract))
@@ -128,7 +121,7 @@ def buildeputable(
         
         yield from bps.mv(mono_en, energy,en.scanlock, False,epu_gap,startgap)
         yield from fly_max(
-            [Izero_Mesh_int, Beamstop_WAXS_int, DownstreamLargeDiode_int],
+            [izero_mesh, beamstop_waxs, DownstreamLargeDiode_int],
             [
                 "RSoXS Au Mesh Current",
                 "WAXS Beamstop",
@@ -259,7 +252,7 @@ def Scan_izero_peak(startingen, widfract):
     ps = PeakStats("en_energy", "RSoXS Au Mesh Current")
     yield from subs_wrapper(
         tune_max(
-            [Izero_Mesh, Beamstop_WAXS, DownstreamLargeDiode_int],
+            [izero_mesh, beamstop_waxs, DownstreamLargeDiode_int],
             "RSoXS Au Mesh Current",
             mono_en,
             min(2100, max(72, startingen - 10 * widfract)),
@@ -281,9 +274,9 @@ def buildeputablegaps(start, stop, step, widfract, startingen, name, phase, grat
     ens = []
     gapsout = []
     heights = []
-    Beamstop_WAXS.kind = "hinted"
+    beamstop_waxs.kind = "hinted"
     DownstreamLargeDiode_int.kind = "hinted"
-    Izero_Mesh.kind = "hinted"
+    izero_mesh.kind = "hinted"
     epu_gap.kind = "hinted"
     # startinggap = epugap_from_energy(ens[0]) #get starting position from existing table
 
@@ -302,7 +295,7 @@ def buildeputablegaps(start, stop, step, widfract, startingen, name, phase, grat
         yield from bps.mv(mono_en, max(72, startingen - 10 * widfract))
         peaklist = []
         yield from tune_max(
-            [Izero_Mesh, Beamstop_WAXS, DownstreamLargeDiode_int],
+            [izero_mesh, beamstop_waxs, DownstreamLargeDiode_int],
             "RSoXS Au Mesh Current",
             mono_en,
             min(2100, max(72, startingen - 10 * widfract)),
@@ -356,8 +349,8 @@ def do_2020_eputables():
 
 
 def do_2023_eputables():
-    Izero_Mesh.kind = "hinted"
-    Beamstop_WAXS.kind = "hinted"
+    izero_mesh.kind = "hinted"
+    beamstop_waxs.kind = "hinted"
     DownstreamLargeDiode_int.kind = "hinted"
     mono_en.readback.kind = "hinted"
     mono_en.kind = "hinted"
@@ -552,7 +545,7 @@ def stability_scans(num):
     scans = np.arange(num)
     for scan in scans:
         yield from bps.mv(en, 200)
-        yield from bp.scan([Izero_Mesh], en, 200, 1400, 1201)
+        yield from bp.scan([izero_mesh], en, 200, 1400, 1201)
 
 
 # settings for 285.3 eV 1.6 C 1200l/mm gold Aug 1, 2020
@@ -672,27 +665,27 @@ def reset_amps():
 #[200,250,270,280,282,283,284,285,286,287,288,500,535,800]
 
 def do_cdsaxs(energies, samples):
-    ## If a reduction in X-ray dose is needed, then adjust the Exit_Slit aperture size and not the exposure time.  The 9 s exposure time is necessary to ensure X-ray exposure is delivered at all angles.
-    yield from bps.mv(Exit_Slit,-1.05) # big flux
+    ## If a reduction in X-ray dose is needed, then adjust the slitsc aperture size and not the exposure time.  The 9 s exposure time is necessary to ensure X-ray exposure is delivered at all angles.
+    yield from bps.mv(slitsc,-1.05) # big flux
     for samp in samples:
         yield from load_samp(samp)
         for energy in energies:
             yield from bps.mv(en,energy)
             yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-57,end_angle=-80,exp_time=9,md={'plan_name':f'CD_high_{energy}'})
-    yield from bps.mv(Exit_Slit,-0.05) # mid flux
+    yield from bps.mv(slitsc,-0.05) # mid flux
     for samp in samples:
         yield from load_samp(samp)
         for energy in energies:
             yield from bps.mv(en,energy)
             yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-57,end_angle=-80,exp_time=9,md={'plan_name':f'CD_mid1_{energy}'})
             yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-65,end_angle=-88,exp_time=9,md={'plan_name':f'CD_mid2_{energy}'})
-    yield from bps.mv(Exit_Slit,-0.01) # least flux
+    yield from bps.mv(slitsc,-0.01) # least flux
     for samp in samples:
         yield from load_samp(samp)
         for energy in energies:
             yield from bps.mv(en,energy)
             yield from cdsaxs_scan(angle_mot=sam_Th,det=waxs_det,start_angle=-65,end_angle=-88,exp_time=9,md={'plan_name':f'CD_low_{energy}'})
-    yield from bps.mv(Exit_Slit,-3.05) # all flux
+    yield from bps.mv(slitsc,-3.05) # all flux
     for samp in samples:
         yield from load_samp(samp)
         yield from bps.mv(sam_Th,-70)

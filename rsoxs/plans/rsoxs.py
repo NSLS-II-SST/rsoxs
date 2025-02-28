@@ -5,8 +5,8 @@ from bluesky.preprocessors import finalize_wrapper
 from functools import partial
 from nbs_bl.hw import (
     en,
-    Shutter_control,
-    Shutter_open_time,
+    shutter_control,
+    shutter_open_time,
     sam_X,
     sam_Y,
     waxs_det,
@@ -92,7 +92,7 @@ def spiral_scan(*args, stepsize=0.3, widthX=1.8, widthY=1.8, dwell=1, n_exposure
 def post_scan_hardware_reset():
     ## Make sure the shutter is closed, and the scanlock if off after a scan, even if it errors out
     yield from bps.mv(en.scanlock, 0)
-    yield from bps.mv(Shutter_control, 0)
+    yield from bps.mv(shutter_control, 0)
 
 
 def _wrap_rsoxs(element, edge):

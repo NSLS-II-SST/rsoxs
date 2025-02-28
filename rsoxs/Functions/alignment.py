@@ -7,14 +7,14 @@ import numpy as np
 from functools import partial
 import bluesky.plan_stubs as bps
 from ophyd import Device
-from ..startup import RE, db, rsoxs_config  # bec,
+from ..startup import RE, rsoxs_config  # bec, db
 from nbs_bl.hw import (
     psh10,
-    Exit_Slit,
+    slitsc,
     slits1,
-    Izero_Y,
-    Shutter_control,
-    Shutter_Y,
+    izero_y,
+    shutter_control,
+    shutter_y,
     slits2,
     slits3,
     sam_X,
@@ -182,13 +182,13 @@ def move_to_location(locs=get_sample_location()):
         slits2.hcenter: slits2.hcenter,
         slits3.vcenter: slits3.vcenter,
         slits3.hcenter: slits3.hcenter,
-        Shutter_Y: Shutter_Y,
-        Izero_Y: Izero_Y,
+        shutter_y: shutter_y,
+        izero_y: izero_y,
         Det_W: Det_W,
         Det_S: Det_S,
         BeamStopS: BeamStopS,
         BeamStopW: BeamStopW,
-        Exit_Slit: Exit_Slit,
+        slitsc: slitsc,
         dm7: dm7,
     }
     for order in orderlist:
@@ -607,11 +607,11 @@ def spiralsearch(
         per_step=partial(
             one_nd_sticky_exp_step,
             remember={},
-            take_reading=partial(take_exposure_corrected_reading, shutter=Shutter_control, check_exposure=False),
+            take_reading=partial(take_exposure_corrected_reading, shutter=shutter_control, check_exposure=False),
         ),
     )
 
-    md["bar_loc"]["spiral_started"] = db[-1]["start"]["uid"]
+    # md["bar_loc"]["spiral_started"] = db[-1]["start"]["uid"]
 
 
 def rotate_now(theta, force=False):
