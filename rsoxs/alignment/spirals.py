@@ -70,7 +70,7 @@ def viewAllSpiralImages(
 
                 ## Plot
                 ax = axs[indexPlotRow, indexPlotColumn]
-                ax.set_title(("Image " + str(indexImage) + ", x = " + str(float(xCoordinate)) + ", y = " + str(float(yCoordinate))), color=(0, 0, 0, 1), size=12)
+                ax.set_title(("Image " + str(indexImage) + ", x = " + str(float(xMotorPosition)) + ", y = " + str(float(yMotorPosition))), color=(0, 0, 0, 1), size=12)
                 if logScale: ax.imshow(image, extent=[0, width_CameraSensor, height_CameraSensor, 0], cmap=matplotlib.colormaps['RdYlBu_r'], norm=LogNorm(vmin=contrastLimits[0], vmax=contrastLimits[1])) ## If needed, a pedestal could be added for better viewing of log-scale images
                 else: ax.imshow(image, extent=[0, width_CameraSensor, height_CameraSensor, 0], cmap=matplotlib.colormaps['RdYlBu_r'], vmin=contrastLimits[0], vmax=contrastLimits[1])
                 
