@@ -1,13 +1,13 @@
 import bluesky.plan_stubs as bps
 from .fly_alignment import rsoxs_fly_max
 from nbs_bl.hw import (
-    Shutter_control,
-    Shutter_enable,
+    shutter_control,
+    shutter_enable,
     sam_X,
     sam_Y,
     sam_Th,
     sam_Z,
-    Beamstop_WAXS_int,
+    beamstop_waxs,
 )
 from rsoxs.configuration_setup.configurations_instrument import load_configuration
 from ..Functions.alignment import (
@@ -23,10 +23,10 @@ def find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-187.5
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
     startxss = [f2, f1]
-    yield from bps.mv(Shutter_enable, 0)
-    yield from bps.mv(Shutter_control, 0)
+    yield from bps.mv(shutter_enable, 0)
+    yield from bps.mv(shutter_control, 0)
     yield from load_configuration("WAXSNEXAFS") ## Don't want to harm camera while rotating sample bar
-    Beamstop_WAXS_int.kind = "hinted"
+    beamstop_waxs.kind = "hinted"
     # bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
     maxlocs = []
@@ -34,7 +34,7 @@ def find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-187.5
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
         peaklist = []
         yield from rsoxs_fly_max(
-            [Beamstop_WAXS_int],
+            [beamstop_waxs],
             sam_Y,
             starty - 1,
             starty + 1,
@@ -47,10 +47,10 @@ def find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-187.5
         yield from bps.mv(sam_Y, peaklist[-1]["WAXS Beamstop"]["manipulator_y"])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
-            yield from bps.mv(Shutter_control, 1)
+            yield from bps.mv(shutter_control, 1)
             peaklist = []
             yield from rsoxs_fly_max(
-                [Beamstop_WAXS_int],
+                [beamstop_waxs],
                 sam_X,
                 startx - 0.5 * xrange,
                 startx + 0.5 * xrange,

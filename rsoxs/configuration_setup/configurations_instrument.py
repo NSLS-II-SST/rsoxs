@@ -9,10 +9,10 @@ from nbs_bl.hw import (
     en,
     mir3,
     psh10,
-    Exit_Slit,
+    slitsc,
     slits1,
-    Shutter_Y,
-    Izero_Y,
+    shutter_y,
+    izero_y,
     slits2,
     slits3,
     Det_W,
@@ -39,7 +39,7 @@ def load_configuration(configuration_name):
     if "NEXAFS" in configuration_name:
         mdToUpdate = {
             "RSoXS_Config": configuration_name,
-            "RSoXS_Main_DET": "Beamstop_WAXS",
+            "RSoXS_Main_DET": "beamstop_waxs",
             "RSoXS_WAXS_SDD": None,
             "RSoXS_WAXS_BCX": None,
             "RSoXS_WAXS_BCY": None,
@@ -126,9 +126,9 @@ default_configurations = {
 
     "WAXS_OpenBeamImages": [
         {"motor": en, "position": 150, "order": 0},
-        {"motor": Exit_Slit, "position": -0.01, "order": 0},
-        {"motor": Izero_Y, "position": position_RSoXSDiagnosticModule_OutOfBeamPath, "order": 0},
-        {"motor": Shutter_Y, "position": 2.2, "order": 0},
+        {"motor": slitsc, "position": -0.01, "order": 0},
+        {"motor": izero_y, "position": position_RSoXSDiagnosticModule_OutOfBeamPath, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
         {"motor": slits1.vsize, "position": 0.02, "order": 0},
         {"motor": slits1.vcenter, "position": -0.55, "order": 0},
         {"motor": slits1.hsize, "position": 0.04, "order": 0},
@@ -159,11 +159,11 @@ default_configurations = {
         {"motor": slits3.vcenter, "position": -0.45, "order": 0},
         {"motor": slits3.hsize, "position": 1, "order": 0},
         {"motor": slits3.hcenter, "position": 0.15, "order": 0},
-        {"motor": Shutter_Y, "position": 2.2, "order": 0},
-        {"motor": Izero_Y, "position": -31, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
+        {"motor": izero_y, "position": -31, "order": 0},
         {"motor": Det_W, "position": position_CameraWAXS_OutOfBeamPath, "order": 1},
         {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
-        {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        {"motor": slitsc, "position": -3.05, "order": 2},
     ],
 
     "WAXS": [
@@ -180,11 +180,11 @@ default_configurations = {
         {"motor": slits3.vcenter, "position": -0.45, "order": 0},
         {"motor": slits3.hsize, "position": 1, "order": 0},
         {"motor": slits3.hcenter, "position": 0.15, "order": 0},
-        {"motor": Shutter_Y, "position": 2.2, "order": 0},
-        {"motor": Izero_Y, "position": -31, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
+        {"motor": izero_y, "position": -31, "order": 0},
         {"motor": Det_W, "position": position_CameraWAXS_InBeamPath, "order": 1},
         {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
-        {"motor": Exit_Slit, "position": -3.05, "order": 2},
+        {"motor": slitsc, "position": -3.05, "order": 2},
     ],
 
 
@@ -202,11 +202,11 @@ default_configurations = {
         {"motor": slits3.vcenter, "position": -0.45, "order": 0},
         {"motor": slits3.hsize, "position": 1, "order": 0},
         {"motor": slits3.hcenter, "position": 0.15, "order": 0},
-        {"motor": Shutter_Y, "position": 2.2, "order": 0},
-        {"motor": Izero_Y, "position": -31, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
+        {"motor": izero_y, "position": -31, "order": 0},
         {"motor": Det_W, "position": position_CameraWAXS_InBeamPath, "order": 1},
         {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
-        {"motor": Exit_Slit, "position": -0.05, "order": 2},
+        {"motor": slitsc, "position": -0.05, "order": 2},
     ],
     
 }
@@ -231,9 +231,9 @@ def all_out():
     )
     print("Moving the rest of RSoXS components")
     yield from bps.mv(
-        Shutter_Y,
+        shutter_y,
         44,
-        Izero_Y,
+        izero_y,
         144,
         Det_W,
         position_CameraWAXS_OutOfBeamPath,
@@ -251,7 +251,7 @@ def all_out():
         0,
         en.polarization, #TODO - remove this to another step with try except for PV access error
         0,
-        Exit_Slit,
+        slitsc,
         -0.05,
         TEMZ,
         1

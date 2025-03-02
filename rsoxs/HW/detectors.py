@@ -4,7 +4,7 @@ from bluesky.preprocessors import make_decorator
 import bluesky_darkframes
 
 from ..devices.detectors import RSOXSGreatEyesDetector, SimGreatEyes
-from nbs_bl.hw import en, Shutter_control, Shutter_open_time, Det_S, Det_W, sam_Th, sam_X, sam_Y, waxs_det
+from nbs_bl.hw import en, shutter_control, shutter_open_time, Det_S, Det_W, sam_Th, sam_X, sam_Y, waxs_det
 from nbs_bl.printing import boxed_text, run_report
 from ..Functions.per_steps import trigger_and_read_with_shutter
 from ..startup import RE
@@ -57,7 +57,7 @@ def set_exposure(exposure):
     if exposure > 0.001 and exposure < 1000:
         # saxs_det.set_exptime(exposure)
         waxs_det.set_exptime(exposure)
-        Shutter_open_time.set(exposure * 1000).wait()
+        shutter_open_time.set(exposure * 1000).wait()
         for sig in default_sigs:
             if hasattr(sig, "exposure_time"):
                 sig.exposure_time.set(max(0.3, exposure - 0.5)).wait()
@@ -113,7 +113,7 @@ def snapshot(secs=0, count=1, name=None, energy=None, detn="waxs", n_exp=1):
     # print(count)
     det.number_exposures = n_exp
     yield from bp.count(
-        [det] + default_sigs, num=count, per_shot=partial(trigger_and_read_with_shutter, shutter=Shutter_control)
+        [det] + default_sigs, num=count, per_shot=partial(trigger_and_read_with_shutter, shutter=shutter_control)
     )
     if name is not None:
         RE.md["sample_name"] = samsave

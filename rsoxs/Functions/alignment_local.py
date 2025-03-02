@@ -12,7 +12,7 @@ import datetime
 import bluesky.plan_stubs as bps
 from ophyd import Device
 from bluesky.preprocessors import finalize_decorator
-from ..startup import db, rsoxs_config #bec, 
+from ..startup import rsoxs_config #bec, db 
 from nbs_bl.hw import(
     sam_viewer,   
     SampleViewer_cam

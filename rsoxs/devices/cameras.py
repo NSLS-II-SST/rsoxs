@@ -3,8 +3,9 @@ from ophyd.areadetector.base import EpicsSignalWithRBV as SignalWithRBV
 from ophyd import Component as Cpt
 from ophyd import EpicsSignalRO
 
-from sst_funcs.printing import run_report
-from sst_base.cameras import StandardProsilicaWithTIFFV33, StandardProsilica, ColorProsilicaWithTIFFV33
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from nbs_bl.printing import run_report
+from sst_base.cameras import StandardProsilicaV33, TIFFPluginWithProposalDirectory
 
 run_report(__file__)
 
@@ -15,16 +16,25 @@ class StatsWCentroid(StatsPluginV33):
     profile_avg_x = Cpt(EpicsSignalRO,'ProfileAverageX_RBV',kind='hinted')
     profile_avg_y = Cpt(EpicsSignalRO,'ProfileAverageY_RBV',kind='hinted')
 
-class StandardProsilicawstats(StandardProsilicaWithTIFFV33):
-    stats1 = Cpt(StatsWCentroid, "Stats1:", kind='hinted')
-    stats2 = Cpt(StatsWCentroid, "Stats2:", read_attrs=["total"])
-    stats3 = Cpt(StatsWCentroid, "Stats3:", read_attrs=["total"])
-    stats4 = Cpt(StatsWCentroid, "Stats4:", read_attrs=["total"])
-    stats5 = Cpt(StatsWCentroid, "Stats5:", read_attrs=["total","centroid_total", "profile_avg_x", "profile_avg_y"])
+def StandardProsilicawstatsFactory(*args, camera_name="", date_template="%Y/%m/%d", **kwargs):
+    class StandardProsilicawstats(StandardProsilicaV33):
+        tiff = Cpt(
+            TIFFPluginWithProposalDirectory,
+            suffix="TIFF1:",
+            md=bl.md,
+            camera_name=camera_name,
+            date_template=date_template,
+        )
+        stats1 = Cpt(StatsWCentroid, "Stats1:", kind='hinted')
+        stats2 = Cpt(StatsWCentroid, "Stats2:", read_attrs=["total"])
+        stats3 = Cpt(StatsWCentroid, "Stats3:", read_attrs=["total"])
+        stats4 = Cpt(StatsWCentroid, "Stats4:", read_attrs=["total"])
+        stats5 = Cpt(StatsWCentroid, "Stats5:", read_attrs=["total","centroid_total", "profile_avg_x", "profile_avg_y"])
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
 
+    return StandardProsilicawstats(*args, **kwargs)
 
 def configure_cameras():
     SampleViewer_cam.cam.ensure_nonblocking()
@@ -64,7 +74,7 @@ def configure_cameras():
 
     #
     #
-    all_standard_pros = [SampleViewer_cam, Sample_cam, DetS_cam, Izero_cam]
+    all_standard_pros = [SampleViewer_cam, Sample_cam, DetS_cam, izero_cam]
     for camera in all_standard_pros:
         # camera.read_attrs = ['stats1', 'stats2', 'stats3', 'stats4', 'stats5']
         # getattr(camera, s).kind = 'normal'

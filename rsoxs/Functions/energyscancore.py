@@ -33,8 +33,7 @@ from copy import deepcopy
 from nbs_bl.hw import (
     en,
     mir3,
-    Izero_Mesh,
-    Izero_Mesh_int,
+    izero_mesh,
     Shutter_open_time,
     Shutter_control,
     Shutter_enable,
@@ -44,14 +43,14 @@ from nbs_bl.hw import (
     sam_Y,
     sam_Z,
     sam_Th,
-    Beamstop_WAXS,
+    beamstop_waxs,
     waxs_det,
     Beamstop_SAXS,
     #saxs_det,
     DiodeRange,
     Sample_TEY, 
     Beamstop_SAXS_int,
-    Beamstop_WAXS_int,
+    beamstop_waxs,
     DownstreamLargeDiode, 
     DownstreamLargeDiode_int, 
     Sample_TEY_int, 
@@ -77,7 +76,7 @@ from ..HW.signals import (
 from ..HW.lakeshore import tem_tempstage
 from ..Functions.alignment import rotate_now
 from ..Functions.common_procedures import set_exposure
-from ..Functions.fly_alignment import find_optimum_motor_pos, db, return_NullStatus_decorator #bec, 
+from ..Functions.fly_alignment import find_optimum_motor_pos, return_NullStatus_decorator #bec, db
 
 from .flystream_wrapper import flystream_during_wrapper
 from nbs_bl.printing import run_report
@@ -214,7 +213,7 @@ def NEXAFS_step_scan_core(
 ):
     # grab locals
     if dets is None:
-        dets = [Beamstop_SAXS_int,Beamstop_WAXS_int, DownstreamLargeDiode_int, Izero_Mesh_int,Sample_TEY_int]
+        dets = [Beamstop_SAXS_int,beamstop_waxs, DownstreamLargeDiode_int, izero_mesh,Sample_TEY_int]
     if energies is None:
         energies = []
     if times is None:
@@ -726,7 +725,7 @@ def new_en_scan_core(
                                                         shutter = Shutter_control,
                                                         check_exposure=check_exposure))
                 ),
-                [Beamstop_WAXS_int, Izero_Mesh_int], stream=False),
+                [beamstop_waxs, izero_mesh], stream=False),
         cleanup()
     )
     """
@@ -888,7 +887,7 @@ def flyer_scan_energy(scan_params, md={},locked=True,polarization=0):
         metadata
 
     """
-    detectors = [Beamstop_WAXS_int,  Izero_Mesh_int, Sample_TEY_int]
+    detectors = [beamstop_waxs,  izero_mesh, Sample_TEY_int]
 
 
     _md = {

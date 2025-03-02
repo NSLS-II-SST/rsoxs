@@ -13,15 +13,16 @@ from ophyd.areadetector import (
     TransformPlugin,
 )
 from ophyd.areadetector.base import ad_group
-from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from nslsii.ad33 import SingleTriggerV33, StatsPluginV33
 from nbs_bl.printing import boxed_text, colored, run_report
 from nbs_bl.hw import (
-    Shutter_open_time,
-    Shutter_control,
-    Shutter_enable,
-    Shutter_delay,
+    shutter_open_time,
+    shutter_control,
+    shutter_enable,
+    shutter_delay,
 )
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from sst_base.cameras import TIFFPluginWithProposalDirectory
 import warnings
 
 run_report(__file__)
@@ -35,13 +36,6 @@ class StatsWithHist(StatsPluginV33):
         super().__init__(*args, **kwargs)
         self.total.kind = "hinted"
         self.compute_histogram.set(1).wait()
-
-
-class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
-    """Add this as a component to detectors that write TIFFs."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class GreatEyesDetCamWithVersions(GreatEyesDetectorCam):
@@ -99,12 +93,12 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
     transform_type = 0
     number_exposures = 1
     tiff = C(
-        TIFFPluginWithFileStore,
+        TIFFPluginWithProposalDirectory,
         "TIFF1:",
-        write_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
-        read_path_template="/nsls2/data/sst/assets/%Y/%m/%d/",
+        md=bl.md,
+        camera_name="waxs-1",
+        date_template="%Y/%m/%d/",
         read_attrs=[],
-        root="/nsls2/data/sst/assets/",
         kind="hinted",
     )
 
@@ -199,8 +193,8 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         # print('staging the detector')
         if self.useshutter:
 
-            Shutter_enable.set(1).wait()
-            Shutter_delay.set(0).wait()
+            shutter_enable.set(1).wait()
+            shutter_delay.set(0).wait()
         if abs(self.cam.temperature_actual.get() - self.cam.temperature.get()) > 2.0:
 
             boxed_text(
@@ -247,7 +241,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
 
     def unstage(self, *args, **kwargs):
         if self.useshutter:
-            Shutter_enable.set(0).wait()
+            shutter_enable.set(0).wait()
         else:
             print("not turning on shutter because detector is in simulation mode")
         self.cam.num_images.set(1).wait()
@@ -365,7 +359,7 @@ class SyncedDetectors(Device):
     def set_exposure(self, seconds):
         self.waxs.set_exptime_detonly(seconds)
         self.saxs.set_exptime_detonly(seconds)
-        Shutter_open_time.set(seconds * 1000).wait()
+        shutter_open_time.set(seconds * 1000).wait()
         self.waxs.trans1.type.put(1)
         self.saxs.trans1.type.put(3)
 
@@ -404,13 +398,13 @@ class SyncedDetectors(Device):
         self.cooling_state()
 
     def open_shutter(self):
-        Shutter_control.set(1).wait()
+        shutter_control.set(1).wait()
 
     def close_shutter(self):
-        Shutter_control.set(0).wait()
+        shutter_control.set(0).wait()
 
     def shutter(self):
-        Shutter_control.get()
+        shutter_control.get()
 
 
 from ophyd.sim import SynSignalWithRegistry, SynSignal

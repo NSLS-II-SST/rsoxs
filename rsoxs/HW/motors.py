@@ -39,7 +39,7 @@ class ShutterWait(EpicsSignal):
 
             Parameters
             ----------
-            value : either a set value of a value to wait for
+            value : either a set value or a value to wait for
             just_wait : boolean whether to not set anything but just wait for the value to change to this value
             
             Returns
@@ -94,7 +94,7 @@ Det_S = PrettyMotorFMBODeadband(
 Shutter_Y = PrettyMotorFMBODeadband(
     "XF:07ID2-ES1{FSh-Ax:1}Mtr", name="Shutter Vertical Translation", kind="hinted"
 )
-Izero_Y = PrettyMotorFMBODeadband(
+izero_y = PrettyMotorFMBODeadband(
     "XF:07ID2-ES1{Scr-Ax:1}Mtr",
     name="Izero Assembly Vertical Translation",
     kind="hinted",

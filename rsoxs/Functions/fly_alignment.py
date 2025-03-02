@@ -15,16 +15,15 @@ import numpy as np
 from copy import deepcopy
 from nbs_bl.hw import (
     en,
-    Izero_Y,
-    Shutter_control,
-    Shutter_enable,
-    Shutter_Y,
+    izero_y,
+    shutter_control,
+    shutter_enable,
+    shutter_y,
     sam_X,
     sam_Y,
     sam_Th,
     sam_Z,
-    Beamstop_WAXS,
-    Beamstop_WAXS_int,
+    beamstop_waxs,
     BeamStopW,
     Det_W,
     Beamstop_SAXS,
@@ -32,7 +31,7 @@ from nbs_bl.hw import (
     Det_S,
     DownstreamLargeDiode_int,
 )
-from ..startup import RE, db, sd, rsoxs_config  # bec,
+from ..startup import RE, sd, rsoxs_config  # bec, db
 from .alignment import load_configuration, rsoxs_config, correct_bar
 
 
@@ -256,14 +255,14 @@ def ramp_motor_scan(
     ramp_plan = fly_plan(motor, start_pos, stop_pos, flyer_list=detector_channels, md=md)
 
     def _cleanup():
-        yield from bps.mv(Shutter_control, 0)
+        yield from bps.mv(shutter_control, 0)
         if velocity is not None:
             yield from bps.mv(motor.velocity, old_motor_velocity)
             yield from bps.sleep(sleep)
 
     if open_shutter:
-        yield from bps.mv(Shutter_enable, 0)
-        yield from bps.mv(Shutter_control, 1)
+        yield from bps.mv(shutter_enable, 0)
+        yield from bps.mv(shutter_control, 1)
     yield from finalize_wrapper(ramp_plan, _cleanup())
 
 
@@ -370,10 +369,10 @@ def fly_find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-1
     angles = [-90 + thoffset, 0 + thoffset, 90 + thoffset, 180 + thoffset]
     xrange = 3.5
     startxss = [f2, f1]
-    yield from bps.mv(Shutter_enable, 0)
-    yield from bps.mv(Shutter_control, 0)
+    yield from bps.mv(shutter_enable, 0)
+    yield from bps.mv(shutter_control, 0)
     yield from load_configuration("WAXSNEXAFS")
-    Beamstop_WAXS_int.kind = "hinted"
+    beamstop_waxs.kind = "hinted"
     DownstreamLargeDiode_int.kind = "hinted"
     # bec.enable_plots()
     startys = [y2, y1]  # af2 first because it is a safer location
@@ -382,7 +381,7 @@ def fly_find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-1
         yield from bps.mv(sam_Y, starty, sam_X, startxs[1], sam_Th, 0, sam_Z, 0)
         peaklist = []
         yield from fly_max(
-            [Beamstop_WAXS_int, DownstreamLargeDiode_int],
+            [beamstop_waxs, DownstreamLargeDiode_int],
             ["WAXS Beamstop", "DownstreamLargeDiode"],
             sam_Y,
             starty - 1,
@@ -395,10 +394,10 @@ def fly_find_fiducials(f2=[3.5, -1, -2.4, 1.5], f1=[2.0, -0.9, -1.5, 0.8], y1=-1
         yield from bps.mv(sam_Y, peaklist[-1]["WAXS Beamstop"]["manipulator_y"])
         for startx, angle in zip(startxs, angles):
             yield from bps.mv(sam_X, startx, sam_Th, angle)
-            yield from bps.mv(Shutter_control, 1)
+            yield from bps.mv(shutter_control, 1)
             peaklist = []
             yield from fly_max(
-                [Beamstop_WAXS_int, DownstreamLargeDiode_int],
+                [beamstop_waxs, DownstreamLargeDiode_int],
                 ["WAXS Beamstop", "DownstreamLargeDiode"],
                 sam_X,
                 startx - 0.5 * xrange,

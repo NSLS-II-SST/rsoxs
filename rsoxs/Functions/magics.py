@@ -5,7 +5,7 @@ from IPython.terminal.prompts import Prompts, Token
 import datetime
 from nbs_bl.hw import (
     en,
-    Exit_Slit,
+    slitsc,
     sam_Y,
     sam_Th,
     sam_Z,
@@ -14,9 +14,9 @@ from nbs_bl.hw import (
     BeamStopW,
     Det_W,
     Det_S,
-    Shutter_Y,
+    shutter_y,
     Izero_ds,
-    Izero_Y,
+    izero_y,
     sam_viewer,
 )
 
@@ -107,13 +107,13 @@ def motors(line):
             # + Det_S.where()
             # + "  ds"
             # + "\n"
-            + Shutter_Y.where()
+            + shutter_y.where()
             + "\n"
-            + Izero_Y.where()
+            + izero_y.where()
             + "\n"
             + Izero_ds.where()
             + "\n"
-            + Exit_Slit.where()
+            + slitsc.where()
             + "\n"
             + sam_viewer.where()
             + "\n"
