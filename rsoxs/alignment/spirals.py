@@ -71,8 +71,8 @@ def viewAllSpiralImages(
                 ## Plot
                 ax = axs[indexPlotRow, indexPlotColumn]
                 ax.set_title(("Image " + str(indexImage) + ", x = " + str(float(xMotorPosition)) + ", y = " + str(float(yMotorPosition))), color=(0, 0, 0, 1), size=12)
-                if logScale: ax.imshow(image, extent=limitsInboardOutboardDownUp, cmap=matplotlib.colormaps['RdYlBu_r'], norm=LogNorm(vmin=contrastLimits[0], vmax=contrastLimits[1])) ## If needed, a pedestal could be added for better viewing of log-scale images
-                else: ax.imshow(image, extent=limitsInboardOutboardDownUp, cmap=matplotlib.colormaps['RdYlBu_r'], vmin=contrastLimits[0], vmax=contrastLimits[1])
+                if logScale: ax.imshow(image, extent=[limitsInboardOutboardDownUp[0], limitsInboardOutboardDownUp[1], limitsInboardOutboardDownUp[3], limitsInboardOutboardDownUp[2]], cmap=matplotlib.colormaps['RdYlBu_r'], norm=LogNorm(vmin=contrastLimits[0], vmax=contrastLimits[1])) ## If needed, a pedestal could be added for better viewing of log-scale images
+                else: ax.imshow(image, extent=[limitsInboardOutboardDownUp[0], limitsInboardOutboardDownUp[1], limitsInboardOutboardDownUp[3], limitsInboardOutboardDownUp[2]], cmap=matplotlib.colormaps['RdYlBu_r'], vmin=contrastLimits[0], vmax=contrastLimits[1])
                 
         ## Plot Formatting
         for indexRow in np.arange(0, numberRows, 1):
