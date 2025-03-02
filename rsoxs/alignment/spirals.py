@@ -53,7 +53,7 @@ def viewAllSpiralImages(
     if format == "matplotlib":
         numberRows, numberColumns = len(scan["sam_y"]), len(scan["sam_x"])
         fig, axs = plt.subplots(numberRows, numberColumns, figsize=(numberColumns*3.25, numberRows*3.25), edgecolor=(0, 0, 0, 0), linewidth=3); #figsize=(3.25, 3.25) for figure
-        fig.suptitle(("Scan ID: " + str(scanID_spiral)), color=(0, 0, 0, 1), fontname="Calibri", size=24)
+        #fig.suptitle((""), color=(0, 0, 0, 1), fontname="Calibri", size=24)
         ## Enxure axs always stays a 2D array
         if numberRows == 1 and numberColumns == 1: axs = np.array([[axs]])
         if numberRows == 1 and numberColumns > 1: axs = axs.reshape(1, numberColumns)
