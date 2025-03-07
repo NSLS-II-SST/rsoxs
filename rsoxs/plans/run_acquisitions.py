@@ -12,13 +12,13 @@ from rsoxs.Functions.alignment import (
 from rsoxs.HW.energy import set_polarization
 from nbs_bl.plans.scans import nbs_count, nbs_energy_scan
 from rsoxs.plans.rsoxs import spiral_scan
-from rsoxs_scans.defaultEnergyParameters import energyListParameters
+from .default_energy_parameters import energyListParameters
 from rsoxs.HW.detectors import snapshot
 from ..startup import rsoxs_config
 from nbs_bl.hw import (
     en,
 )
-from rsoxs_scans.configuration_load_save_sanitize import (
+from ..configuration_setup.configuration_load_save_sanitize import (
     gatherAcquisitionsFromConfiguration, 
     sanitizeAcquisition, 
     sortAcquisitionsQueue,

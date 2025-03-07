@@ -19,11 +19,8 @@ from nbs_bl.detectors import *
 from nbs_bl.plans.scans import *
 from nbs_bl.plans.xas import *
 from nbs_bl.samples import *
+from rsoxs.redis_config import rsoxs_config
 
-import redis  ## In-memory (RAM) databases that persists on disk even if Bluesky is restarted
-from redis_json_dict import RedisJSONDict
-from nbs_bl.status import RedisStatusDict
-from nbs_bl.queueserver import GLOBAL_USER_STATUS
 
 from databroker import Broker
 
@@ -64,13 +61,7 @@ RE.md = bl.md
 md = RE.md  ## The contents from md are added into the start document for the scan metadata in Tiled.
 # GLOBAL_USER_STATUS.add_status("USER_MD", RE.md)
 
-redis_config_settings = bl.settings.get("redis").get("config", {})
-rsoxsredis = redis.Redis(
-    redis_config_settings.get("host", "info.sst.nsls2.bnl.gov"),
-    port=redis_config_settings.get("port", 60737),
-    db=redis_config_settings.get("db", 1),
-)
-rsoxs_config = RedisJSONDict(rsoxsredis, prefix=redis_config_settings.get("prefix", "rsoxs-"))
+
 
 data_session_re = re.compile(r"^pass-(?P<proposal_number>\d+)$")
 

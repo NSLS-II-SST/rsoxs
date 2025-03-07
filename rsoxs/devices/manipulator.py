@@ -2,7 +2,7 @@ from nbs_bl.devices import Manipulator4AxBase
 from sst_base.motors import PrettyMotorFMBODeadbandFlyer
 from ophyd import Component as Cpt
 from nbs_bl.geometry.bars import AbsoluteBar
-from rsoxs_scans.configuration_load_save_sanitize import load_configuration_spreadsheet_local
+from rsoxs.configuration_setup.configuration_load_save_sanitize import load_configuration_spreadsheet_local
 
 
 class RSoXSBar(AbsoluteBar):
@@ -40,4 +40,9 @@ def ManipulatorBuilderRSOXS(prefix, *, name, **kwargs):
 
     holder = RSoXSBar()
     origin = (0, 0, 464)
-    return Manipulator(prefix, name=name, attachment_point=origin, holder=holder, **kwargs)
+    manip = Manipulator(prefix, name=name, attachment_point=origin, holder=holder, **kwargs)
+    manip.x.name = "RSoXS Sample Outboard-Inboard"
+    manip.y.name = "RSoXS Sample Up-Down"
+    manip.z.name = "RSoXS Sample Downstream-Upstream"
+    manip.r.name = "RSoXS Sample Rotation"
+    return manip
