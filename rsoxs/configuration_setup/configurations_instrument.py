@@ -115,10 +115,10 @@ default_configurations = {
         {"motor": mir1.roll, "position": 0, "order": 4},
         {"motor": mir1.yaw, "position": 0, "order": 5},
 
-        {"motor": mir3.x, "position": 22.1, "order": 0},
+        {"motor": mir3.x, "position": 21.8, "order": 0},
         {"motor": mir3.y, "position": 18, "order": 1},
         {"motor": mir3.z, "position": 0, "order": 2},
-        {"motor": mir3.pitch, "position": 7.93, "order": 3},
+        {"motor": mir3.pitch, "position": 7.91, "order": 3},
         {"motor": mir3.roll, "position": 0, "order": 4},
         {"motor": mir3.yaw, "position": 0, "order": 5},
     ],

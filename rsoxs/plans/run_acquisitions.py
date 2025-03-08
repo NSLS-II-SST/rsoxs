@@ -18,7 +18,7 @@ from ..startup import rsoxs_config
 from nbs_bl.hw import (
     en,
 )
-from ..configuration_setup.configuration_load_save_sanitize import (
+from ..configuration_setup.configuration_load_save import (
     gatherAcquisitionsFromConfiguration, 
     sanitizeAcquisition, 
     sortAcquisitionsQueue,

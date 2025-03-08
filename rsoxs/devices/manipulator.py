@@ -2,7 +2,7 @@ from nbs_bl.devices import Manipulator4AxBase
 from sst_base.motors import PrettyMotorFMBODeadbandFlyer
 from ophyd import Component as Cpt
 from nbs_bl.geometry.bars import AbsoluteBar
-from rsoxs.configuration_setup.configuration_load_save_sanitize import load_configuration_spreadsheet_local
+from rsoxs.configuration_setup.configuration_load_save import load_configuration_spreadsheet_local
 
 
 class RSoXSBar(AbsoluteBar):
@@ -33,16 +33,13 @@ class RSoXSBar(AbsoluteBar):
 
 def ManipulatorBuilderRSOXS(prefix, *, name, **kwargs):
     class Manipulator(Manipulator4AxBase):
-        x = Cpt(PrettyMotorFMBODeadbandFlyer, "X}Mtr", name="x", kind="hinted")
-        y = Cpt(PrettyMotorFMBODeadbandFlyer, "Y}Mtr", name="y", kind="hinted")
-        z = Cpt(PrettyMotorFMBODeadbandFlyer, "Z}Mtr", name="z", kind="hinted")
-        r = Cpt(PrettyMotorFMBODeadbandFlyer, "Yaw}Mtr", name="r", kind="hinted")
+        x = Cpt(PrettyMotorFMBODeadbandFlyer, "X}Mtr", kind="hinted")
+        y = Cpt(PrettyMotorFMBODeadbandFlyer, "Y}Mtr", kind="hinted")
+        z = Cpt(PrettyMotorFMBODeadbandFlyer, "Z}Mtr", kind="hinted")
+        r = Cpt(PrettyMotorFMBODeadbandFlyer, "Yaw}Mtr", kind="hinted")
 
     holder = RSoXSBar()
     origin = (0, 0, 464)
     manip = Manipulator(prefix, name=name, attachment_point=origin, holder=holder, **kwargs)
-    manip.x.name = "RSoXS Sample Outboard-Inboard"
-    manip.y.name = "RSoXS Sample Up-Down"
-    manip.z.name = "RSoXS Sample Downstream-Upstream"
-    manip.r.name = "RSoXS Sample Rotation"
+
     return manip
