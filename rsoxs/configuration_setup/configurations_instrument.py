@@ -253,7 +253,7 @@ default_configurations = {
     
 }
 
-
+## TODO: break up the function so that undulator movements are separated.  We lose PV write access during maintenance/shutdown periods.
 def all_out():
     yield from psh10.close()
     print("Retracting Slits to 1 cm gap")
