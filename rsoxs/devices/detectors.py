@@ -98,7 +98,7 @@ class RSOXSGreatEyesDetector(SingleTriggerV33, GreatEyesDetector):
         md=bl.md,
         camera_name="waxs-1",
         date_template="%Y/%m/%d/",
-        read_attrs=[],
+        read_attrs=["time_stamp"],
         kind="hinted",
     )
 
