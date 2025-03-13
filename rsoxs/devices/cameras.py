@@ -24,6 +24,7 @@ def StandardProsilicawstatsFactory(*args, camera_name="", date_template="%Y/%m/%
             md=bl.md,
             camera_name=camera_name,
             date_template=date_template,
+            read_attrs=["time_stamp"],
         )
         stats1 = Cpt(StatsWCentroid, "Stats1:", kind='hinted')
         stats2 = Cpt(StatsWCentroid, "Stats2:", read_attrs=["total"])
