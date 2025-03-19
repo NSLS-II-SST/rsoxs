@@ -82,7 +82,6 @@ def run_acquisitions_single(
             ## Don't move motors if I don't have beam.
             if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
             else: yield from load_samp(acquisition[parameter]) ## TODO: what is the difference between load_sample (loads from dict) and load_samp(loads from id or number)?  Can they be consolidated?
-            add_current_position_as_sample(name=acquisition[parameter], sample_id=acquisition[parameter]) ## Probably temporary until we figure have this as part of load_samp
         
 
     ## TODO: set temperature if needed, but this is lowest priority
@@ -103,6 +102,7 @@ def run_acquisitions_single(
                 else: yield from set_polarization(polarization)
             
             print("Running scan: " + str(acquisition["scan_type"]))
+            add_current_position_as_sample(name=acquisition[parameter], sample_id=acquisition[parameter]) ## Probably temporary until we figure have this as part of load_samp.  Adding here so all angle rotations are included.
             if dryrun == False or updateAcquireStatusDuringDryRun == True:
                 timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                 acquisition["acquire_status"] = "Started " + str(timeStamp)
