@@ -94,7 +94,7 @@ position_BeamstopWAXS_InBeamPath = 69.6  ## Out is 3
 position_CameraWAXS_InBeamPath = 2
 position_CameraWAXS_OutOfBeamPath = -94
 
-
+## TODO: split into 2 dictionaries.  One that users can use and I can make a list of names to use in spreadsheet sanitization and then one dictionary that is used for one-time setup.
 default_configurations = {
 
     "NoBeam": [
