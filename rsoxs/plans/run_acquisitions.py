@@ -12,13 +12,13 @@ from rsoxs.Functions.alignment import (
 from rsoxs.HW.energy import set_polarization
 from nbs_bl.plans.scans import nbs_count, nbs_energy_scan
 from rsoxs.plans.rsoxs import spiral_scan
-from rsoxs_scans.defaultEnergyParameters import energyListParameters
+from .default_energy_parameters import energyListParameters
 from rsoxs.HW.detectors import snapshot
 from ..startup import rsoxs_config
 from nbs_bl.hw import (
     en,
 )
-from rsoxs_scans.configuration_load_save_sanitize import (
+from ..configuration_setup.configuration_load_save_sanitize import (
     gatherAcquisitionsFromConfiguration, 
     sanitizeAcquisition, 
     sortAcquisitionsQueue,
@@ -82,7 +82,6 @@ def run_acquisitions_single(
             ## Don't move motors if I don't have beam.
             if acquisition["configuration_instrument"] == "NoBeam": print("Not moving motors.")
             else: yield from load_samp(acquisition[parameter]) ## TODO: what is the difference between load_sample (loads from dict) and load_samp(loads from id or number)?  Can they be consolidated?
-            add_current_position_as_sample(name=acquisition[parameter], sample_id=acquisition[parameter]) ## Probably temporary until we figure have this as part of load_samp
         
 
     ## TODO: set temperature if needed, but this is lowest priority
@@ -103,6 +102,7 @@ def run_acquisitions_single(
                 else: yield from set_polarization(polarization)
             
             print("Running scan: " + str(acquisition["scan_type"]))
+            add_current_position_as_sample(name=acquisition[parameter], sample_id=acquisition[parameter]) ## Probably temporary until we figure have this as part of load_samp.  Adding here so all angle rotations are included.
             if dryrun == False or updateAcquireStatusDuringDryRun == True:
                 timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                 acquisition["acquire_status"] = "Started " + str(timeStamp)

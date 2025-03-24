@@ -94,7 +94,7 @@ position_BeamstopWAXS_InBeamPath = 69.6  ## Out is 3
 position_CameraWAXS_InBeamPath = 2
 position_CameraWAXS_OutOfBeamPath = -94
 
-
+## TODO: split into 2 dictionaries.  One that users can use and I can make a list of names to use in spreadsheet sanitization and then one dictionary that is used for one-time setup.
 default_configurations = {
 
     "NoBeam": [
@@ -115,10 +115,10 @@ default_configurations = {
         {"motor": mir1.roll, "position": 0, "order": 4},
         {"motor": mir1.yaw, "position": 0, "order": 5},
 
-        {"motor": mir3.x, "position": 22.1, "order": 0},
+        {"motor": mir3.x, "position": 21.8, "order": 0},
         {"motor": mir3.y, "position": 18, "order": 1},
         {"motor": mir3.z, "position": 0, "order": 2},
-        {"motor": mir3.pitch, "position": 7.93, "order": 3},
+        {"motor": mir3.pitch, "position": 7.91, "order": 3},
         {"motor": mir3.roll, "position": 0, "order": 4},
         {"motor": mir3.yaw, "position": 0, "order": 5},
     ],
@@ -208,10 +208,52 @@ default_configurations = {
         {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
         {"motor": slitsc, "position": -0.05, "order": 2},
     ],
+
+    "WAXSNEXAFS_Liquids": [
+        {"motor": TEMZ, "position": 1, "order": 0},
+        {"motor": slits1.vsize, "position": 0.1, "order": 0},
+        {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+        {"motor": slits1.hsize, "position": 0.7, "order": 0},
+        {"motor": slits1.hcenter, "position": -0.18, "order": 0},
+        {"motor": slits2.vsize, "position":  0.75, "order": 0},
+        {"motor": slits2.vcenter, "position": -0.873, "order": 0},
+        {"motor": slits2.hsize, "position": 1.5, "order": 0},
+        {"motor": slits2.hcenter, "position": -0.1, "order": 0},
+        {"motor": slits3.vsize, "position": 5, "order": 0},
+        {"motor": slits3.vcenter, "position": -0.45, "order": 0},
+        {"motor": slits3.hsize, "position": 5, "order": 0},
+        {"motor": slits3.hcenter, "position": 0.15, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
+        {"motor": izero_y, "position": -31, "order": 0},
+        {"motor": Det_W, "position": position_CameraWAXS_OutOfBeamPath, "order": 1},
+        {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
+        {"motor": slitsc, "position": -3.05, "order": 2},
+    ],
+
+    "WAXS_Liquids": [
+        {"motor": TEMZ, "position": 1, "order": 0},
+        {"motor": slits1.vsize, "position": 0.1, "order": 0},
+        {"motor": slits1.vcenter, "position": -0.55, "order": 0},
+        {"motor": slits1.hsize, "position": 0.7, "order": 0},
+        {"motor": slits1.hcenter, "position": -0.18, "order": 0},
+        {"motor": slits2.vsize, "position":  0.75, "order": 0},
+        {"motor": slits2.vcenter, "position": -0.873, "order": 0},
+        {"motor": slits2.hsize, "position": 1.5, "order": 0},
+        {"motor": slits2.hcenter, "position": -0.1, "order": 0},
+        {"motor": slits3.vsize, "position": 5, "order": 0},
+        {"motor": slits3.vcenter, "position": -0.45, "order": 0},
+        {"motor": slits3.hsize, "position": 5, "order": 0},
+        {"motor": slits3.hcenter, "position": 0.15, "order": 0},
+        {"motor": shutter_y, "position": 2.2, "order": 0},
+        {"motor": izero_y, "position": -31, "order": 0},
+        {"motor": Det_W, "position": position_CameraWAXS_InBeamPath, "order": 1},
+        {"motor": BeamStopW, "position": position_BeamstopWAXS_InBeamPath, "order": 1},
+        {"motor": slitsc, "position": -3.05, "order": 2},
+    ],
     
 }
 
-
+## TODO: break up the function so that undulator movements are separated.  We lose PV write access during maintenance/shutdown periods.
 def all_out():
     yield from psh10.close()
     print("Retracting Slits to 1 cm gap")

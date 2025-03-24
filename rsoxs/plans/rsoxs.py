@@ -21,7 +21,7 @@ from nbs_bl.queueserver import GLOBAL_USER_STATUS
 from nbs_bl.help import _add_to_import_list, add_to_plan_list, add_to_func_list, add_to_plan_list
 from nbs_bl.plans.scans import nbs_energy_scan
 
-from rsoxs_scans.defaultEnergyParameters import energyListParameters
+from .default_energy_parameters import energyListParameters
 from .per_steps import take_exposure_corrected_reading, one_nd_sticky_exp_step
 
 try:
