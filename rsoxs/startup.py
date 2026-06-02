@@ -40,6 +40,7 @@ from rsoxs.Functions.alignment import *
 from rsoxs.Functions.alignment_local import *
 from rsoxs.Functions.magics import *
 from rsoxs.HW.contingencies import *
+from rsoxs.HW.energy import * ## 2026-05-20 - grating_to_rsoxs was no longer found.  Though not sure how it was found before.
 
 
 run_report(__file__)
