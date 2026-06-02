@@ -7,11 +7,13 @@ from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 import bluesky.plan_stubs as bps
 from nbs_bl.printing import run_report
 from nbs_bl.hw import (
-    mir1,
+    #mir1,
     slits_foe,
     en,
     mir3,
     psh10,
+    slits_dm6,
+    dm6_y,
     slitsc,
     slits1,
     shutter_y,
@@ -64,10 +66,10 @@ def load_configuration(
         mdToUpdate = {
             "RSoXS_Config": configuration_name,
             "RSoXS_Main_DET": "WAXS",
-            "RSoXS_WAXS_SDD": 31.960803248151926,
-            "RSoXS_WAXS_BCX": 474,
-            "RSoXS_WAXS_BCY": 502,
-            "WAXS_Mask": [(477.418, 535.415), (446.074, 511.344), (872.214, -0.476), (948.916, -0.476)],
+            "RSoXS_WAXS_SDD": 31.33214858158717,
+            "RSoXS_WAXS_BCX": 465,
+            "RSoXS_WAXS_BCY": 509,
+            "WAXS_Mask": [(467.050, 549.518), (429.788, 516.836), (864.869, -0.476), (929.670, -0.476)],
             "RSD": None,
             "RSoXS_SAXS_BCX": None,
             "RSoXS_SAXS_BCY": None,
@@ -155,16 +157,16 @@ default_configurations = {
     ## Grouping mirrors together 
     ## Hexapod positions are not always reproducible, so ideally, these should only be moved once during the beam time and left in place afterward.
     "mirrors": [
-        {"motor": mir1.x, "position": 1.3, "order": 0},
-        {"motor": mir1.y, "position": -18, "order": 1},
-        {"motor": mir1.z, "position": 0, "order": 2},
-        {"motor": mir1.pitch, "position": 0.57, "order": 3},
-        {"motor": mir1.roll, "position": 0, "order": 4},
-        {"motor": mir1.yaw, "position": 0, "order": 5},
+        #{"motor": mir1.x, "position": 1.3, "order": 0},
+        #{"motor": mir1.y, "position": -18, "order": 1},
+        #{"motor": mir1.z, "position": 0, "order": 2},
+        #{"motor": mir1.pitch, "position": 0.57, "order": 3},
+        #{"motor": mir1.roll, "position": 0, "order": 4},
+        #{"motor": mir1.yaw, "position": 0, "order": 5},
         {"motor": mir3.x, "position": 24.2, "order": 0},
         {"motor": mir3.y, "position": 18, "order": 1},
         {"motor": mir3.z, "position": 0, "order": 2},
-        {"motor": mir3.pitch, "position": 7.72, "order": 3},
+        {"motor": mir3.pitch, "position": 7.78, "order": 3},
         {"motor": mir3.roll, "position": 0, "order": 4},
         {"motor": mir3.yaw, "position": 0, "order": 5},
         {"motor": mir4.x, "position": 0, "order": 0},
@@ -177,12 +179,12 @@ default_configurations = {
     ## TODO: include FOE slits here and try again to include front-end slits
     "mirrors_nexafs": [
         ## Ideally, M1 and M3 positions should remain  the same for all end stations, but we see some differences in practice so far
-        {"motor": mir1.x, "position": 1.3, "order": 0},
-        {"motor": mir1.y, "position": -18, "order": 1},
-        {"motor": mir1.z, "position": 0, "order": 2},
-        {"motor": mir1.pitch, "position": 0.57, "order": 3},
-        {"motor": mir1.roll, "position": 0, "order": 4},
-        {"motor": mir1.yaw, "position": 0, "order": 5},
+        #{"motor": mir1.x, "position": 1.3, "order": 0},
+        #{"motor": mir1.y, "position": -18, "order": 1},
+        #{"motor": mir1.z, "position": 0, "order": 2},
+        #{"motor": mir1.pitch, "position": 0.57, "order": 3},
+        #{"motor": mir1.roll, "position": 0, "order": 4},
+        #{"motor": mir1.yaw, "position": 0, "order": 5},
         {"motor": mir3.x, "position": 24.2, "order": 0},
         {"motor": mir3.y, "position": 18, "order": 1},
         {"motor": mir3.z, "position": 0, "order": 2},
@@ -204,11 +206,23 @@ default_configurations = {
         {"motor": slits_foe.hcenter, "position": -1, "order": 0},
         {"motor": slits_foe.hsize, "position": 8, "order": 0},
     ],
-    "FOESlits_Attenuated": [
+    "foe_slits_attenuated": [
         {"motor": slits_foe.vcenter, "position": 0, "order": 0},
         {"motor": slits_foe.vsize, "position": 10, "order": 0},
         {"motor": slits_foe.hcenter, "position": 1.55, "order": 0},
         {"motor": slits_foe.hsize, "position": -0.28, "order": 0},
+    ],
+
+    
+    "slits_dm6_retracted": [
+        {"motor": slits_dm6.vcenter, "position": 0, "order": 0},
+        {"motor": slits_dm6.vsize, "position": 18, "order": 0},
+        {"motor": slits_dm6.hcenter, "position": 0, "order": 0},
+        {"motor": slits_dm6.hsize, "position": 18, "order": 0},
+    ],
+
+    "dm6_retracted": [
+        {"motor": dm6_y, "position": 80, "order": 0}, 
     ],
 
 
@@ -251,9 +265,9 @@ default_configurations = {
         {"motor": slits1.vcenter, "position": -0.55, "order": 0},
         {"motor": slits1.hcenter, "position": -0.18, "order": 0},
         {"motor": slits2.vcenter, "position": -0.873, "order": 0},
-        {"motor": slits2.hcenter, "position": -0.06, "order": 0},
+        {"motor": slits2.hcenter, "position": -0.15, "order": 0},
         {"motor": slits3.vcenter, "position": -0.45, "order": 0},
-        {"motor": slits3.hcenter, "position": 0.2, "order": 0},
+        {"motor": slits3.hcenter, "position": 0.22, "order": 0},
     ],
     ## Normally, when I have 2D detectors and am running mixed scattering and NEXAFS measurements, I want all 3 sets of slits to be set for scattering and have same slit configurations across RSoXS and NEXAFS.
     ## However, when there is no 2D detector, only slit 1 matters
@@ -678,7 +692,7 @@ default_configurations = create_hybrid_configuration(
         new_configuration_name = "WAXS_BroadbandReflectivity",
         configurations_dictionary = default_configurations, 
         configurations_to_combine = [
-                "FOESlits_Attenuated",
+                "foe_slits_attenuated",
                 "SlitC_Retracted",
                 "RSoXSSlits_Centers",
                 "RSoXSSlits_ApertureSizes_BroadbandReflectivity",
@@ -694,7 +708,7 @@ default_configurations = create_hybrid_configuration(
         new_configuration_name = "WAXS_BroadbandReflectivity_withI0Mesh",
         configurations_dictionary = default_configurations, 
         configurations_to_combine = [
-                "FOESlits_Attenuated",
+                "foe_slits_attenuated",
                 "SlitC_Retracted",
                 "RSoXSSlits_Centers",
                 "RSoXSSlits_ApertureSizes_BroadbandReflectivity",
@@ -710,7 +724,7 @@ default_configurations = create_hybrid_configuration(
         new_configuration_name = "WAXS_LowFluxNEXAFS",
         configurations_dictionary = default_configurations, 
         configurations_to_combine = [
-                "FOESlits_Attenuated",
+                "foe_slits_attenuated",
                 "SlitC_Retracted",
                 "RSoXSSlits_Centers",
                 "RSoXSSlits_ApertureSizes_SolidSamples",
@@ -726,7 +740,7 @@ default_configurations = create_hybrid_configuration(
         new_configuration_name = "WAXS_LowFluxNEXAFS_withI0Mesh",
         configurations_dictionary = default_configurations, 
         configurations_to_combine = [
-                "FOESlits_Attenuated",
+                "foe_slits_attenuated",
                 "SlitC_Retracted",
                 "RSoXSSlits_Centers",
                 "RSoXSSlits_ApertureSizes_SolidSamples",
