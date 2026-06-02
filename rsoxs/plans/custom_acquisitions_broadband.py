@@ -8,7 +8,6 @@ from nbs_bl.plans.scans import nbs_count, nbs_list_scan, nbs_energy_scan
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.hw import (
     en,
-    mir1,
     fs1_cam,
     slits_foe,
     fs6_cam,
