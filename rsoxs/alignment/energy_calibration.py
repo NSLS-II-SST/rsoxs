@@ -382,6 +382,7 @@ def energy_resolution_series(
      energy_parameters = "carbon_NEXAFS",
      slit1_vsizes = None, 
      cffs = [1.5],  
+     configuration = "WAXSNEXAFS",
      **kwargs,  
 ):
     """
@@ -410,7 +411,7 @@ def energy_resolution_series(
     print("Starting energy resolution series")
     
     ## Start and end at safe configuraiton like WAXSNEXAFS
-    yield from load_configuration("DM7NEXAFS")
+    yield from load_configuration(configuration)
 
     ## Set polarization
     yield from set_polarization(90)
@@ -447,7 +448,92 @@ def energy_resolution_series(
 
     ## End in safe/default configuration
     yield from bps.mv(en.monoen.cff, 1.5)
-    yield from load_configuration("DM7NEXAFS")
+    yield from load_configuration(configuration)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from nbs_bl.hw import (
+    i0_up_tey
+)
+## Temporary function to use Cherno's I0_up HOPG for tuning
+def calibrate_pgm_offsets_20260519_i0up(
+    cs=[1.92, 1.97, 2.02, 2.07, 2.12], ## cff = 2.02 is what cherno uses
+    ms=[1, 1, 1, 1, 1],
+    energy=291.65,
+    pol=90,
+    k=1200, ## Grating l/mm
+    detector=None, 
+    signal="I0 up sample current", 
+    grat_off_search = 0.08,
+    grating_rb_off = 0,
+    mirror_rb_off = 0,
+    search_ratio = 5,
+    scan_time = 30,
+):
+    
+    detector = detector if detector else i0_up_tey  ## Cannot have device in function definition for gui
+
+    yield from bps.mv(en.polarization, pol)
+    yield from bps.mv(en, energy)
+    detector.kind = "hinted"
+    mirror_measured = []
+    grating_measured = []
+    energy_measured = []
+    m_measured = []
+    # bec.enable_plots()
+    for cff, m_order in zip(cs, ms):
+        m_set, g_set = get_mirror_grating_angles(energy, cff, k, m_order)
+        print(f'setting cff to {cff} for a mirror with k={k} at {m_order} order')
+        print("Setting mirror2 to: " + str(m_set))
+        m_set += mirror_rb_off
+        g_set += grating_rb_off
+        yield from bps.mv(grating.velocity, 0.1, mirror2.velocity, 0.1)
+        yield from bps.sleep(1)
+        yield from bps.mv(grating, g_set, mirror2, m_set)
+        yield from bps.sleep(1)
+        peaklist = []
+        yield from rsoxs_fly_max(
+            detectors=[detector], ## TODO: might be good to save out I0 mesh signal as well because then we can see the maxima in the I0 lining up with the maxima in TEY signal.
+            motor=grating,
+            start=g_set - grat_off_search,
+            stop=g_set + grat_off_search,
+            velocities=[grat_off_search*2/scan_time, grat_off_search*2/(search_ratio * scan_time), grat_off_search*2/(search_ratio**2 * scan_time)],
+            period = 0.5,
+            snake=False,
+            peaklist=peaklist,
+            range_ratio=search_ratio,
+            open_shutter=True,
+            rb_offset=grating_rb_off,
+            stream=False
+        )
+        grating_measured.append(peaklist[0][signal][grating.name] - grating_rb_off )
+        mirror_measured.append(mirror2.read()[mirror2.name]["value"] - mirror_rb_off)
+        energy_measured.append(291.65)
+        m_measured.append(m_order)
+    print(f"mirror positions: {mirror_measured}")
+    print(f"grating positions: {grating_measured}")
+    print(f"energy positions: {energy_measured}")
+    print(f"orders: {m_measured}")
+    fit = find_best_offsets(mirror_measured, grating_measured, m_measured, energy_measured, k)
+    print(fit)
+    accept = input("Accept these values and set the offset (y/n)? ")
+    if accept in ["y", "Y", "yes"]:
+        yield from bps.mvr(mirror2.user_offset, -fit.x[0], grating.user_offset, -fit.x[1])
+    # bec.disable_plots()
+    detector.kind = "normal"
+    return fit
