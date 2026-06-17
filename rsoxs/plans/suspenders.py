@@ -25,12 +25,7 @@ from ..HW.detectors import (
     stop_det_cooling,
     
 )
-from ..devices.waxs_det_setup import(
-    dark_frame_preprocessor_waxs_spirals,
-    dark_frame_preprocessor_waxs,
-    # dark_frame_preprocessor_saxs,
-    waxs_back_on,
-)
+from ..devices.waxs_det_setup import waxs_back_on
 
 RE = bl.run_engine
 

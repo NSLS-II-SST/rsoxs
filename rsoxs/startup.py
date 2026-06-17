@@ -18,6 +18,7 @@ from nbs_bl.detectors import *
 from nbs_bl.plans.scans import *
 from nbs_bl.plans.xas import *
 from nbs_bl.samples import *
+from nbs_bl.modes import *
 
 ## For some reason, need have rsoxs in the path instead of just . even though imports are coming from within the same package.
 from rsoxs.redis_config import rsoxs_config
@@ -32,7 +33,10 @@ from rsoxs.configuration_setup.configurations_instrument import *
 from rsoxs.alignment.fiducials import *
 from rsoxs.alignment.energy_calibration import *
 from rsoxs.alignment.m3 import *
-from rsoxs.devices.waxs_det_setup import *
+from rsoxs.devices.waxs_det_setup import (
+    activate_waxs_mode as _activate_waxs_mode,
+    deactivate_waxs_mode as _deactivate_waxs_mode,
+)
 
 ## Eliot's old code
 from rsoxs.HW.cameras import * ## 20250131 - temporary solution to using crosshairs, need a better long-term solution
@@ -67,6 +71,13 @@ if not is_re_worker_active():
     ns = get_ipython().user_ns
 else:
     ns = {}
+bl.register_mode_function(
+    "waxs",
+    _activate_waxs_mode,
+    _deactivate_waxs_mode,
+    run_hook=True,
+    namespace=ns,
+)
 if not is_re_worker_active():
     get_ipython().log.setLevel("ERROR")
 
