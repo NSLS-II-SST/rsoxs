@@ -31,6 +31,9 @@ source = "vcs"
 rsoxs-custom-scan = "rsoxs.qt.plans.rsoxsCustom:RSoXSCustomWidget"
 rsoxs-scan = "rsoxs.qt.plans.rsoxsPlan:RSoXSPlanWidget"
 
+[project.entry-points."nbs_gui.tabs"]
+rsoxs-monitor-tab = "rsoxs.qt.tabs.beamlineStatus:BeamlineStatusTab"
+
 [project.entry-points."nbs_gui.plans.beamlineModifier"]
 rsoxs-configuration = "rsoxs.qt.plans.rsoxsSetup:RSoXSBeamlineSetupParams"
 

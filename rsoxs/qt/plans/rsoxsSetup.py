@@ -5,9 +5,10 @@ from qtpy.QtCore import Slot
 
 class RSoXSConfigurationParam(DynamicComboParam):
     def update_options(self, options):
-        print(f"Updating options for RSoXSConfigurationParam to {options}")
-        if options is not None:
-            super().update_options(list(options.keys()))
+        configurations = list(options.keys())
+        print(f"Updating options for RSoXSConfigurationParam to {configurations}")
+        if configurations is not None:
+            super().update_options(configurations)
 
 
 class RSoXSBeamlineSetupParams(ParamGroup):
