@@ -17,7 +17,6 @@ from ..redis_config import rsoxs_config
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.hw import (
     en,
-    mir1,
     fs6_cam,
     mirror2,
     grating,

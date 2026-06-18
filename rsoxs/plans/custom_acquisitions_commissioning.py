@@ -8,7 +8,7 @@ from nbs_bl.plans.scans import nbs_count, nbs_list_scan, nbs_energy_scan
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.hw import (
     en,
-    mir1,
+    #mir1,
     fs1_cam,
     fs6_cam,
     fs6_y,
@@ -43,6 +43,184 @@ from rsoxs.HW.energy import set_polarization
 from ..alignment.m3 import *
 from ..alignment.energy_calibration import *
 from .cdsaxs import cdsaxs_scan
+from ..alignment.energy_calibration import energy_resolution_series
+
+
+
+
+
+
+
+
+def commissioning_scans_20260522():
+
+    
+    
+    
+    
+    
+    
+    comment = "SRS570 sensitivities: I0 = 2 nA/V, TEY = 2 nA/V, WAXS photodiode = 1 uA/V"
+    
+
+
+
+
+
+    ## Testing differnet energy increments during a scan
+    yield from load_configuration("WAXSNEXAFS")
+    yield from load_samp("OpenBeam") #yield from load_samp("OpenBeam_NW_107T")
+    yield from set_polarization(0)
+    yield from bps.mv(mirror2.velocity, 0.1)
+    yield from bps.mv(grating.velocity, 0.1)
+
+    energy_parameters = [100, 10, 1000]
+    for iteration in np.arange(0, 1000, 1):
+        for polarization in [0, 90, 45, 135]:
+            yield from set_polarization(polarization)
+            yield from nbs_energy_scan(
+                *energy_parameters,
+                extra_dets = [slitc_cam],
+                comment = comment,
+                )
+            yield from nbs_energy_scan(
+                *energy_parameters[::-1], ## Reverse the energy list parameters to produce reversed energy list
+                extra_dets = [slitc_cam],
+                comment = comment,
+                )
+    
+    
+
+    """
+    ## Testing cycles to see if downward motion in cycles is problematic
+    yield from load_configuration("WAXSNEXAFS")
+    yield from load_samp("OpenBeam_NW_107T")
+
+    yield from bps.mv(mirror2.velocity, 0.1)
+    yield from bps.mv(grating.velocity, 0.1)
+
+    energy_parameters = [250, 1.28, 282, 0.3, 297, 1.325, 350]
+
+    for iteration in np.arange(0, 1000, 1):
+        for polarization in [0, 90, 45, 135]:
+            yield from set_polarization(polarization)
+
+            yield from nbs_energy_scan(
+                *energy_parameters,
+                )
+            yield from nbs_energy_scan(
+                *energy_parameters[::-1], ## Reverse the energy list parameters to produce reversed energy list
+                )
+
+    
+                
+
+    ## Testing different velooooooooocities            
+    velocities = [0.1] #[0.01, 0.05, 0.1]
+    yield from load_configuration("WAXSNEXAFS")
+    for iteration in np.arange(0, 1000, 1):
+        for polarization in [0]: #[0, 90, 45, 135]:
+            yield from set_polarization(polarization)
+
+            for velocity in velocities:
+                yield from bps.mv(mirror2.velocity, velocity)
+                yield from bps.mv(grating.velocity, velocity)
+
+                comment = "velocity: " + str(velocity)
+
+                yield from load_samp("OpenBeam_NW_107T")
+                yield from nbs_energy_scan(250, 1.28, 282, 0.3, 297, 1.325, 350, comment = comment)
+                yield from nbs_energy_scan(250, 1.28, 282, 0.3, 297, 1.325, 350, comment = comment)
+                #yield from nbs_energy_scan(370, 1, 397, 0.2, 407, 1, 440, comment = comment)
+                #yield from nbs_energy_scan(500, 1, 525, 0.2, 540, 1, 560, comment = comment)
+                #yield from nbs_energy_scan(650, 1.5, 680, 0.25, 700, 1.25, 740, comment = comment)
+    
+    
+    yield from energy_resolution_series(
+        sample_id = "HOPG",
+        energy_parameters = "carbon_NEXAFS",
+        slit1_vsizes = [0.02], 
+        cffs = [1.5],    
+        configuration = "WAXS",
+    )
+
+    yield from bps.mv(en.monoen.cff, 1.5)
+
+    
+
+
+    print("Starting SDD calibration scans")
+
+    yield from load_configuration("WAXS") 
+    yield from load_samp("SBA15")
+    
+    for polarization in [0]: #[0, 90, 45, 135]:
+        yield from set_polarization(polarization)
+        
+        energy_parameters = (200, 91.65, 291.65, 8.35, 300, 100, 1300)
+        yield from nbs_energy_scan(
+                            *energy_parameters,
+                            use_2d_detector=True, 
+                            dwell=0.1,
+                            n_exposures=1, ## Was going to take 90 repeats, but then darks would be very infrequent
+                            )
+    """
+
+
+from nbs_bl.hw import (
+    mirror2_temperature,
+)
+def monochromator_sweeps():
+    ## Testing M2 pitch failure rate after increasing current on 2026-05-27
+    ## Also tracking M2 motor temperature.  Started off at room temperature
+    for iteration in np.arange(0, 1e10, 1):
+        yield from nbs_list_scan(
+            en.monoen,
+            [100, 1000],
+            extra_dets = [mirror2_temperature],
+        )
+        yield from nbs_list_scan(
+            en.monoen,
+            [1000, 100],
+            extra_dets = [mirror2_temperature],
+        )
+    
+    
+
+
+
+
+
+
+def knife_edge_scan():
+
+    ## Edit this based on which slit it is connected to and what gain is used
+    comment = "rsoxs slits2.top, SRS570 gain = 5 nA/V"
+    ## Edit which slit is being used
+    slit_motor_to_scan = slits2.top
+    ## Edit based on motor range
+    slit_motor_range_to_scan = np.concatenate((
+        #np.arange(-9, 9, 0.5),
+        np.arange(-9, -6, 0.1), np.arange(-6, 0, 0.01), np.arange(0, 9, 0.1),
+        )) ## Got this from PyDM
+
+
+    ## Run the scan, don't edit anything here
+
+    ## Consider trying various energies and polarizations later?  Would that impact beam shape?
+    yield from set_polarization(0)
+    yield from bps.mv(en, 270)
+
+    yield from load_samp("OpenBeam") ## Make sure samples are well out of the way since slits are being opened fully
+
+    yield from load_configuration("FOESlits_HighFlux")
+    yield from load_configuration("SlitC_Retracted") ## DM7NEXAFS works as well
+    yield from load_configuration("RSoXSSlits_Centers")
+    yield from load_configuration("RSoXSSlits_Retracted") ## So that slits won't collide with opposite slits
+    yield from load_configuration("DMRSoXS_Retracted")
+
+    yield from nbs_list_scan(slit_motor_to_scan, slit_motor_range_to_scan, dwell=1, comment=comment)
+
 
 
 
@@ -93,6 +271,8 @@ def beam_time_startup():
 
 
 
+
+
 def test_scans_prefect():
     """
     Prefect is used to write out 1D detector data to csv files and 2D detector data to tiff files.
@@ -134,21 +314,6 @@ def test_scans_prefect():
         )
 
 
-
-def commissioning_scans_20260406():
-
-    comment = "SRS570 sensitivities: I0 = 1 nA/V, TEY = 100 pA/V, WAXS photodiode = 10 nA/V"
-
-    
-    for iteration in np.arange(0, 1, 1):
-        for polarization in [90]: #[0, 90, 45, 135]:
-            yield from set_polarization(polarization)
-
-            yield from load_samp("OpenBeam_HOPG")
-            yield from nbs_energy_scan(250, 1.28, 282, 0.3, 297, 1.325, 350, comment = comment)
-            yield from nbs_energy_scan(370, 1, 397, 0.2, 407, 1, 440, comment = comment)
-            yield from nbs_energy_scan(500, 1, 525, 0.2, 540, 1, 560, comment = comment)
-            yield from nbs_energy_scan(650, 1.5, 680, 0.25, 700, 1.25, 740, comment = comment)
 
     
 
@@ -276,10 +441,11 @@ def reproduce_EPU_error():
 
 
 ## 20250711 mirror alignment parameter sweep to loop overnight
+"""
 def M1_parameter_sweep_FS6():   
     comment_front_end = "FS6 image.  Front-end slits all the way open to hsize=7, hcenter=0.52, vsize=5, vcenter=-0.6.  FOE slits opened all the way to outboard=5, inboard=-5, top=5, bottom=-5."
     
-    """
+    ###
     ## Not going to change y and z
     comment_M1_y_z = comment_front_end + "  Mirror 1 y=-18, z=0"
     comment_M1_x_pitch = comment_M1_y_z
@@ -303,7 +469,7 @@ def M1_parameter_sweep_FS6():
 
             yield from nbs_count(extra_dets=[fs6_cam], num=1, comment=comment)
     
-    """
+    ###
 
     
     ## Start at the defaults and do 1D sweeps
@@ -363,7 +529,7 @@ def M1_parameter_sweep_FS6():
     ## TODO: In the future, sweeps of how the beam looks at different EPU gaps and phases would be good as well
     comment = comment_front_end + "  Mirror 1 x=1.3, y=-18, z=0, pitch=0.57, yaw=0, roll=0"
     yield from nbs_count(extra_dets=[fs6_cam], num=10000000000, comment=comment)
-
+"""
 
 
 
@@ -375,7 +541,7 @@ def beam_motion_monitoring_20260312(
     """
 
     ## Set up configuration
-    yield from bps.mv(mir1.x, 1.3)
+    #yield from bps.mv(mir1.x, 1.3)
     yield from bps.mv(fs6_y, 1.5)
     yield from bps.mv(mir3.x, 24.2)
     yield from bps.mv(mir3.pitch, 7.78)
@@ -457,7 +623,7 @@ def beam_motion_monitoring_20260312(
         
         
         ## FS1
-        yield from bps.mv(mir1.x, -5)
+        #yield from bps.mv(mir1.x, -5)
         yield from nbs_energy_scan(
             *energy_parameters,
             extra_dets = [fs1_cam],
@@ -470,7 +636,7 @@ def beam_motion_monitoring_20260312(
 
 
         ## Restore all configurations
-        yield from bps.mv(mir1.x, 1.3)
+        #yield from bps.mv(mir1.x, 1.3)
         yield from bps.mv(fs6_y, 1.5)
         yield from bps.mv(mir3.x, 24.2)
         yield from load_configuration("DMRSoXS_Mesh")
@@ -489,7 +655,7 @@ def beam_motion_monitoring_20260313(
     """
 
     ## Set up configuration
-    yield from bps.mv(mir1.x, 1.3)
+    #yield from bps.mv(mir1.x, 1.3)
     yield from bps.mv(fs6_y, 1.5)
     yield from bps.mv(mir3.x, 24.2)
     yield from bps.mv(mir3.pitch, 7.78)
@@ -603,7 +769,7 @@ def beam_motion_monitoring_FS1_20260216(
     """
 
     ## Retract M1 to access FS1
-    yield from bps.mv(mir1.x, -5)
+    #yield from bps.mv(mir1.x, -5)
 
     yield from load_samp("OpenBeam")
 
