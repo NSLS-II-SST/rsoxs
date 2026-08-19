@@ -11,7 +11,7 @@ from nbs_bl.hw import (
     #mir1,
     fs1_cam,
     fs6_cam,
-    fs6_y,
+    #fs6_y, ## 2026-08-19
     mirror2,
     grating,
     mir3,
